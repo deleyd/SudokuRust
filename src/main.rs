@@ -2,6 +2,8 @@ use rand::{Rng, SeedableRng};
 
 
 fn main() {
+    let mut xyzzy: [i32; 5] = [1, 2, 3, 4, 5];
+    xyzzy[2] = 0;
 
     let line:&str = "+---+---+---+";
     let _middle:&str = "|...|...|...|";
@@ -45,16 +47,16 @@ fn main() {
     // Top elements are (row, col) of cell which has been modified compared to previous state
     //Stack<int> rowIndexStack = new Stack<int>();
     //Stack<int> colIndexStack = new Stack<int>();
-    let mut _row_index_stack: Vec<i32> = Vec::new(); // Explicitly typed for clarity
-    let mut _col_index_stack: Vec<i32> = Vec::new(); // Explicitly typed for clarity
+    let mut row_index_stack: Vec<i32> = Vec::new(); // Explicitly typed for clarity
+    let mut col_index_stack: Vec<i32> = Vec::new(); // Explicitly typed for clarity
 
     // Top element indicates candidate digits (those with False) for (row, col)
     //Stack<bool[]> usedDigitsStack = new Stack<bool[]>();
-    let mut _used_digits_stack: Vec<[bool; 9*9]> = Vec::new();
+    let mut used_digits_stack: Vec<[bool; 9*9]> = Vec::new();
 
     // Top element is the value that was set on (row, col)
     //Stack<int> lastDigitStack = new Stack<int>();
-    let mut _last_digit_stack:Vec<i32> = Vec::new();
+    let mut last_digit_stack:Vec<i32> = Vec::new();
 
     // Indicates operation to perform next
     // - expand - finds next empty cell and puts new state on stacks
@@ -68,31 +70,88 @@ fn main() {
         if command == "expand"
         {
             println!("in if");
-            let mut current_state : Option<[i32; 9*9]>;
+            let mut current_state : [i32; 81] = [0;81];
             if state_stack.len() > 0
             {
                 // source array is state_stack.last(), destination is current_state, length is 81
                 //Array.Copy(state_stack.last(), current_state, current_state.len());
-                current_state = state_stack.last().cloned();
+                let opt_owned = state_stack.last().cloned();
+                current_state = opt_owned.unwrap();
             }
 
             let mut best_row: i32 = -1;
             let mut best_col: i32  = -1;
-            let mut best_used_digits : Var<bool> = null;
+            let mut best_used_digits : Vec<bool> = [false; 9*9].to_vec();
             let mut best_candidates_count : i32 = -1;
             let mut best_random_value : i32 = -1;
-            let contains_unsolvable_cells: bool = false;
-            for index in 0..currentState.Length
+            let mut contains_unsolvable_cells: bool = false;
+            for index in 0..81
             {
                 if current_state[index] == 0
                 {
-                    let row : i32 = index / 9;
-                    let col : i32 = index % 9;
-                    let block_row : i32 = row / 3;
-                    let block_col : i32 = col / 3;
+                    let row: i32 = (index / 9) as i32;
+                    let col: i32 = (index % 9) as i32;
+                    let block_row: i32 = row / 3;
+                    let block_col: i32 = col / 3;
 
-                    let mut is_digit_used : [bool; 9];
+                    let mut is_digit_used: [bool; 9] = [false; 9];
+                    is_digit_used[5] = true;
+                    for i in 0..9
+                    {
+                        let row_digit = current_state[9 * i + col as usize];
+                        if row_digit > 0
+                        {
+                            is_digit_used[row_digit as usize - 1] = true;
+                        }
 
+                        let col_digit = current_state[9 * row as usize + i];
+                        if col_digit > 0
+                        {
+                            is_digit_used[col_digit as usize - 1] = true;
+                        }
+
+                        let block_digit = current_state[(block_row as usize * 3 + i / 3) * 9 + (block_col as usize * 3 + i % 3)];
+                        if block_digit > 0
+                        {
+                            is_digit_used[block_digit as usize - 1] = true;
+                        }
+                        let candidates_count : i32 = is_digit_used.iter() // Get an iterator over the elements
+                            .filter(|&&value| !value) // Filter for false values
+                            .count() as i32; // Count the remaining elements
+                        //let candidates_count = is_digit_used.Where(used => !used).Count();
+
+                        if (candidates_count == 0)
+                        {
+                            contains_unsolvable_cells = true;
+                            break;
+                        }
+
+                        let random_value = rng.random::<i32>();
+
+                        if best_candidates_count < 0 ||
+                            candidates_count < best_candidates_count ||
+                            (candidates_count == best_candidates_count && random_value < best_random_value)
+                        {
+                            best_row = row;
+                            best_col = col;
+                            best_used_digits = is_digit_used;
+                            best_candidates_count = candidates_count;
+                            best_random_value = random_value;
+                        }
+                    } // for (i = 0..8)
+                }
+
+                if (!contains_unsolvable_cells)
+                {
+                    state_stack.push(current_state);
+                    row_index_stack.push(best_row);
+                    col_index_stack.push(best_col);
+                    used_digits_stack.push(best_used_digits);
+                    last_digit_stack.push(0); // No digit was tried at this position
+                }
+
+                // Always try to move after expand
+                command = "move";
             }
 
         }
