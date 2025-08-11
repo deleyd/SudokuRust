@@ -707,10 +707,10 @@ fn main() {
             // Try to see if there are pairs of values that can be exchanged arbitrarily
             // This happens when board has more than one valid solution
 
-            Queue<int> candidateIndex1 = new Queue<int>();
-            Queue<int> candidateIndex2 = new Queue<int>();
-            Queue<int> candidateDigit1 = new Queue<int>();
-            Queue<int> candidateDigit2 = new Queue<int>();
+            Queue<int> candidate_index1 = new Queue<int>();
+            Queue<int> candidate_index2 = new Queue<int>();
+            Queue<int> candidate_digit1 = new Queue<int>();
+            Queue<int> candidate_digit2 = new Queue<int>();
 
             for (int i = 0; i < candidate_masks.Length - 1; i++)
             {
@@ -718,7 +718,7 @@ fn main() {
                 {
                     let row = i / 9;
                     let col = i % 9;
-                    let blockIndex = 3 * (row / 3) + col / 3;
+                    let block_index = 3 * (row / 3) + col / 3;
 
                     let temp = candidate_masks[i];
                     let lower = 0;
@@ -739,14 +739,14 @@ fn main() {
                         {
                             let row1 = j / 9;
                             let col1 = j % 9;
-                            let blockIndex1 = 3 * (row1 / 3) + col1 / 3;
+                            let block_index1 = 3 * (row1 / 3) + col1 / 3;
 
-                            if (row == row1 || col == col1 || blockIndex == blockIndex1)
+                            if (row == row1 || col == col1 || block_index == block_index1)
                             {
-                                candidateIndex1.Enqueue(i);
-                                candidateIndex2.Enqueue(j);
-                                candidateDigit1.Enqueue(lower);
-                                candidateDigit2.Enqueue(upper);
+                                candidate_index1.Enqueue(i);
+                                candidate_index2.Enqueue(j);
+                                candidate_digit1.Enqueue(lower);
+                                candidate_digit2.Enqueue(upper);
                             }
                         }
                     }
@@ -761,61 +761,61 @@ fn main() {
             List<int> value1 = new List<int>();
             List<int> value2 = new List<int>();
 
-            while (candidateIndex1.Any())
+            while (candidate_index1.Any())
             {
-                let index1 = candidateIndex1.Dequeue();
-                let index2 = candidateIndex2.Dequeue();
-                let digit1 = candidateDigit1.Dequeue();
-                let digit2 = candidateDigit2.Dequeue();
+                let index1 = candidate_index1.Dequeue();
+                let index2 = candidate_index2.Dequeue();
+                let digit1 = candidate_digit1.Dequeue();
+                let digit2 = candidate_digit2.Dequeue();
 
-                int[] alternateState = new int[final_state.Length];
-                Array.Copy(state, alternateState, alternateState.Length);
+                int[] alternate_state = new int[final_state.Length];
+                Array.Copy(state, alternate_state, alternate_state.Length);
 
                 if (final_state[index1] == digit1)
                 {
-                    alternateState[index1] = digit2;
-                    alternateState[index2] = digit1;
+                    alternate_state[index1] = digit2;
+                    alternate_state[index2] = digit1;
                 }
                 else
                 {
-                    alternateState[index1] = digit1;
-                    alternateState[index2] = digit2;
+                    alternate_state[index1] = digit1;
+                    alternate_state[index2] = digit2;
                 }
 
                 // What follows below is a complete copy-paste of the solver which appears at the beginning of this method
                 // However, the algorithm couldn't be applied directly and it had to be modified.
                 // Implementation below assumes that the board might not have a solution.
                 state_stack = new Stack<int[]>();
-                rowIndexStack = new Stack<int>();
-                colIndexStack = new Stack<int>();
-                usedDigitsStack = new Stack<bool[]>();
-                lastDigitStack = new Stack<int>();
+                row_index_stack = new Stack<int>();
+                col_index_stack = new Stack<int>();
+                used_digits_stack = new Stack<bool[]>();
+                last_digit_stack = new Stack<int>();
 
                 command = "expand";
                 while (command != "complete" && command != "fail")
                 {
                     if (command == "expand")
                     {
-                        int[] currentState = new int[9 * 9];
+                        int[] current_state = new int[9 * 9];
 
                         if (state_stack.Any())
                         {
-                            Array.Copy(state_stack.Peek(), currentState, currentState.Length);
+                            Array.Copy(state_stack.Peek(), current_state, current_state.Length);
                         }
                         else
                         {
-                            Array.Copy(alternateState, currentState, currentState.Length);
+                            Array.Copy(alternate_state, current_state, current_state.Length);
                         }
 
-                        let bestRow = -1;
-                        let bestCol = -1;
-                        bool[] bestUsedDigits = null;
-                        let bestCandidatesCount = -1;
-                        let bestRandomValue = -1;
-                        bool containsUnsolvableCells = false;
+                        let best_row = -1;
+                        let best_col = -1;
+                        bool[] best_used_digits = null;
+                        let best_candidates_count = -1;
+                        let best_random_value = -1;
+                        bool contains_unsolvable_cells = false;
 
-                        for (int index = 0; index < currentState.Length; index++)
-                        if (currentState[index] == 0)
+                        for (int index = 0; index < current_state.Length; index++)
+                        if (current_state[index] == 0)
                         {
 
                             int row = index / 9;
@@ -823,53 +823,53 @@ fn main() {
                             let block_row = row / 3;
                             let block_col = col / 3;
 
-                            bool[] isDigitUsed = new bool[9];
+                            bool[] is_digit_used = new bool[9];
 
                             for (int i = 0; i < 9; i++)
                             {
-                                let rowDigit = currentState[9 * i + col];
-                                if (rowDigit > 0)
-                                isDigitUsed[rowDigit - 1] = true;
+                                let row_digit = current_state[9 * i + col];
+                                if (row_digit > 0)
+                                is_digit_used[row_digit - 1] = true;
 
-                                let colDigit = currentState[9 * row + i];
-                                if (colDigit > 0)
-                                isDigitUsed[colDigit - 1] = true;
+                                let col_digit = current_state[9 * row + i];
+                                if (col_digit > 0)
+                                is_digit_used[col_digit - 1] = true;
 
-                                let blockDigit = currentState[(block_row * 3 + i / 3) * 9 + (block_col * 3 + i % 3)];
-                                if (blockDigit > 0)
-                                isDigitUsed[blockDigit - 1] = true;
+                                let block_digit = current_state[(block_row * 3 + i / 3) * 9 + (block_col * 3 + i % 3)];
+                                if (block_digit > 0)
+                                is_digit_used[block_digit - 1] = true;
                             } // for (i = 0..8)
 
-                            let candidatesCount = isDigitUsed.Where(used => !used).Count();
+                            let candidates_count = is_digit_used.Where(used => !used).Count();
 
-                            if (candidatesCount == 0)
+                            if (candidates_count == 0)
                             {
-                                containsUnsolvableCells = true;
+                                contains_unsolvable_cells = true;
                                 break;
                             }
 
-                            let randomValue = rng.Next();
+                            let random_value = rng.Next();
 
-                            if (bestCandidatesCount < 0 ||
-                                candidatesCount < bestCandidatesCount ||
-                                (candidatesCount == bestCandidatesCount && randomValue < bestRandomValue))
+                            if (best_candidates_count < 0 ||
+                                candidates_count < best_candidates_count ||
+                                (candidates_count == best_candidates_count && random_value < best_random_value))
                             {
-                                bestRow = row;
-                                bestCol = col;
-                                bestUsedDigits = isDigitUsed;
-                                bestCandidatesCount = candidatesCount;
-                                bestRandomValue = randomValue;
+                                best_row = row;
+                                best_col = col;
+                                best_used_digits = is_digit_used;
+                                best_candidates_count = candidates_count;
+                                best_random_value = random_value;
                             }
 
                         } // for (index = 0..81)
 
-                        if (!containsUnsolvableCells)
+                        if (!contains_unsolvable_cells)
                         {
-                            state_stack.Push(currentState);
-                            rowIndexStack.Push(bestRow);
-                            colIndexStack.Push(bestCol);
-                            usedDigitsStack.Push(bestUsedDigits);
-                            lastDigitStack.Push(0); // No digit was tried at this position
+                            state_stack.Push(current_state);
+                            row_index_stack.Push(best_row);
+                            col_index_stack.Push(best_col);
+                            used_digits_stack.Push(best_used_digits);
+                            last_digit_stack.Push(0); // No digit was tried at this position
                         }
 
                         // Always try to move after expand
@@ -879,10 +879,10 @@ fn main() {
                     else if (command == "collapse")
                     {
                         state_stack.Pop();
-                        rowIndexStack.Pop();
-                        colIndexStack.Pop();
-                        usedDigitsStack.Pop();
-                        lastDigitStack.Pop();
+                        row_index_stack.Pop();
+                        col_index_stack.Pop();
+                        used_digits_stack.Pop();
+                        last_digit_stack.Pop();
 
                         if (state_stack.Any())
                         command = "move"; // Always try to move after collapse
@@ -892,36 +892,36 @@ fn main() {
                     else if (command == "move")
                     {
 
-                        let rowToMove = rowIndexStack.Peek();
-                        let colToMove = colIndexStack.Peek();
-                        let digitToMove = lastDigitStack.Pop();
+                        let row_to_move = row_index_stack.Peek();
+                        let col_to_move = col_index_stack.Peek();
+                        let digit_to_move = last_digit_stack.Pop();
 
-                        let row_to_write = rowToMove + rowToMove / 3 + 1;
-                        let col_to_write = colToMove + colToMove / 3 + 1;
+                        let row_to_write = row_to_move + row_to_move / 3 + 1;
+                        let col_to_write = col_to_move + col_to_move / 3 + 1;
 
-                        bool[] usedDigits = usedDigitsStack.Peek();
-                        let[] currentState = state_stack.Peek();
-                        let currentStateIndex = 9 * rowToMove + colToMove;
+                        bool[] used_digits = used_digits_stack.Peek();
+                        let[] current_state = state_stack.Peek();
+                        let current_stateIndex = 9 * row_to_move + col_to_move;
 
-                        let movedToDigit = digitToMove + 1;
-                        while (movedToDigit <= 9 && usedDigits[movedToDigit - 1])
-                        movedToDigit += 1;
+                        let moved_to_digit = digit_to_move + 1;
+                        while (moved_to_digit <= 9 && used_digits[moved_to_digit - 1])
+                        moved_to_digit += 1;
 
-                        if (digitToMove > 0)
+                        if (digit_to_move > 0)
                         {
-                            usedDigits[digitToMove - 1] = false;
-                            currentState[currentStateIndex] = 0;
+                            used_digits[digit_to_move - 1] = false;
+                            current_state[current_state_index] = 0;
                             board[row_to_write][col_to_write] = '.';
                         }
 
-                        if (movedToDigit <= 9)
+                        if (moved_to_digit <= 9)
                         {
-                            lastDigitStack.Push(movedToDigit);
-                            usedDigits[movedToDigit - 1] = true;
-                            currentState[currentStateIndex] = movedToDigit;
-                            board[row_to_write][col_to_write] = (char)('0' + movedToDigit);
+                            last_digit_stack.Push(moved_to_digit);
+                            used_digits[moved_to_digit - 1] = true;
+                            current_state[current_state_index] = moved_to_digit;
+                            board[row_to_write][col_to_write] = (char)('0' + moved_to_digit);
 
-                            if (currentState.Any(digit => digit == 0))
+                            if (current_state.Any(digit => digit == 0))
                             command = "expand";
                             else
                             command = "complete";
@@ -929,7 +929,7 @@ fn main() {
                         else
                         {
                             // No viable candidate was found at current position - pop it in the next iteration
-                            lastDigitStack.Push(0);
+                            last_digit_stack.Push(0);
                             command = "collapse";
                         }
                     } // if (command == "move")
@@ -943,7 +943,7 @@ fn main() {
                     value1.Add(digit1);
                     value2.Add(digit2);
                 }
-            } // while (candidateIndex1.Any())
+            } // while (candidate_index1.Any())
 
             if (state_index1.Any())
             {
@@ -957,7 +957,7 @@ fn main() {
                 let row2 = index2 / 9;
                 let col2 = index2 % 9;
 
-                string description = string.Empty;
+                let description : string;
 
                 if (index1 / 9 == index2 / 9)
                 {
@@ -980,10 +980,10 @@ fn main() {
 
                 for (int i = 0; i < state.Length; i++)
                 {
-                    let tempRow = i / 9;
-                    let tempCol = i % 9;
-                    let row_to_write = tempRow + tempRow / 3 + 1;
-                    let col_to_write = tempCol + tempCol / 3 + 1;
+                    let temp_row = i / 9;
+                    let temp_col = i % 9;
+                    let row_to_write = temp_row + temp_row / 3 + 1;
+                    let col_to_write = temp_col + temp_col / 3 + 1;
 
                     board[row_to_write][col_to_write] = '.';
                     if (state[i] > 0)
