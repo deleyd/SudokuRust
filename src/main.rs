@@ -44,12 +44,12 @@ fn main() {
     // Top elements are (row, col) of cell which has been modified compared to previous state
     //Stack<int> rowIndexStack = new Stack<int>();
     //Stack<int> colIndexStack = new Stack<int>();
-    let mut row_index_stack: Vec<i32> = Vec::new(); // Explicitly typed for clarity
-    let mut col_index_stack: Vec<i32> = Vec::new(); // Explicitly typed for clarity
+    let mut row_index_stack: Vec<usize> = Vec::new(); // Explicitly typed for clarity
+    let mut col_index_stack: Vec<usize> = Vec::new(); // Explicitly typed for clarity
 
     // Top element indicates candidate digits (those with False) for (row, col)
     //Stack<bool[]> usedDigitsStack = new Stack<bool[]>();
-    let mut used_digits_stack: Vec<[bool; 9*9]> = Vec::new();
+    let mut used_digits_stack: [bool; 9*9] = [false; 81];
 
     // Top element is the value that was set on (row, col)
     //Stack<int> lastDigitStack = new Stack<int>();
@@ -76,9 +76,9 @@ fn main() {
                 current_state = opt_owned.unwrap();
             }
 
-            let mut best_row: i32 = -1;
+            let mut best_row: usize;
             let mut best_col: i32  = -1;
-            let mut best_used_digits : Vec<bool> = [false; 9*9].to_vec();
+            let mut best_used_digits : [bool; 81] = [false; 9*9];
             let mut best_candidates_count : i32 = -1;
             let mut best_random_value : i32 = -1;
             let mut contains_unsolvable_cells: bool = false;
@@ -86,13 +86,13 @@ fn main() {
             {
                 if current_state[index] == 0
                 {
-                    let row: i32 = (index / 9) as i32;
-                    let col: i32 = (index % 9) as i32;
-                    let block_row: i32 = row / 3;
-                    let block_col: i32 = col / 3;
+                    let row: usize = (index / 9) as i32;
+                    let col: usize = (index % 9) as i32;
+                    let block_row: usize = row / 3;
+                    let block_col: usize = col / 3;
 
                     let mut is_digit_used: [bool; 9] = [false; 9];
-                    is_digit_used[5] = true;
+\
                     for i in 0..9
                     {
                         let row_digit = current_state[9 * i + col as usize];
@@ -117,7 +117,7 @@ fn main() {
                             .count() as i32; // Count the remaining elements
                         //let candidates_count = is_digit_used.Where(used => !used).Count();
 
-                        if (candidates_count == 0)
+                        if candidates_count == 0
                         {
                             contains_unsolvable_cells = true;
                             break;
@@ -138,7 +138,7 @@ fn main() {
                     } // for (i = 0..8)
                 }
 
-                if (!contains_unsolvable_cells)
+                if !contains_unsolvable_cells
                 {
                     state_stack.push(current_state);
                     row_index_stack.push(best_row);
@@ -151,7 +151,7 @@ fn main() {
                 command = "move";
             }
         } // if (command == "expand")
-        else if (command == "collapse")
+        else if command == "collapse"
         {
             state_stack.pop();
             row_index_stack.pop();
@@ -161,11 +161,11 @@ fn main() {
 
             command = "move";   // Always try to move after collapse
         }
-        else if (command == "move")
+        else if command == "move"
         {
-            let row_to_move = row_index_stack.last();
-            let col_to_move = col_index_stack.last();
-            let digit_to_move = last_digit_stack.last();
+            let row_to_move = row_index_stack.last().unwrap();  // panic if empty which it should never be
+            let col_to_move = col_index_stack.last().unwrap();
+            let digit_to_move = last_digit_stack.last().unwrap();
 
             let row_to_write = row_to_move + row_to_move / 3 + 1;
             let col_to_write = col_to_move + col_to_move / 3 + 1;
@@ -175,8 +175,10 @@ fn main() {
             let current_state_index = 9 * row_to_move + col_to_move;
 
             let moved_to_digit = digit_to_move + 1;
-            while moved_to_digit <= 9 && used_digits[moved_to_digit - 1])
-            moved_to_digit += 1;
+            while moved_to_digit <= 9 && used_digits[moved_to_digit - 1]
+            {
+                moved_to_digit += 1;
+            }
 
             if digit_to_move > 0
             {
@@ -187,10 +189,10 @@ fn main() {
 
             if moved_to_digit <= 9
             {
-                last_digit_stack.last(moved_to_digit);
+                last_digit_stack.push(moved_to_digit);
                 used_digits[moved_to_digit - 1] = true;
                 current_state[current_state_index] = moved_to_digit;
-                board[row_to_write][col_to_write] = /*(char)*/('0' + moved_to_digit);
+                board[row_to_write][col_to_write] = /*(char)*/ '0' + moved_to_digit;
 
                 // Next possible digit was found at current position
                 // Next step will be to expand the state
@@ -206,32 +208,44 @@ fn main() {
     }
     println!();
     println!("Final look of the solved board:");
-    println!(string.Join(Environment.NewLine, board.Select(s => new string(s)).ToArray()));
-    //#endregion
+    let transformed_data = board.iter() // Iterate over outer Vec<Vec<char>>
+        .map(|inner_vec| { // For each inner Vec<char>
+            inner_vec.iter() // Iterate over inner Vec<char>
+                .map(|&c| c.to_string().to_uppercase()) // Transform each char to uppercase String
+                .collect() // Collect transformed characters into a new Vec<String>
+        })
+        .collect(); // Collect all inner Vec<String> into a new Vec<Vec<String>>
 
+    println!("{:?}", transformed_data); // Output: [["A", "B"], ["C", "D", "E"]]
+    //println!(board);
+    //#endregion
+}
+/*
     //#region Generate inital board from the completely solved one
     // Board is solved at this point.
     // Now pick subset of digits as the starting position.
+
     let remaining_digits = 30;
     let max_removed_per_block = 6;
-    let[,] removed_per_block = new int[3, 3];
-    int[] positions = Enumerable.Range(0, 9 * 9).ToArray();
-    int[] state = state_stack.Peek();
+    let mut removed_per_block = new int[3, 3];
+    //int[] positions = Enumerable.Range(0, 9 * 9).ToArray();
+    let positions: [i32; 9*9] = std::array::from_fn(|i| start + i as i32);
+    int[] state = state_stack.last().cloned();
 
-    int[] final_state = new int[state.Length];
-    Array.Copy(state, final_state, final_state.Length);
+    let final_state = new int[state.len()];
+    Array.Copy(state, final_state, final_state.len());
 
     let removed_pos = 0;
     while (removed_pos < 9 * 9 - remaining_digits)
     {
-        let cur_remaining_digits = positions.Length - removed_pos;
-        let indexToPick = removed_pos + rng.Next(cur_remaining_digits);
+        let cur_remaining_digits = positions.len() - removed_pos;
+        let index_to_pick = removed_pos + rng..random::<i32>();Next(cur_remaining_digits);
 
-        let row = positions[indexToPick] / 9;
-        let col = positions[indexToPick] % 9;
+        let row : u32 = positions[index_to_pick] / 9;
+        let col : u32 = positions[index_to_pick] % 9;
 
-        let block_row_to_remove = row / 3;
-        let block_col_to_remove = col / 3;
+        let block_row_to_remove : u32 = row / 3;
+        let block_col_to_remove : u32 = col / 3;
 
         if (removed_per_block[block_row_to_remove, block_col_to_remove] >= max_removed_per_block)
         {
@@ -244,13 +258,13 @@ fn main() {
         positions[removed_pos] = positions[index_to_pick];
         positions[index_to_pick] = temp;
 
-        let row_to_write = row + row / 3 + 1;
-        let colToWrite = col + col / 3 + 1;
+        let row_to_write : usize = row + row / 3 + 1;
+        let col_to_write : usize = col + col / 3 + 1;
 
-        board[row_to_write][colToWrite] = '.';
+        board[row_to_write][col_to_write] = '.';
 
-        let stateIndex = 9 * row + col;
-        state[stateIndex] = 0;
+        let state_index : usize = 9 * row + col;
+        state[state_index] = 0;
 
         removed_pos += 1;
     }
@@ -707,10 +721,14 @@ fn main() {
             // Try to see if there are pairs of values that can be exchanged arbitrarily
             // This happens when board has more than one valid solution
 
-            Queue<int> candidate_index1 = new Queue<int>();
-            Queue<int> candidate_index2 = new Queue<int>();
-            Queue<int> candidate_digit1 = new Queue<int>();
-            Queue<int> candidate_digit2 = new Queue<int>();
+            //Queue<int> candidate_index1 = new Queue<int>();
+            //Queue<int> candidate_index2 = new Queue<int>();
+            //Queue<int> candidate_digit1 = new Queue<int>();
+            //Queue<int> candidate_digit2 = new Queue<int>();
+            let mut candidate_index1 : VecDeque<i32> = VecDeque::new();
+            let mut candidate_index2 : VecDeque<i32> = VecDeque::new();
+            let mut candidate_digit1 : VecDeque<i32> = VecDeque::new();
+            let mut candidate_digit2 : VecDeque<i32> = VecDeque::new();
 
             for (int i = 0; i < candidate_masks.Length - 1; i++)
             {
@@ -756,10 +774,14 @@ fn main() {
             // At this point we have the lists with pairs of cells that might pick one of two digits each
             // Now we have to check whether that is really true - does the board have two solutions?
 
-            List<int> state_index1 = new List<int>();
-            List<int> state_index2 = new List<int>();
-            List<int> value1 = new List<int>();
-            List<int> value2 = new List<int>();
+            //List<int> state_index1 = new List<int>();
+            //List<int> state_index2 = new List<int>();
+            //List<int> value1 = new List<int>();
+            //List<int> value2 = new List<int>();
+            let mut state_index1: Vec<usize> = Vec::new();
+            let mut state_index2: Vec<usize> = Vec::new();
+            let mut value1: Vec<usize> = Vec::new();
+            let mut value2: Vec<usize> = Vec::new();
 
             while (candidate_index1.Any())
             {
@@ -768,7 +790,7 @@ fn main() {
                 let digit1 = candidate_digit1.Dequeue();
                 let digit2 = candidate_digit2.Dequeue();
 
-                int[] alternate_state = new int[final_state.Length];
+                int[] alternate_state = new int[final_state.len()];
                 Array.Copy(state, alternate_state, alternate_state.Length);
 
                 if (final_state[index1] == digit1)
@@ -892,16 +914,16 @@ fn main() {
                     else if (command == "move")
                     {
 
-                        let row_to_move = row_index_stack.Peek();
-                        let col_to_move = col_index_stack.Peek();
-                        let digit_to_move = last_digit_stack.Pop();
+                        let row_to_move : usize = row_index_stack.last().cloned();
+                        let col_to_move : usize = col_index_stack.last().cloned();
+                        let digit_to_move = last_digit_stack.pop();
 
-                        let row_to_write = row_to_move + row_to_move / 3 + 1;
-                        let col_to_write = col_to_move + col_to_move / 3 + 1;
+                        let row_to_write : usize = row_to_move + row_to_move / 3 + 1;
+                        let col_to_write : usize = col_to_move + col_to_move / 3 + 1;
 
-                        bool[] used_digits = used_digits_stack.Peek();
-                        let[] current_state = state_stack.Peek();
-                        let current_stateIndex = 9 * row_to_move + col_to_move;
+                        bool[] used_digits = used_digits_stack.last().cloned();
+                        let[] current_state = state_stack.last().cloned();
+                        let current_state_index : usize = 9 * row_to_move + col_to_move;
 
                         let moved_to_digit = digit_to_move + 1;
                         while (moved_to_digit <= 9 && used_digits[moved_to_digit - 1])
@@ -916,10 +938,10 @@ fn main() {
 
                         if (moved_to_digit <= 9)
                         {
-                            last_digit_stack.Push(moved_to_digit);
+                            last_digit_stack.push(moved_to_digit);
                             used_digits[moved_to_digit - 1] = true;
                             current_state[current_state_index] = moved_to_digit;
-                            board[row_to_write][col_to_write] = (char)('0' + moved_to_digit);
+                            board[row_to_write][col_to_write] = / * (char) * / ('0' + moved_to_digit);
 
                             if (current_state.Any(digit => digit == 0))
                             command = "expand";
@@ -929,7 +951,7 @@ fn main() {
                         else
                         {
                             // No viable candidate was found at current position - pop it in the next iteration
-                            last_digit_stack.Push(0);
+                            last_digit_stack.push(0);
                             command = "collapse";
                         }
                     } // if (command == "move")
@@ -947,7 +969,7 @@ fn main() {
 
             if (state_index1.Any())
             {
-                let pos = rng.Next(state_index1.Count());
+                let pos = rng.Next(state_index1.len());
                 let index1 = state_index1.ElementAt(pos);
                 let index2 = state_index2.ElementAt(pos);
                 let digit1 = value1.ElementAt(pos);
@@ -1011,5 +1033,6 @@ fn main() {
             //#endregion
         }
     }
-}
+
+ */
 
