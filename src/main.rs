@@ -1,5 +1,7 @@
 use rand::{Rng, SeedableRng};
 use std::collections::HashMap;
+use itertools::Itertools;
+
 fn print_board(board : &[[char; 13]; 13])
 {
     for row in board {
@@ -8,6 +10,57 @@ fn print_board(board : &[[char; 13]; 13])
         }
         println!(); // Print a newline after each row
     }
+}
+
+fn join_values<I, S>(values: I, sep: &str) -> String
+where
+    I: IntoIterator<Item = S>,
+    S: AsRef<str>,
+{
+    let mut iter = values.into_iter();
+    match iter.next() {
+        None => String::new(),
+        Some(first) => {
+            // Start with the first element, then append separator + next elements
+            let mut result = first.as_ref().to_string();
+            for s in iter {
+                result.push_str(sep);
+                result.push_str(s.as_ref());
+            }
+            result
+        }
+    }
+}
+
+struct RowColBlkInfo {
+    discriminator: usize,
+    description: String,
+    index: usize,
+    row: usize,
+    column: usize,
+}
+struct RowInfo {
+    discriminator: usize,
+    description: String,
+    index: usize,
+    row: usize,
+    column: usize,
+}
+
+struct ColumnInfo {
+    discriminator: usize,
+    description: String,
+    index: usize,
+    row: usize,
+    column: usize,
+}
+
+struct BlockInfo {
+    discriminator: usize,
+    description: String,
+    index: usize,
+    row: usize,
+    column: usize,
 }
 
 fn main() {
@@ -230,7 +283,7 @@ fn main() {
      */
     //#endregion
 
-    //#region Generate inital board from the completely solved one
+    //#region Generate initial board from the completely solved one
     // Board is solved at this point.
     // Now pick subset of digits as the starting position.
     let mut remaining_digits = 30;
@@ -285,7 +338,7 @@ fn main() {
     //#region Prepare lookup structures that will be used in further execution
     println!();
     let s = "=".repeat(80);
-    println!(s);
+    println!("{}", s);
     println!();
 
     let mut mask_to_ones_count : HashMap<usize,usize> = HashMap::new();
@@ -346,9 +399,9 @@ fn main() {
             }
         }
         //#endregion
-/*
+
         //#region Build a collection (named cellGroups) which maps cell indices into distinct groups (rows/columns/blocks)
-        let rows_indices = state
+        /*let rows_indices = state
             .Select((value, index) => new
             {
                 Discriminator = index / 9,
@@ -387,9 +440,78 @@ fn main() {
             })
             .GroupBy(tuple => tuple.Discriminator);
 
-        let cell_groups = rows_indices.Concat(column_indices).Concat(block_indices).ToList();
+        cell_groups = rows_indices.Concat(column_indices).Concat(block_indices).ToList();*/
+        let state: Vec<u32> = vec![0; 81]; // Example state, replace with actual data
+
+        let rows_indices: HashMap<i32, Vec<_>> = (0..state.len())
+            .map(|index| {
+                let row = index / 9;
+                let column = index % 9;
+                let discriminator = row;
+                (
+                    discriminator,
+                    RowColBlkInfo {
+                        discriminator,
+                        description: format!("row #{}", row + 1),
+                        index,
+                        row,
+                        column,
+                    },
+                )
+            })
+            .fold(HashMap::new(), |mut acc, (discriminator, info)| {
+                acc.entry(discriminator.try_into().unwrap()).or_insert_with(Vec::new).push(info);
+                acc
+            });
+
+        let column_indices: HashMap<i32, Vec<_>> = (0..state.len())
+            .map(|index| {
+                let row = index / 9;
+                let column = index % 9;
+                let discriminator = 9 + column;
+                (
+                    discriminator,
+                    RowColBlkInfo {
+                        discriminator,
+                        description: format!("column #{}", column + 1),
+                        index,
+                        row,
+                        column,
+                    },
+                )
+            })
+            .fold(HashMap::new(), |mut acc, (discriminator, info)| {
+                acc.entry(discriminator.try_into().unwrap()).or_insert_with(Vec::new).push(info);
+                acc
+            });
+
+        let block_indices: HashMap<i32, Vec<_>> = (0..state.len())
+            .map(|index| {
+                let row = index / 9;
+                let column = index % 9;
+                let discriminator = 18 + 3 * (row / 3) + column / 3;
+                (
+                    discriminator,
+                    RowColBlkInfo {
+                        discriminator,
+                        description: format!("block ({}, {})", row / 3 + 1, column / 3 + 1),
+                        index,
+                        row,
+                        column,
+                    },
+                )
+            })
+            .fold(HashMap::new(), |mut acc, (discriminator, info)| {
+                acc.entry(discriminator.try_into().unwrap()).or_insert_with(Vec::new).push(info);
+                acc
+            });
+        let cell_groups: Vec<_> = rows_indices.iter()
+            .chain(column_indices.iter())
+            .chain(block_indices.iter())
+            .cloned()
+            .collect();
         //#endregion
-*/
+
         let mut step_change_made : bool = true;
         while step_change_made
         {
@@ -397,7 +519,7 @@ fn main() {
 
             //#region Pick cells with only one candidate left
 
-            let single_candidate_indices =
+            /*let single_candidate_indices =
                 candidate_masks
                     .Select((mask, index) => new
                     {
@@ -406,7 +528,19 @@ fn main() {
                     })
                     .Where(tuple => tuple.CandidatesCount == 1)
                     .Select(tuple => tuple.Index)
-                    .ToArray();
+                    .ToArray();*/
+            let single_candidate_indices: Vec<usize> = candidate_masks
+                .iter()
+                .enumerate()
+                .filter_map(|(index, &mask)| {
+                    let candidates_count = mask_to_ones_count.get(&mask).copied().unwrap_or(0);
+                    if candidates_count == 1 {
+                        Some(index)
+                    } else {
+                        None
+                    }
+                })
+                .collect();
 
             if single_candidate_indices.len() > 0
             {
@@ -436,9 +570,9 @@ fn main() {
             if !change_made
             {
                 let mut group_descriptions : Vec<String> = Vec::new();
-                let mut candidate_row_indices : Vec<String> = Vec::new();
-                let mut candidate_col_indices : Vec<String> = Vec::new();
-                let mut candidates : Vec<String> = Vec::new();
+                let mut candidate_row_indices : Vec<usize> = Vec::new();
+                let mut candidate_col_indices : Vec<usize> = Vec::new();
+                let mut candidates : Vec<u32> = Vec::new();
 
                 for digit in 1..=9
                 {
@@ -513,15 +647,15 @@ fn main() {
                 if candidates.len() > 0
                 {
                     let index = rng.random_range(0..candidates.len());
-                    let description = group_descriptions.get(index);
-                    let row = candidate_row_indices.get(index);
-                    let col = candidate_col_indices.get(index);
-                    let digit = candidates.get(index);
+                    let description = group_descriptions.get(index).unwrap();
+                    let row = candidate_row_indices.get(index).unwrap();
+                    let col = candidate_col_indices.get(index).unwrap();
+                    let digit = candidates.get(index).unwrap();
                     let row_to_write = row + row / 3 + 1;
                     let col_to_write = col + col / 3 + 1;
 
                     let state_index = 9 * row + col;
-                    state[state_index] = digit;
+                    state[state_index] = *digit;
                     candidate_masks[state_index] = 0;
                     board[row_to_write][col_to_write] = (char)('0' + digit);
 
@@ -597,19 +731,24 @@ fn main() {
                             })
                             .cloned() // or .copied() depending on the type of cell and if you need to clone or copy it
                             .collect();
-                        var mask_cells =
+
+                        /*let mask_cells =
                             group.Cells
                                 .Where(cell => candidate_masks[cell.Index] == group.Mask)
-                                .ToArray();
-                        let cells: Vec<_> = group.cells
+                                .ToArray();*/
+
+                        /*let cells: Vec<_> = group.cells
                             .iter()
                             .filter(|cell| {
                                 candidate_masks[cell.index] != group.mask &&
                                     (candidate_masks[cell.index] & group.mask) > 0
                             })
                             .cloned() // or .copied() depending on the type of cell and if you need to clone or copy it
+                            .collect();*/
+                        let mask_cells: Vec<_> = group.cells
+                            .iter()
+                            .filter(|cell| candidate_masks[cell.index] == group.mask)
                             .collect();
-
 
                         if !cells.is_empty()
                         {
@@ -657,7 +796,11 @@ fn main() {
                                 }
 
                                 //string valuesReport = string.Join(", ", values_to_remove.ToArray());
-                                let values_report = values_to_remove.join(", ");
+                                let string_values_to_remove: Vec<String> = values_to_remove
+                                    .iter()
+                                    .map(|&num| num.to_string())
+                                    .collect();
+                                let values_report = string_values_to_remove.join(", ");
                                 let s = format!("{} cannot appear in ({}, {}).", valuesReport, cell.Row + 1, cell.Column + 1);
                                 println!("{}",s);
                                 candidate_masks[cell.Index] &= !group.Mask;
