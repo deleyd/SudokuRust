@@ -1,6 +1,8 @@
 use rand::{Rng, SeedableRng};
 use std::collections::HashMap;
-use itertools::Itertools;
+//use std::collections::HashSet;
+use std::collections::VecDeque;
+//use itertools::Itertools;
 
 fn print_board(board : &[[char; 13]; 13])
 {
@@ -38,6 +40,7 @@ struct RowColBlkInfo {
     index: usize,
     row: usize,
     column: usize,
+    cells: ()
 }
 struct RowInfo {
     discriminator: usize,
@@ -61,6 +64,30 @@ struct BlockInfo {
     index: usize,
     row: usize,
     column: usize,
+}
+
+struct Group {
+    discriminator: usize,
+    description: String,
+    index: usize,
+    row: usize,
+    column: usize,
+}
+
+struct Cell {
+    discriminator: usize,
+    description: String,
+    index: usize,
+    row: usize,
+    column: usize,
+}
+
+struct GroupWithMask {
+    mask: u32,
+    description: String,
+    cells: Vec<Cell>,
+    cells_with_mask: Vec<&'static Cell>, // Adjust lifetime as needed
+    cleanable_cells_count: usize,
 }
 
 fn main() {
@@ -252,8 +279,7 @@ fn main() {
                 last_digit_stack.push(moved_to_digit);
                 used_digits[moved_to_digit as usize - 1] = true;
                 current_state[current_state_index] = moved_to_digit;
-                // board[row_to_write][col_to_write] = /*(char)*/
-                let _m = '0' as u32 + moved_to_digit;
+                board[row_to_write][col_to_write] = char::from_u32(b'0' as u32 + moved_to_digit as u32).expect("REASON");
 
                 // Next possible digit was found at current position
                 // Next step will be to expand the state
@@ -291,9 +317,9 @@ fn main() {
     let mut removed_per_block: [[u32; 3]; 3] = [[0; 3]; 3];
     //int[] positions = Enumerable.Range(0, 9 * 9).ToArray();
     let mut positions: [usize; 9 * 9] = std::array::from_fn(|i| i as usize);
-    let state = state_stack.last().unwrap().cloned();
+    let state = state_stack.last().unwrap().clone();
 
-    let final_state = state.cloned(); // new int[state.len()];
+    let final_state = state.clone(); // new int[state.len()];
     //Array.Copy(state, final_state, final_state.len());
 
     let mut removed_pos = 0;
@@ -341,15 +367,13 @@ fn main() {
     println!("{}", s);
     println!();
 
-    let mut mask_to_ones_count : HashMap<usize,usize> = HashMap::new();
+    let mut mask_to_ones_count : HashMap<u32,u32> = HashMap::new();
     mask_to_ones_count.insert(0, 0);
     for i in 1..(1 << 9)
     {
-        let smaller : usize = i >> 1;
-        let increment : usize = i & 1;
-        let usize_value = mask_to_ones_count.get(&smaller)
-            .and_then(|opt_val| opt_val.map(|val| val as usize))
-            .unwrap_or(0);
+        let smaller = i >> 1;
+        let increment = i & 1;
+        let usize_value = mask_to_ones_count[&smaller] + increment;
         mask_to_ones_count.insert(i, usize_value + increment);
     }
 
@@ -370,11 +394,11 @@ fn main() {
         change_made = false;
 
         //#region Calculate candidates for current state of the board
-        let mut candidate_masks : [u32; 81] = [0; u32];
+        let mut candidate_masks : [u32; 81] = [0; 81];
 
         for i in 0..state.len()
         {
-            if (state[i] == 0)
+            if state[i] == 0
             {
                 let row = i / 9;
                 let col = i % 9;
@@ -505,7 +529,7 @@ fn main() {
                 acc.entry(discriminator.try_into().unwrap()).or_insert_with(Vec::new).push(info);
                 acc
             });
-        let cell_groups: Vec<_> = rows_indices.iter()
+        let cell_groups: Vec<RowColBlkInfo> = rows_indices.iter()
             .chain(column_indices.iter())
             .chain(block_indices.iter())
             .cloned()
@@ -547,7 +571,7 @@ fn main() {
                 let pick_single_candidate_index = rng.random_range(0..single_candidate_indices.len());
                 let single_candidate_index = single_candidate_indices[pick_single_candidate_index];
                 let candidate_mask = candidate_masks[single_candidate_index];
-                let candidate = single_bit_to_index[candidate_mask];
+                let candidate = single_bit_to_index[&(candidate_mask as usize)];
 
                 let row = single_candidate_index / 9;
                 let col = single_candidate_index % 9;
@@ -555,8 +579,8 @@ fn main() {
                 let row_to_write = row + row / 3 + 1;
                 let col_to_write = col + col / 3 + 1;
 
-                state[single_candidate_index] = candidate + 1;
-                board[row_to_write][col_to_write] = (char)('1' + candidate);
+                state[single_candidate_index] = candidate as u32 + 1;
+                board[row_to_write][col_to_write] = char::from_u32(b'0' as u32 + candidate as u32).expect("REASON");
                 candidate_masks[single_candidate_index] = 0;
                 change_made = true;
 
@@ -657,7 +681,7 @@ fn main() {
                     let state_index = 9 * row + col;
                     state[state_index] = *digit;
                     candidate_masks[state_index] = 0;
-                    board[row_to_write][col_to_write] = char::from_u32('0' as u32 + digit).expect("REASON");
+                    board[row_to_write][col_to_write] = char::from_u32(b'0' as u32 + digit).expect("REASON");
 
                     change_made = true;
 
@@ -673,11 +697,13 @@ fn main() {
             {
                 //let two_digit_masks = candidate_masks.Where(mask => mask_to_ones_count[mask] == 2).Distinct().ToList();
                 let two_digit_masks: Vec<u32> = candidate_masks
-                    .into_iter() // Convert the vector into an iterator, taking ownership
-                    .filter(|&mask| mask_to_ones_count.get(&mask).copied().unwrap_or(0) == 2) // Filter based on the count
-                    .collect::<HashSet<u32>>() // Collect into a HashSet to get distinct values
-                    .into_iter() // Convert the HashSet back into an iterator
-                    .collect(); // Collect the distinct values into a new Vec
+                    .iter()
+                    .filter(|&&mask| mask_to_ones_count[&(mask as u32)] == 2)
+                    .cloned()
+                    .collect::<std::collections::HashSet<_>>()
+                    .into_iter()
+                    .collect();
+
 /*              var groups =
                     two_digit_masks
                         .SelectMany(mask =>
@@ -708,7 +734,10 @@ fn main() {
                                 mask,
                                 discriminator: group.key.clone(),
                                 description: group.description.clone(),
+                                index: 0,
+                                row: 0,
                                 cells: group.cells.clone(),
+                                column: 0,
                             })
                     })
                     .collect();
@@ -801,9 +830,9 @@ fn main() {
                                     .map(|&num| num.to_string())
                                     .collect();
                                 let values_report = string_values_to_remove.join(", ");
-                                let s = format!("{} cannot appear in ({}, {}).", valuesReport, cell.Row + 1, cell.Column + 1);
+                                let s = format!("{} cannot appear in ({}, {}).", values_report, cell.Row + 1, cell.Column + 1);
                                 println!("{}",s);
-                                candidate_masks[cell.Index] &= !group.Mask;
+                                candidate_masks[cell.Index] &= !group.mask;
                                 step_change_made = true;
                             }
                         }
@@ -850,6 +879,47 @@ fn main() {
                         .ToList(); */
                 let groups_with_n_masks = masks
                     .iter()
+                    .flat_map(|&mask | {
+                        cell_groups
+                            .iter()
+                            .filter(|group| {
+                                group.iter().all(|cell| {
+                                    state[cell.index] == 0
+                                        || (mask & (1 << (state[cell.index] - 1))) == 0
+                                })
+                            })
+                            .map(|group| {
+                                let cells_with_mask: Vec<&Cell> = group
+                                    .iter()
+                                    .filter(|cell| {
+                                        state[cell.index] == 0
+                                            && (candidate_masks[cell.index] & mask) != 0
+                                    })
+                                    .collect();
+
+                                let cleanable_cells_count = group
+                                    .iter()
+                                    .filter(|cell| {
+                                        state[cell.index] == 0
+                                            && (candidate_masks[cell.index] & mask) != 0
+                                            && (candidate_masks[cell.index] & !mask) != 0
+                                    })
+                                    .count();
+
+                                GroupWithMask {
+                                    mask,
+                                    description: group.first().unwrap().description.clone(),
+                                    cells: group.clone(),
+                                    cells_with_mask,
+                                    cleanable_cells_count,
+                                }
+                            })
+                    })
+                    .filter(|group| group.cells_with_mask.len() == *mask_to_ones_count.get(&group.mask).unwrap())
+                    .collect();
+                /*
+                let groups_with_n_masks = masks
+                    .iter()
                     .flat_map(|&mask| {
                         cell_groups.iter().filter_map(move |group| {
                             // Equivalent of group.All(cell => state[cell.Index] == 0 || (mask & (1 << (state[cell.Index] - 1))) == 0)
@@ -878,7 +948,7 @@ fn main() {
                                     })
                                     .count();
 
-                                Some(GroupsWithMasks {
+                                Some(groups_with_masks {
                                     mask,
                                     description: &first_cell.description,
                                     cells: &group.cells,
@@ -895,7 +965,7 @@ fn main() {
                         group.cells_with_mask.len() == *mask_to_ones_count.get(&group.mask).unwrap_or(&0)
                     })
                     .collect();
-
+*/
 
                 for group_with_n_masks in groups_with_n_masks
                 {
@@ -910,7 +980,7 @@ fn main() {
                         (candidate_mask_for_cell & mask) != 0 && (candidate_mask_for_cell & !mask) != 0
                     })
                     {
-                        let message = format!("In {} values ", group_with_n_masks.Description);
+                        let mut message = format!("In {} values ", group_with_n_masks.Description);
 
                         let mut separator = "";
                         let temp = mask;
@@ -920,20 +990,20 @@ fn main() {
                             if (temp & 1) > 0
                             {
                                 let s = format!("{}{}", separator, cur_value);
-                                message.push_str(s);
+                                message.push_str(&s);
                                 separator = ", ";
                             }
                             temp = temp >> 1;
                             cur_value += 1;
                         }
 
-                        message.push_str(" appear only in cells".to_string());
+                        message.push_str(&" appear only in cells".to_string());
                         for cell in group_with_n_masks.CellsWithMask
                         {
-                            message.push_str(format!(" ({}, {})", cell.Row + 1, cell.Column + 1));
+                            message.push_str(&format!(" ({}, {})", cell.Row + 1, cell.Column + 1));
                         }
 
-                        message.push_str(" and other values cannot appear in those cells.".to_string());
+                        message.push_str(&" and other values cannot appear in those cells.".to_string());
 
                         println!("{}", message.to_string());
                     }
@@ -951,21 +1021,21 @@ fn main() {
 
                         let mut value_to_clear = 1;
 
-                        let mut separator: String = "";
-                        let mut message: String = "";
+                        let mut separator: String = "".to_string();
+                        let mut message: String = "".to_string();
 
                         while mask_to_clear > 0
                         {
                             if mask_to_clear & 1 > 0
                             {
-                                message.push_str(format!("{}{}", separator, value_to_clear));
-                                separator = ", ";
+                                message.push_str(&format!("{}{}", separator, value_to_clear));
+                                separator = ", ".to_string();
                             }
                             mask_to_clear = mask_to_clear >> 1;
                             value_to_clear += 1;
                         }
 
-                        message.push_str(format!(" cannot appear in cell ({}, {}).", cell.Row + 1, cell.Column + 1));
+                        message.push_str(&format!(" cannot appear in cell ({}, {}).", cell.Row + 1, cell.Column + 1));
                         println!("{}", message.to_string());
                     }
                 }
@@ -993,7 +1063,7 @@ fn main() {
 
             for i in 0..candidate_masks.len() - 1
             {
-                if mask_to_ones_count[candidate_masks[i]] == 2
+                if mask_to_ones_count[&(candidate_masks[i])] == 2
                 {
                     let row = i / 9;
                     let col = i % 9;
@@ -1019,18 +1089,18 @@ fn main() {
 
                     for j in i + 1..candidate_masks.len()
                     {
-                        if (candidate_masks[j] == candidate_masks[i])
+                        if candidate_masks[j] == candidate_masks[i]
                         {
                             let row1 = j / 9;
                             let col1 = j % 9;
                             let block_index1 = 3 * (row1 / 3) + col1 / 3;
 
-                            if (row == row1 || col == col1 || block_index == block_index1)
+                            if row == row1 || col == col1 || block_index == block_index1
                             {
-                                candidate_index1.Enqueue(i);
-                                candidate_index2.Enqueue(j);
-                                candidate_digit1.Enqueue(lower);
-                                candidate_digit2.Enqueue(upper);
+                                candidate_index1.push_back(i);
+                                candidate_index2.push_back(j);
+                                candidate_digit1.push_back(lower);
+                                candidate_digit2.push_back(upper);
                             }
                         }
                     }
@@ -1057,9 +1127,9 @@ fn main() {
                 let digit2 = candidate_digit2.Dequeue();
 
                 let flen = final_state.len();
-                let alternate_state : Vec<i32> = state.cloned();
+                let alternate_state : Vec<u32> = state.clone();
 
-                if (final_state[index1] == digit1)
+                if final_state[index1] == digit1
                 {
                     alternate_state[index1] = digit2;
                     alternate_state[index2] = digit1;
@@ -1107,7 +1177,7 @@ fn main() {
 
                         for index in 0..current_state.len()
                         {
-                            if (current_state[index] == 0)
+                            if current_state[index] == 0
                             {
                                 let row = index / 9;
                                 let col = index % 9;
@@ -1148,7 +1218,8 @@ fn main() {
                                     break;
                                 }
 
-                                let random_value = rng.Next();
+                                let random_value = rng.random::<u32>();
+                                //let random_value = rng.Next();
 
                                 if best_candidates_count < 0 ||
                                     candidates_count < best_candidates_count ||
@@ -1175,7 +1246,7 @@ fn main() {
                         // Always try to move after expand
                         command = "move";
                     } // if (command == "expand")
-                    else if (command == "collapse")
+                    else if command == "collapse"
                     {
                         state_stack.pop();
                         row_index_stack.pop();
@@ -1205,12 +1276,12 @@ fn main() {
                         let current_state_index: usize = 9 * row_to_move + col_to_move;
 
                         let mut moved_to_digit = digit_to_move + 1;
-                        while (moved_to_digit <= 9 && used_digits[moved_to_digit as usize - 1])
+                        while moved_to_digit <= 9 && used_digits[moved_to_digit as usize - 1]
                         {
                             moved_to_digit += 1;
                         }
 
-                        if (digit_to_move > 0)
+                        if digit_to_move > 0
                         {
                             used_digits[digit_to_move as usize - 1] = false;
                             current_state[current_state_index] = 0;
@@ -1242,7 +1313,7 @@ fn main() {
 
                 } // while (command != "complete" && command != "fail")
 
-                if (command == "complete")
+                if command == "complete"
                 {   // Board was solved successfully even with two digits swapped
                     state_index1.push(index1);
                     state_index2.push(index2);
@@ -1263,12 +1334,12 @@ fn main() {
                 let row2 = index2 / 9;
                 let col2 = index2 % 9;
 
-                let description: string;
+                let description: String;
 
-                if (index1 / 9 == index2 / 9)
+                if index1 / 9 == index2 / 9
                 {
                     description = format!("row #{}", index1 / 9 + 1);
-                } else if (index1 % 9 == index2 % 9)
+                } else if index1 % 9 == index2 % 9
                 {
                     description = format!("column #{}", index1 % 9 + 1);
                 } else {
@@ -1300,7 +1371,7 @@ fn main() {
         }
         //#endregion
 
-        if (change_made)
+        if change_made
         {
             //#region Print the board as it looks after one change was made to it
             print_board(&board);
