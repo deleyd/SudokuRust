@@ -465,7 +465,7 @@ fn main() {
             .GroupBy(tuple => tuple.Discriminator);
 
         cell_groups = rows_indices.Concat(column_indices).Concat(block_indices).ToList();*/
-        let state: Vec<u32> = vec![0; 81]; // Example state, replace with actual data
+        let mut state : [u32; 81] = [0; 81]; // Example state, replace with actual data
 
         let rows_indices: HashMap<i32, Vec<_>> = (0..state.len())
             .map(|index| {
@@ -1117,18 +1117,19 @@ fn main() {
             //List<int> value2 = new List<int>();
             let mut state_index1: Vec<usize> = Vec::new();
             let mut state_index2: Vec<usize> = Vec::new();
-            let mut value1: Vec<usize> = Vec::new();
-            let mut value2: Vec<usize> = Vec::new();
+            let mut value1: Vec<u32> = Vec::new();
+            let mut value2: Vec<u32> = Vec::new();
 
             while !candidate_index1.is_empty()
             {
-                let index1 = candidate_index1.pop_front();
-                let index2 = candidate_index2.pop_front();
-                let digit1 = candidate_digit1.pop_front();
-                let digit2 = candidate_digit2.pop_front();
+                let index1 = candidate_index1.pop_front().unwrap() as usize;
+                let index2 = candidate_index2.pop_front().unwrap() as usize;
+                let digit1 = candidate_digit1.pop_front().unwrap();
+                let digit2 = candidate_digit2.pop_front().unwrap();
 
                 let flen = final_state.len();
-                let alternate_state : Vec<u32> = state.clone();
+                //int[] alternateState = new int[finalState.Length];
+                let mut alternate_state = state.clone();
 
                 if final_state[index1] == digit1
                 {
@@ -1169,11 +1170,11 @@ fn main() {
                             //Array.Copy(alternate_state, current_state, current_state.Length);
                         }
 
-                        let mut best_row = -1;
-                        let mut best_col = -1;
+                        let mut best_row = 9999;
+                        let mut best_col = 9999;
                         let mut best_used_digits : Vec<bool> = Vec::new();
-                        let mut best_candidates_count = -1;
-                        let mut best_random_value = -1;
+                        let mut best_candidates_count = 9999;
+                        let mut best_random_value = 9999;
                         let mut contains_unsolvable_cells : bool = false;
 
                         for index in 0..current_state.len()
@@ -1192,19 +1193,19 @@ fn main() {
                                     let row_digit = current_state[9 * i + col];
                                     if row_digit > 0
                                     {
-                                        is_digit_used[row_digit - 1] = true;
+                                        is_digit_used[row_digit as usize - 1] = true;
                                     }
 
                                     let col_digit = current_state[9 * row + i];
                                     if col_digit > 0
                                     {
-                                        is_digit_used[col_digit - 1] = true;
+                                        is_digit_used[col_digit as usize - 1] = true;
                                     }
 
                                     let block_digit = current_state[(block_row * 3 + i / 3) * 9 + (block_col * 3 + i % 3)];
                                     if block_digit > 0
                                     {
-                                        is_digit_used[block_digit - 1] = true;
+                                        is_digit_used[block_digit as usize - 1] = true;
                                     }
                                 } // for (i = 0..8)
 
