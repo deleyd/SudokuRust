@@ -312,7 +312,7 @@ fn main() {
     //#endregion
 
     let mut change_made : bool = true;
-    while (change_made)
+    while change_made
     {
         change_made = false;
 
@@ -410,7 +410,7 @@ fn main() {
 
             if single_candidate_indices.len() > 0
             {
-                let pick_single_candidate_index = rng.Next(single_candidate_indices.Length);
+                let pick_single_candidate_index = rng.random_range(0..single_candidate_indices.len());
                 let single_candidate_index = single_candidate_indices[pick_single_candidate_index];
                 let candidate_mask = candidate_masks[single_candidate_index];
                 let candidate = single_bit_to_index[candidate_mask];
@@ -491,38 +491,34 @@ fn main() {
 
                         if col_number_count == 1
                         {
-                            group_descriptions.Add($ "Column #{cell_group + 1}");
-                            candidate_row_indices.Add(index_in_col);
-                            candidate_col_indices.Add(cell_group);
-                            candidates.Add(digit);
+                            group_descriptions.push(format!("Column #{}", cell_group + 1));
+                            candidate_row_indices.push(index_in_col);
+                            candidate_col_indices.push(cell_group);
+                            candidates.push(digit);
                         }
 
-                        if (block_number_count == 1)
+                        if block_number_count == 1
                         {
                             let block_row = cell_group / 3;
                             let block_col = cell_group % 3;
 
-                            group_descriptions.Add($ "Block ({block_row + 1}, {block_col + 1})");
-                            candidate_row_indices.Add(block_row * 3 + index_in_block / 3);
-                            candidate_col_indices.Add(block_col * 3 + index_in_block % 3);
-                            candidates.Add(digit);
+                            group_descriptions.push(format!("Block ({}, {})", block_row + 1, block_col + 1));
+                            candidate_row_indices.push(block_row * 3 + index_in_block / 3);
+                            candidate_col_indices.push(block_col * 3 + index_in_block % 3);
+                            candidates.push(digit);
                         }
                     } // for (cell_group = 0..8)
                 } // for (digit = 1..9)
 
-                if (candidates.Count > 0)
+                if candidates.len() > 0
                 {
-                    let index = rng.Next(candidates.Count);
-                    string
-                    description = group_descriptions.ElementAt(index);
-                    let row = candidate_row_indices.ElementAt(index);
-                    let col = candidate_col_indices.ElementAt(index);
-                    let digit = candidates.ElementAt(index);
+                    let index = rng.random_range(0..candidates.len());
+                    let description = group_descriptions.get(index);
+                    let row = candidate_row_indices.get(index);
+                    let col = candidate_col_indices.get(index);
+                    let digit = candidates.get(index);
                     let row_to_write = row + row / 3 + 1;
                     let col_to_write = col + col / 3 + 1;
-
-                    string
-                    message = $ "{description} can contain {digit} only at ({row + 1}, {col + 1}).";
 
                     let state_index = 9 * row + col;
                     state[state_index] = digit;
@@ -531,20 +527,24 @@ fn main() {
 
                     change_made = true;
 
-                    println!(message);
+                    let message = format!("{} can contain {} only at ({}, {}).", description, digit, row + 1, col + 1);
+                    println!("{}", message);
                 }
             }
 
             //#endregion
 
             //#region Try to find pairs of digits in the same row/column/block and remove them from other colliding cells
-            if (!change_made)
+            if !change_made
             {
-                IEnumerable < int > two_digit_masks =
-                    candidate_masks.Where(mask => mask_to_ones_count[mask] == 2).Distinct().ToList();
-
-                var
-                groups =
+                //let two_digit_masks = candidate_masks.Where(mask => mask_to_ones_count[mask] == 2).Distinct().ToList();
+                let two_digit_masks: Vec<u32> = candidate_masks
+                    .into_iter() // Convert the vector into an iterator, taking ownership
+                    .filter(|&mask| mask_to_ones_count.get(&mask).copied().unwrap_or(0) == 2) // Filter based on the count
+                    .collect::<HashSet<u32>>() // Collect into a HashSet to get distinct values
+                    .into_iter() // Convert the HashSet back into an iterator
+                    .collect(); // Collect the distinct values into a new Vec
+/*              var groups =
                     two_digit_masks
                         .SelectMany(mask =>
                                     cell_groups
@@ -557,38 +557,70 @@ fn main() {
                                             Description = group.First().Description,
                                             Cells = group
                                         }))
-                        .ToList();
+                        .ToList();*/
+                let groups: Vec<Group> = two_digit_masks.into_iter()
+                    .flat_map(|mask| {
+                        cell_groups.iter()
+                            .filter(|group| {
+                                group.cells.iter()
+                                    .filter(|tuple| candidate_masks[tuple.index] == mask)
+                                    .count() == 2
+                            })
+                            .filter(|group| {
+                                group.cells.iter()
+                                    .any(|tuple| candidate_masks[tuple.index] != mask && (candidate_masks[tuple.index] & mask) > 0)
+                            })
+                            .map(|group| Group {
+                                mask,
+                                discriminator: group.key.clone(),
+                                description: group.description.clone(),
+                                cells: group.cells.clone(),
+                            })
+                    })
+                    .collect();
 
-                if (groups.Any())
+                if !groups.is_empty()
                 {
-                    foreach(var group in groups)
+                    for group in groups
                     {
-                        var
-                        cells =
-                            group.Cells
+                        /*var cells = group.Cells
                                 .Where(
                                     cell =>
                                     candidate_masks[cell.Index] != group.Mask &&
                                         (candidate_masks[cell.Index] & group.Mask) > 0)
-                                .ToList();
-
-                        var
-                        mask_cells =
+                                .ToList();*/
+                        let cells: Vec<_> = group.cells
+                            .iter()
+                            .filter(|cell| {
+                                candidate_masks[cell.index] != group.mask &&
+                                    (candidate_masks[cell.index] & group.mask) > 0
+                            })
+                            .cloned() // or .copied() depending on the type of cell and if you need to clone or copy it
+                            .collect();
+                        var mask_cells =
                             group.Cells
                                 .Where(cell => candidate_masks[cell.Index] == group.Mask)
                                 .ToArray();
+                        let cells: Vec<_> = group.cells
+                            .iter()
+                            .filter(|cell| {
+                                candidate_masks[cell.index] != group.mask &&
+                                    (candidate_masks[cell.index] & group.mask) > 0
+                            })
+                            .cloned() // or .copied() depending on the type of cell and if you need to clone or copy it
+                            .collect();
 
 
-                        if (cells.Any())
+                        if !cells.is_empty()
                         {
-                            let upper = 0;
-                            let lower = 0;
-                            let temp = group.Mask;
+                            let mut upper = 0;
+                            let mut lower = 0;
+                            let mut temp = group.Mask;
 
-                            let value = 1;
-                            while (temp > 0)
+                            let mut value = 1;
+                            while temp > 0
                             {
-                                if ((temp & 1) > 0)
+                                if (temp & 1) > 0
                                 {
                                     lower = upper;
                                     upper = value;
@@ -597,30 +629,38 @@ fn main() {
                                 value += 1;
                             }
 
-                            println!(
-                                $"Values {lower} and {upper} in {group.Description} are in cells ({mask_cells[0].Row + 1}, {mask_cells[0].Column + 1}) and ({mask_cells[1].Row + 1}, {mask_cells[1].Column + 1}).");
+                            let s = format!(
+                                "Values {} and {} in {} are in cells ({}, {}) and ({}, {}).",
+                                lower,
+                                upper,
+                                group.Description,
+                                mask_cells[0].Row + 1,
+                                mask_cells[0].Column + 1,
+                                mask_cells[1].Row + 1,
+                                mask_cells[1].Column + 1
+                            );
+                            println!("{}", s);
 
-                            foreach(var cell in cells)
+                            for cell in cells
                             {
                                 let mask_to_remove = candidate_masks[cell.Index] & group.Mask;
-                                List < int > values_to_remove = new
-                                List < int > ();
-                                let cur_value = 1;
-                                while (mask_to_remove > 0)
+                                let mut values_to_remove : Vec<u32> = Vec::new();
+                                let mut cur_value : u32 = 1;
+                                while mask_to_remove > 0
                                 {
-                                    if ((mask_to_remove & 1) > 0)
+                                    if (mask_to_remove & 1) > 0
                                     {
-                                        values_to_remove.Add(cur_value);
+                                        values_to_remove.push(cur_value);
                                     }
                                     mask_to_remove = mask_to_remove >> 1;
                                     cur_value += 1;
                                 }
 
-                                string
-                                valuesReport = string.Join(", ", values_to_remove.ToArray());
-                                println!($"{valuesReport} cannot appear in ({cell.Row + 1}, {cell.Column + 1}).");
-
-                                candidate_masks[cell.Index] &= ~group.Mask;
+                                //string valuesReport = string.Join(", ", values_to_remove.ToArray());
+                                let values_report = values_to_remove.join(", ");
+                                let s = format!("{} cannot appear in ({}, {}).", valuesReport, cell.Row + 1, cell.Column + 1);
+                                println!("{}",s);
+                                candidate_masks[cell.Index] &= !group.Mask;
                                 step_change_made = true;
                             }
                         }
@@ -633,15 +673,19 @@ fn main() {
             // When a set of N digits only appears in N cells within row/column/block, then no other digit can appear in the same set of cells
             // All other candidates can then be removed from those cells
 
-            if (!change_made && !step_change_made)
+            if !change_made && !step_change_made
             {
+                /*
                 IEnumerable < int > masks =
                     mask_to_ones_count
                         .Where(tuple => tuple.Value > 1)
-                        .Select(tuple => tuple.Key).ToList();
-
-                var
-                groupsWithNMasks =
+                        .Select(tuple => tuple.Key).ToList(); */
+                let masks: Vec<i32> = mask_to_ones_count
+                    .iter()
+                    .filter(|&(_, &value)| value > 1)
+                    .map(|&(key, _)| key)
+                    .collect();
+                /* var groups_with_n_masks =
                     masks
                         .SelectMany(mask =>
                                     cell_groups
@@ -660,52 +704,101 @@ fn main() {
                                             (candidate_masks[cell.Index] & ~mask) != 0)
                                         }))
                         .Where(group => group.CellsWithMask.Count() == mask_to_ones_count[group.Mask])
-                        .ToList();
+                        .ToList(); */
+                let groups_with_n_masks = masks
+                    .iter()
+                    .flat_map(|&mask| {
+                        cell_groups.iter().filter_map(move |group| {
+                            // Equivalent of group.All(cell => state[cell.Index] == 0 || (mask & (1 << (state[cell.Index] - 1))) == 0)
+                            let all_cells_match = group.cells.iter().all(|cell| {
+                                state[cell.index] == 0 || (mask & (1 << (state[cell.index] - 1))) == 0
+                            });
 
-                foreach(var group_with_n_masks in groupsWithNMasks)
+                            if all_cells_match {
+                                let first_cell = group.first()?; // Equivalent to group.First()
+
+                                let cells_with_mask: Vec<&Cell> = group
+                                    .cells
+                                    .iter()
+                                    .filter(|&cell| {
+                                        state[cell.index] == 0 && (candidate_masks[cell.index] & mask) != 0
+                                    })
+                                    .collect();
+
+                                let cleanable_cells_count = group
+                                    .cells
+                                    .iter()
+                                    .filter(|&cell| {
+                                        state[cell.index] == 0
+                                            && (candidate_masks[cell.index] & mask) != 0
+                                            && (candidate_masks[cell.index] & !mask) != 0
+                                    })
+                                    .count();
+
+                                Some(GroupsWithMasks {
+                                    mask,
+                                    description: &first_cell.description,
+                                    cells: &group.cells,
+                                    cells_with_mask,
+                                    cleanable_cells_count,
+                                })
+                            } else {
+                                None
+                            }
+                        })
+                    })
+                    .filter(|group| {
+                        // Equivalent of group.CellsWithMask.Count() == mask_to_ones_count[group.Mask]
+                        group.cells_with_mask.len() == *mask_to_ones_count.get(&group.mask).unwrap_or(&0)
+                    })
+                    .collect();
+
+
+                for group_with_n_masks in groups_with_n_masks
                 {
                     let mask = group_with_n_masks.Mask;
 
-                    if (group_with_n_masks.Cells
+                    /*if (group_with_n_masks.Cells
                         .Any(cell =>
                              (candidate_masks[cell.Index] & mask) != 0 &&
-                                 (candidate_masks[cell.Index] & ~mask) != 0))
+                                 (candidate_masks[cell.Index] & ~mask) != 0)) */
+                    if group_with_n_masks.cells.iter().any(|cell| {
+                        let candidate_mask_for_cell = candidate_masks[cell.index];
+                        (candidate_mask_for_cell & mask) != 0 && (candidate_mask_for_cell & !mask) != 0
+                    })
                     {
-                        StringBuilder
-                        message = new
-                        StringBuilder();
-                        message.Append($ "In {group_with_n_masks.Description} values ");
+                        let message = format!("In {} values ", group_with_n_masks.Description);
 
-                        string
-                        separator = string.Empty;
+                        let mut separator = "";
                         let temp = mask;
-                        let cur_value = 1;
-                        while (temp > 0)
+                        let mut cur_value = 1;
+                        while temp > 0
                         {
-                            if ((temp & 1) > 0)
+                            if (temp & 1) > 0
                             {
-                                message.Append($ "{separator}{cur_value}");
+                                let s = format!("{}{}", separator, cur_value);
+                                message.push_str(s);
                                 separator = ", ";
                             }
                             temp = temp >> 1;
                             cur_value += 1;
                         }
 
-                        message.Append(" appear only in cells");
-                        foreach(var cell in group_with_n_masks.CellsWithMask)
+                        message.push_str(" appear only in cells".to_string());
+                        for cell in group_with_n_masks.CellsWithMask
                         {
-                            message.Append($ " ({cell.Row + 1}, {cell.Column + 1})");
+                            message.push_str(format!(" ({}, {})", cell.Row + 1, cell.Column + 1));
                         }
 
-                        message.Append(" and other values cannot appear in those cells.");
+                        message.push_str(" and other values cannot appear in those cells.".to_string());
 
-                        println!(message.ToString());
+                        println!("{}", message.to_string());
                     }
 
-                    foreach(var cell in group_with_n_masks.CellsWithMask)
+                    for cell in group_with_n_masks.CellsWithMask
                     {
-                        let mask_to_clear = candidate_masks[cell.Index] & ~group_with_n_masks.Mask;
-                        if (mask_to_clear == 0)
+                        let mask_to_clear = candidate_masks[cell.Index] & !group_with_n_masks.Mask;
+                        if mask_to_clear == 0
                         {
                             continue;
                         }
@@ -715,32 +808,30 @@ fn main() {
 
                         let mut value_to_clear = 1;
 
-                        string
-                        separator = string.Empty;
-                        let mut message: String;
+                        let mut separator: String = "";
+                        let mut message: String = "";
 
                         while mask_to_clear > 0
                         {
-                            if (mask_to_clear) & 1 > 0
+                            if mask_to_clear & 1 > 0
                             {
-                                message.Append($ "{separator}{value_to_clear}");
+                                message.push_str(format!("{}{}", separator, value_to_clear));
                                 separator = ", ";
                             }
                             mask_to_clear = mask_to_clear >> 1;
                             value_to_clear += 1;
                         }
 
-                        message.Append($ " cannot appear in cell ({cell.Row + 1}, {cell.Column + 1}).");
-                        println!(message.ToString());
+                        message.push_str(format!(" cannot appear in cell ({}, {}).", cell.Row + 1, cell.Column + 1));
+                        println!("{}", message.to_string());
                     }
                 }
             }
-
             //#endregion
         }
 
         //#region Final attempt - look if the board has multiple solutions
-        if (!change_made)
+        if !change_made
         {
             // This is the last chance to do something in this iteration:
             // If this attempt fails, board will not be entirely solved.
@@ -757,34 +848,33 @@ fn main() {
             let mut candidate_digit1: VecDeque<i32> = VecDeque::new();
             let mut candidate_digit2: VecDeque<i32> = VecDeque::new();
 
-            for (int i = 0;
-            i < candidate_masks.Length - 1;
-            i + +)
+            for i in 0..candidate_masks.len() - 1
             {
-                if (mask_to_ones_count[candidate_masks[i]] == 2)
+                if mask_to_ones_count[candidate_masks[i]] == 2
                 {
                     let row = i / 9;
                     let col = i % 9;
                     let block_index = 3 * (row / 3) + col / 3;
 
-                    let temp = candidate_masks[i];
-                    let lower = 0;
-                    let upper = 0;
-                    for (int digit = 1;
-                    temp > 0;
-                    digit + +)
+                    let mut temp = candidate_masks[i];
+                    let mut lower = 0;
+                    let mut upper = 0;
+                    let mut digit = 1;
+                    while temp > 0
+                    //for digit in 1..
+                    //temp > 0;
+                    //digit + +)
                     {
-                        if ((temp & 1) != 0)
+                        if (temp & 1) != 0
                         {
                             lower = upper;
                             upper = digit;
                         }
                         temp = temp >> 1;
+                        digit += 1;
                     }
 
-                    for (int j = i + 1;
-                    j < candidate_masks.Length;
-                    j + +)
+                    for j in i + 1..candidate_masks.len()
                     {
                         if (candidate_masks[j] == candidate_masks[i])
                         {
@@ -816,18 +906,15 @@ fn main() {
             let mut value1: Vec<usize> = Vec::new();
             let mut value2: Vec<usize> = Vec::new();
 
-            while (candidate_index1.Any())
+            while !candidate_index1.is_empty()
             {
                 let index1 = candidate_index1.Dequeue();
                 let index2 = candidate_index2.Dequeue();
                 let digit1 = candidate_digit1.Dequeue();
                 let digit2 = candidate_digit2.Dequeue();
 
-                int
-                []
-                alternate_state = new
-                int[final_state.len()];
-                Array.Copy(state, alternate_state, alternate_state.Length);
+                let flen = final_state.len();
+                let alternate_state : Vec<i32> = state.cloned();
 
                 if (final_state[index1] == digit1)
                 {
@@ -841,108 +928,106 @@ fn main() {
                 // What follows below is a complete copy-paste of the solver which appears at the beginning of this method
                 // However, the algorithm couldn't be applied directly and it had to be modified.
                 // Implementation below assumes that the board might not have a solution.
-                state_stack = new
-                Stack < int
-                [] > ();
-                row_index_stack = new
-                Stack < int > ();
-                col_index_stack = new
-                Stack < int > ();
-                used_digits_stack = new
-                Stack < bool
-                [] > ();
-                last_digit_stack = new
-                Stack < int > ();
+                //stateStack = new Stack<int[]>();
+                //rowIndexStack = new Stack<int>();
+                //colIndexStack = new Stack<int>();
+                //usedDigitsStack = new Stack<bool[]>();
+                //lastDigitStack = new Stack<int>();
+                let mut state_stack: Vec<u32> = Vec::new();
+                let mut row_index_stack: Vec<u32> = Vec::new();
+                let mut col_index_stack: Vec<u32> = Vec::new();
+                let mut used_digits_stack: Vec<Vec<bool>> = Vec::new();
+                let mut last_digit_stack: Vec<u32> = Vec::new();
 
                 command = "expand";
-                while (command != "complete" && command != "fail")
+                while command != "complete" && command != "fail"
                 {
-                    if (command == "expand")
+                    if command == "expand"
                     {
-                        int
-                        []
-                        current_state = new
-                        int[9 * 9];
+                        let mut current_state : [u32; 81] = [0; 81];
 
-                        if (state_stack.Any())
+                        if !state_stack.is_empty()
                         {
-                            Array.Copy(state_stack.Peek(), current_state, current_state.Length);
+                            current_state = state_stack.last().unwrap().clone();
+                            //Array.Copy(state_stack.Peek(), current_state, current_state.Length);
                         } else {
-                            Array.Copy(alternate_state, current_state, current_state.Length);
+                            current_state = alternate_state.clone();
+                            //Array.Copy(alternate_state, current_state, current_state.Length);
                         }
 
-                        let best_row = -1;
-                        let best_col = -1;
-                        bool
-                        []
-                        best_used_digits = null;
-                        let best_candidates_count = -1;
-                        let best_random_value = -1;
-                        bool
-                        contains_unsolvable_cells = false;
+                        let mut best_row = -1;
+                        let mut best_col = -1;
+                        let mut best_used_digits : Vec<bool> = Vec::new();
+                        let mut best_candidates_count = -1;
+                        let mut best_random_value = -1;
+                        let mut contains_unsolvable_cells : bool = false;
 
-                        for (int index = 0;
-                        index < current_state.Length;
-                        index + +)
-                        if (current_state[index] == 0)
+                        for index in 0..current_state.len()
                         {
-                            int
-                            row = index / 9;
-                            let col = index % 9;
-                            let block_row = row / 3;
-                            let block_col = col / 3;
-
-                            bool
-                            []
-                            is_digit_used = new
-                            bool[9];
-
-                            for (int i = 0;
-                            i < 9;
-                            i + +)
+                            if (current_state[index] == 0)
                             {
-                                let row_digit = current_state[9 * i + col];
-                                if (row_digit > 0)
-                                is_digit_used[row_digit - 1] = true;
+                                int
+                                row = index / 9;
+                                let col = index % 9;
+                                let block_row = row / 3;
+                                let block_col = col / 3;
 
-                                let col_digit = current_state[9 * row + i];
-                                if (col_digit > 0)
-                                is_digit_used[col_digit - 1] = true;
+                                let mut is_digit_used : [bool; 9] = [false; 9];
 
-                                let block_digit = current_state[(block_row * 3 + i / 3) * 9 + (block_col * 3 + i % 3)];
-                                if (block_digit > 0)
-                                is_digit_used[block_digit - 1] = true;
-                            } // for (i = 0..8)
+                                for i in 0..9
+                                {
+                                    let row_digit = current_state[9 * i + col];
+                                    if row_digit > 0
+                                    {
+                                        is_digit_used[row_digit - 1] = true;
+                                    }
 
-                            let candidates_count = is_digit_used.Where(used => !used).Count();
+                                    let col_digit = current_state[9 * row + i];
+                                    if col_digit > 0
+                                    {
+                                        is_digit_used[col_digit - 1] = true;
+                                    }
 
-                            if (candidates_count == 0)
-                            {
-                                contains_unsolvable_cells = true;
-                                break;
-                            }
+                                    let block_digit = current_state[(block_row * 3 + i / 3) * 9 + (block_col * 3 + i % 3)];
+                                    if block_digit > 0
+                                    {
+                                        is_digit_used[block_digit - 1] = true;
+                                    }
+                                } // for (i = 0..8)
 
-                            let random_value = rng.Next();
+                                // candidates_count = is_digit_used.Where(used => !used).Count();
+                                let candidates_count = is_digit_used
+                                    .iter()  // 1. Get an iterator over the vector
+                                    .filter(|&used| !*used) // 2. Filter elements where 'used' is false
+                                    .count(); // 3. Count the remaining elements
+                                if candidates_count == 0
+                                {
+                                    contains_unsolvable_cells = true;
+                                    break;
+                                }
 
-                            if (best_candidates_count < 0 ||
-                                candidates_count < best_candidates_count ||
-                                (candidates_count == best_candidates_count && random_value < best_random_value))
-                            {
-                                best_row = row;
-                                best_col = col;
-                                best_used_digits = is_digit_used;
-                                best_candidates_count = candidates_count;
-                                best_random_value = random_value;
-                            }
-                        } // for (index = 0..81)
+                                let random_value = rng.Next();
 
-                        if (!contains_unsolvable_cells)
+                                if best_candidates_count < 0 ||
+                                    candidates_count < best_candidates_count ||
+                                    (candidates_count == best_candidates_count && random_value < best_random_value)
+                                {
+                                    best_row = row;
+                                    best_col = col;
+                                    best_used_digits = is_digit_used.to_vec();
+                                    best_candidates_count = candidates_count;
+                                    best_random_value = random_value;
+                                }
+                            } // for (index = 0..81)
+                        }
+
+                        if !contains_unsolvable_cells
                         {
-                            state_stack.Push(current_state);
-                            row_index_stack.Push(best_row);
-                            col_index_stack.Push(best_col);
-                            used_digits_stack.Push(best_used_digits);
-                            last_digit_stack.Push(0); // No digit was tried at this position
+                            state_stack.push(current_state);
+                            row_index_stack.push(best_row);
+                            col_index_stack.push(best_col);
+                            used_digits_stack.push(best_used_digits);
+                            last_digit_stack.push(0); // No digit was tried at this position
                         }
 
                         // Always try to move after expand
@@ -950,17 +1035,21 @@ fn main() {
                     } // if (command == "expand")
                     else if (command == "collapse")
                     {
-                        state_stack.Pop();
-                        row_index_stack.Pop();
-                        col_index_stack.Pop();
-                        used_digits_stack.Pop();
-                        last_digit_stack.Pop();
+                        state_stack.pop();
+                        row_index_stack.pop();
+                        col_index_stack.pop();
+                        used_digits_stack.pop();
+                        last_digit_stack.pop();
 
-                        if (state_stack.Any())
-                        command = "move"; // Always try to move after collapse
+                        if !state_stack.is_empty()
+                        {
+                            command = "move"; // Always try to move after collapse
+                        }
                         else
-                        command = "fail";
-                    } else if (command == "move")
+                        {
+                            command = "fail";
+                        }
+                    } else if command == "move"
                     {
                         let row_to_move: usize = row_index_stack.last().cloned();
                         let col_to_move: usize = col_index_stack.last().cloned();
