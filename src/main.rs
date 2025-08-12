@@ -657,7 +657,7 @@ fn main() {
                     let state_index = 9 * row + col;
                     state[state_index] = *digit;
                     candidate_masks[state_index] = 0;
-                    board[row_to_write][col_to_write] = (char)('0' + digit);
+                    board[row_to_write][col_to_write] = char::from_u32('0' as u32 + digit).expect("REASON");
 
                     change_made = true;
 
@@ -1076,9 +1076,9 @@ fn main() {
                 //colIndexStack = new Stack<int>();
                 //usedDigitsStack = new Stack<bool[]>();
                 //lastDigitStack = new Stack<int>();
-                let mut state_stack: Vec<u32> = Vec::new();
-                let mut row_index_stack: Vec<u32> = Vec::new();
-                let mut col_index_stack: Vec<u32> = Vec::new();
+                let mut state_stack: Vec<[u32;81]> = Vec::new();
+                let mut row_index_stack: Vec<usize> = Vec::new();
+                let mut col_index_stack: Vec<usize> = Vec::new();
                 let mut used_digits_stack: Vec<Vec<bool>> = Vec::new();
                 let mut last_digit_stack: Vec<u32> = Vec::new();
 
@@ -1109,8 +1109,7 @@ fn main() {
                         {
                             if (current_state[index] == 0)
                             {
-                                int
-                                row = index / 9;
+                                let row = index / 9;
                                 let col = index % 9;
                                 let block_row = row / 3;
                                 let block_col = col / 3;
@@ -1194,42 +1193,46 @@ fn main() {
                         }
                     } else if command == "move"
                     {
-                        let row_to_move: usize = row_index_stack.last().cloned();
-                        let col_to_move: usize = col_index_stack.last().cloned();
-                        let digit_to_move = last_digit_stack.pop();
+                        let row_to_move: usize = row_index_stack.last().unwrap().clone();
+                        let col_to_move: usize = col_index_stack.last().unwrap().clone();
+                        let digit_to_move = last_digit_stack.pop().unwrap();
 
                         let row_to_write: usize = row_to_move + row_to_move / 3 + 1;
                         let col_to_write: usize = col_to_move + col_to_move / 3 + 1;
 
-                        bool
-                        []
-                        used_digits = used_digits_stack.last().cloned();
-                        let []
-                        current_state = state_stack.last().cloned();
+                        let used_digits = used_digits_stack.last().unwrap().clone();
+                        let mut current_state = state_stack.last().unwrap().clone();
                         let current_state_index: usize = 9 * row_to_move + col_to_move;
 
-                        let moved_to_digit = digit_to_move + 1;
-                        while (moved_to_digit <= 9 && used_digits[moved_to_digit - 1])
-                        moved_to_digit += 1;
+                        let mut moved_to_digit = digit_to_move + 1;
+                        while (moved_to_digit <= 9 && used_digits[moved_to_digit as usize - 1])
+                        {
+                            moved_to_digit += 1;
+                        }
 
                         if (digit_to_move > 0)
                         {
-                            used_digits[digit_to_move - 1] = false;
+                            used_digits[digit_to_move as usize - 1] = false;
                             current_state[current_state_index] = 0;
                             board[row_to_write][col_to_write] = '.';
                         }
 
-                        if (moved_to_digit <= 9)
+                        if moved_to_digit <= 9
                         {
-                            last_digit_stack.push(moved_to_digit);
-                            used_digits[moved_to_digit - 1] = true;
-                            current_state[current_state_index] = moved_to_digit;
-                            board[row_to_write][col_to_write] = / *(char) * / ('0' + moved_to_digit);
+                            last_digit_stack.push(moved_to_digit); // Equivalent of C# Push()
+                            used_digits[moved_to_digit as usize - 1] = true; // Array access is similar
+                            current_state[current_state_index] = moved_to_digit; // Array access is similar
+                            board[row_to_write][col_to_write] = char::from_u32(b'0' as u32 + moved_to_digit).expect("REASON"); // Converting integer to char
 
-                            if (current_state.Any(digit => digit == 0))
+                            /*if (current_state.Any(digit => digit == 0))
                             command = "expand";
                             else
-                            command = "complete";
+                            command = "complete";*/
+                            command = if current_state.iter().any(|&digit| digit == 0) {
+                                "expand"
+                            } else {
+                                "complete"
+                            };
                         } else {
                             // No viable candidate was found at current position - pop it in the next iteration
                             last_digit_stack.push(0);
@@ -1241,20 +1244,20 @@ fn main() {
 
                 if (command == "complete")
                 {   // Board was solved successfully even with two digits swapped
-                    state_index1.Add(index1);
-                    state_index2.Add(index2);
-                    value1.Add(digit1);
-                    value2.Add(digit2);
+                    state_index1.push(index1);
+                    state_index2.push(index2);
+                    value1.push(digit1);
+                    value2.push(digit2);
                 }
             } // while (candidate_index1.Any())
 
-            if (state_index1.Any())
+            if !state_index1.is_empty()
             {
-                let pos = rng.Next(state_index1.len());
-                let index1 = state_index1.ElementAt(pos);
-                let index2 = state_index2.ElementAt(pos);
-                let digit1 = value1.ElementAt(pos);
-                let digit2 = value2.ElementAt(pos);
+                let pos = rng.random_range(0..state_index1.len());
+                let index1 = state_index1[pos];
+                let index2 = state_index2[pos];
+                let digit1 = value1[pos];
+                let digit2 = value2[pos];
                 let row1 = index1 / 9;
                 let col1 = index1 % 9;
                 let row2 = index2 / 9;
@@ -1264,12 +1267,12 @@ fn main() {
 
                 if (index1 / 9 == index2 / 9)
                 {
-                    description = $ "row #{index1 / 9 + 1}";
+                    description = format!("row #{}", index1 / 9 + 1);
                 } else if (index1 % 9 == index2 % 9)
                 {
-                    description = $ "column #{index1 % 9 + 1}";
+                    description = format!("column #{}", index1 % 9 + 1);
                 } else {
-                    description = $ "block ({row1 / 3 + 1}, {col1 / 3 + 1})";
+                    description = format!("block ({}, {})", row1 / 3 + 1, col1 / 3 + 1);
                 }
 
                 state[index1] = final_state[index1];
@@ -1278,9 +1281,7 @@ fn main() {
                 candidate_masks[index2] = 0;
                 change_made = true;
 
-                for (int i = 0;
-                i < state.Length;
-                i + +)
+                for i in 0..state.len()
                 {
                     let temp_row = i / 9;
                     let temp_col = i % 9;
@@ -1288,11 +1289,13 @@ fn main() {
                     let col_to_write = temp_col + temp_col / 3 + 1;
 
                     board[row_to_write][col_to_write] = '.';
-                    if (state[i] > 0)
-                    board[row_to_write][col_to_write] = (char)('0' + state[i]);
+                    if state[i] > 0
+                    {
+                        board[row_to_write][col_to_write] = char::from_u32(b'0' as u32 + state[i]).expect("REASON");
+                    }
                 }
 
-                println!($"Guessing that {digit1} and {digit2} are arbitrary in {description} (multiple solutions): Pick {final_state[index1]}->({row1 + 1}, {col1 + 1}), {final_state[index2]}->({row2 + 1}, {col2 + 1}).");
+                let s = format!("Guessing that {} and {} are arbitrary in {} (multiple solutions): Pick {}->({}, {}), {}->({}, {}).", digit1, digit2,description, final_state[index1], row1 + 1, col1 + 1, final_state[index2], row2 + 1, col2 + 1);
             }
         }
         //#endregion
@@ -1300,15 +1303,21 @@ fn main() {
         if (change_made)
         {
             //#region Print the board as it looks after one change was made to it
-            println!(string.Join(Environment.NewLine, board.Select(s => new string(s)).ToArray()));
-            string
-            code =
+            print_board(&board);
+            /*string code =
                 string.Join(string.Empty, board.Select(s => new string(s)).ToArray())
                     .Replace("-", string.Empty)
                     .Replace("+", string.Empty)
                     .Replace("|", string.Empty)
-                    .Replace(".", "0");
-
+                    .Replace(".", "0");*/
+            let code: String = board
+                .iter()
+                .flat_map(|s| s.iter().copied().collect()) // Flatten the characters from each string in 'board'
+                .collect::<String>() // Collect them into a single String
+                .replace('-', "")
+                .replace('+', "")
+                .replace('|', "")
+                .replace('.', "0");
             println!("Code: {0}", code);
             println!();
             //#endregion
