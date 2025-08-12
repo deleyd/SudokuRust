@@ -852,11 +852,12 @@ fn main() {
                     mask_to_ones_count
                         .Where(tuple => tuple.Value > 1)
                         .Select(tuple => tuple.Key).ToList(); */
-                let masks: Vec<i32> = mask_to_ones_count
+                let masks: Vec<u32> = mask_to_ones_count
                     .iter()
-                    .filter(|&(_, &value)| value > 1)
-                    .map(|&(key, _)| key)
+                    .filter(|&(_, count)| *count > 1)
+                    .map(|(mask, _)| *mask)
                     .collect();
+
                 /* var groups_with_n_masks =
                     masks
                         .SelectMany(mask =>
@@ -1056,10 +1057,10 @@ fn main() {
             //Queue<int> candidate_index2 = new Queue<int>();
             //Queue<int> candidate_digit1 = new Queue<int>();
             //Queue<int> candidate_digit2 = new Queue<int>();
-            let mut candidate_index1: VecDeque<i32> = VecDeque::new();
-            let mut candidate_index2: VecDeque<i32> = VecDeque::new();
-            let mut candidate_digit1: VecDeque<i32> = VecDeque::new();
-            let mut candidate_digit2: VecDeque<i32> = VecDeque::new();
+            let mut candidate_index1: VecDeque<u32> = VecDeque::new();
+            let mut candidate_index2: VecDeque<u32> = VecDeque::new();
+            let mut candidate_digit1: VecDeque<u32> = VecDeque::new();
+            let mut candidate_digit2: VecDeque<u32> = VecDeque::new();
 
             for i in 0..candidate_masks.len() - 1
             {
@@ -1097,8 +1098,8 @@ fn main() {
 
                             if row == row1 || col == col1 || block_index == block_index1
                             {
-                                candidate_index1.push_back(i);
-                                candidate_index2.push_back(j);
+                                candidate_index1.push_back(i as u32);
+                                candidate_index2.push_back(j as u32);
                                 candidate_digit1.push_back(lower);
                                 candidate_digit2.push_back(upper);
                             }
@@ -1121,10 +1122,10 @@ fn main() {
 
             while !candidate_index1.is_empty()
             {
-                let index1 = candidate_index1.Dequeue();
-                let index2 = candidate_index2.Dequeue();
-                let digit1 = candidate_digit1.Dequeue();
-                let digit2 = candidate_digit2.Dequeue();
+                let index1 = candidate_index1.pop_front();
+                let index2 = candidate_index2.pop_front();
+                let digit1 = candidate_digit1.pop_front();
+                let digit2 = candidate_digit2.pop_front();
 
                 let flen = final_state.len();
                 let alternate_state : Vec<u32> = state.clone();
