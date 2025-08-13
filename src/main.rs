@@ -2,6 +2,7 @@ use rand::{Rng, SeedableRng};
 use std::collections::HashMap;
 use std::collections::VecDeque;
 use std::io;
+use itertools::Itertools;
 
 fn print_board(board : &[[char; 13]; 13])
 {
@@ -33,22 +34,8 @@ where
     }
 }
 
-struct RowColBlkInfo {
-    discriminator: usize,
-    description: String,
-    index: usize,
-    row: usize,
-    column: usize,
-}
-struct RowInfo {
-    discriminator: usize,
-    description: String,
-    index: usize,
-    row: usize,
-    column: usize,
-}
-
-struct ColumnInfo {
+#[derive(Debug, Clone)]
+struct RowColBlk {
     discriminator: usize,
     description: String,
     index: usize,
@@ -56,14 +43,20 @@ struct ColumnInfo {
     column: usize,
 }
 
-struct BlockInfo {
-    discriminator: usize,
+struct B
+{
+
+}
+//noinspection ALL
+#[derive(Debug, Clone)]
+struct MDDC {
+    mask: u32,
+    discriminator : u32,
     description: String,
-    index: usize,
-    row: usize,
-    column: usize,
+    cells: RowColBlk
 }
 
+#[derive(Debug, Clone)]
 struct Group {
     discriminator: usize,
     description: String,
@@ -72,14 +65,6 @@ struct Group {
     column: usize,
     cells: Vec<Vec<char>>,
     mask: u32,
-}
-struct CellGroup {
-    discriminator: usize,
-    description: String,
-    index: usize,
-    row: usize,
-    column: usize,
-    cells: ()
 }
 
 struct Cell {
@@ -382,19 +367,19 @@ fn play() {
 
     // 25.
     //Dictionary<int, int> maskToOnesCount = new Dictionary<int, int>();
-    let mut mask_to_ones_count : HashMap<u32,u32> = HashMap::new();
+    let mut mask_to_ones_count: HashMap<u32, usize> = HashMap::new();
     mask_to_ones_count.insert(0, 0);
     for i in 1..(1 << 9)
     {
-        let smaller = i >> 1;
-        let increment = i & 1;
+        let smaller : u32 = i >> 1;
+        let increment : usize = (i & 1) as usize;
         let usize_value = mask_to_ones_count[&smaller] + increment;
         mask_to_ones_count.insert(i, usize_value + increment);
     }
 
     // 26.
     //Dictionary < int, int > single_bit_to_index = new
-    let mut single_bit_to_index: HashMap<usize,usize> = HashMap::new();
+    let mut single_bit_to_index: HashMap<usize, usize> = HashMap::new();
 
     for i in 0..9
     {
@@ -404,13 +389,13 @@ fn play() {
     let all_ones = (1 << 9) - 1;
     //#endregion
 
-    let mut change_made : bool = true;
+    let mut change_made: bool = true;
     while change_made  // 27
     {
         change_made = false;
 
         //#region Calculate candidates for current state of the board
-        let mut candidate_masks : [u32; 81] = [0; 81];
+        let mut candidate_masks: [u32; 81] = [0; 81];
 
         for i in 0..state.len()  // 28.
         {
@@ -439,99 +424,140 @@ fn play() {
             }
         }
         //#endregion
-
+        let x = &candidate_masks;
         //#region Build a collection (named cellGroups) which maps cell indices into distinct groups (rows/columns/blocks)
         // 29.
-        let mut state : [u32; 81] = [0; 81]; // Example state, replace with actual data
+        let mut state: [u32; 81] = [0; 81]; // Example state, replace with actual data
 
         // Group by rows
         // 30.
-        let rows_indices: HashMap<usize, Vec<CellInfo>> = state
+        // Group elements by row
+        let mut rows_indices: HashMap<usize, RowColBlk> = HashMap::new();
+
+        for (index, item) in state.iter().enumerate() {
+            let discriminator : usize = index / 9; // Calculate the group key
+            let description : String = format!("row #{}", index / 9 + 1);
+            let row : usize = index / 9;
+            let column : usize = index % 9;
+
+            let row_col_blk = RowColBlk {
+                discriminator,
+                description,
+                index,
+                row,
+                column,
+            };
+            rows_indices.insert(index, row_col_blk);
+        }
+
+        let rows_indices: Vec<HashMap<usize, RowColBlk>> = state
+            .iter()
+            .enumerate()
+            .map(|(index, value)| RowColBlk {
+                discriminator: index / 9,
+                description: format!("row #{}", index / 9 + 1),
+                index,
+                row: index / 9,
+                column: index % 9,
+            })
+            .chunk_by(|tuple| tuple.discriminator)
+            .into_iter()
+            .map(|(value, group)| group.collect())
+            .collect();
+
+
+        /*
+        let rows_indices: Vec<HashMap<usize, RowColBlk>> = state
+            .iter()
+            .enumerate()
+            .map(|(index, &value)| {
+                let discriminator  = index / 9;
+                RowColBlk {
+                    discriminator,
+                    description: format!("row #{}", discriminator + 1),
+                    index,
+                    row : discriminator,
+                    column: index % 9,
+                }
+            })
+            .fold(HashMap::new(), |mut acc, item| {
+                acc.entry(item.discriminator).or_insert_with(Vec::new)
+                    .push(item);
+
+
+        let x = &candidate_masks;
+
+        // Group by columns
+        // 31.
+        let column_indices: Vec<HashMap<usize, RowColBlk>> = state
             .iter()
             .enumerate()
             .map(|(index, _)| {
-                let row = index / 9;
-                CellInfo {
-                    discriminator: row,
-                    description: format!("row #{}", row + 1),
+                let column = index % 9;
+                RowColBlk {
+                    discriminator: 9 + column,
+                    description: format!("column #{}", column + 1),
                     index,
-                    row,
-                    column: index % 9,
+                    row: index / 9,
+                    column,
                 }
             })
             .fold(HashMap::new(), |mut acc, info| {
                 acc.entry(info.discriminator).or_default().push(info);
                 acc
             });
-
-        // Group by columns
-        // 31.
-        let column_indices: HashMap<usize, Vec<CellInfo>> = state
-                .iter()
-                .enumerate()
-                .map(|(index, _)| {
-                    let column = index % 9;
-                    CellInfo {
-                        discriminator: 9 + column,
-                        description: format!("column #{}", column + 1),
-                        index,
-                        row: index / 9,
-                        column,
-                    }
-                })
-                .fold(HashMap::new(), |mut acc, info| {
-                    acc.entry(info.discriminator).or_default().push(info);
-                    acc
-                });
         // Group by blocks
         // 32.
-        let block_indices: HashMap<usize, Vec<CellInfo>> = state
-                .iter()
-                .enumerate()
-                .map(|(index, _)| {
-                    let row = index / 9;
-                    let column = index % 9;
-                    let block_row = row / 3;
-                    let block_col = column / 3;
-                    CellInfo {
-                        discriminator: 18 + 3 * block_row + block_col,
-                        description: format!("block ({}, {})", block_row + 1, block_col + 1),
-                        index,
-                        row,
-                        column,
-                    }
-                })
-                .fold(HashMap::new(), |mut acc, info| {
-                    acc.entry(info.discriminator).or_default().push(info);
-                    acc
-                });
+        let block_indices: Vec<HashMap<usize, RowColBlk>> = state
+            .iter()
+            .enumerate()
+            .map(|(index, _)| {
+                let row = index / 9;
+                let column = index % 9;
+                let block_row = row / 3;
+                let block_col = column / 3;
+                RowColBlk {
+                    discriminator: 18 + 3 * block_row + block_col,
+                    description: format!("block ({}, {})", block_row + 1, block_col + 1),
+                    index,
+                    row,
+                    column,
+                }
+            })
+            .fold(HashMap::new(), |mut acc, info| {
+                acc.entry(info.discriminator).or_default().push(info);
+                acc
+            });
+        let x = &candidate_masks;
 
         // Combine all groups
         // 33.
-        let mut cell_groups: Vec<Vec<CellInfo>> = Vec::new();
-            // Add rows (0-8)
-            for i in 0..9 {
-                if let Some(group) = rows_indices.get(&i) {
-                    cell_groups.push(group.clone());
-                }
-            }
-            // Add columns (9-17)
-            for i in 9..18 {
-                if let Some(group) = column_indices.get(&i) {
-                    cell_groups.push(group.clone());
-                }
-            }
-            // Add blocks (18-26)
-            for i in 18..27 {
-                if let Some(group) = block_indices.get(&i) {
-                    cell_groups.push(group.clone());
-                }
+        let mut cell_groups: Vec<HashMap<usize,RowColBlk>> = Vec::new();
+        cell_groups.extend(rows_indices.iter().cloned());
+        // Add rows (0-8)
+        for i in 0..9 {
+            if let Some(group) = rows_indices.get(&i) {
+                cell_groups.push(*group.clone());
             }
         }
+        // Add columns (9-17)
+        for i in 9..18 {
+            if let Some(group) = column_indices.get(&i) {
+                cell_groups.push(*group.clone());
+            }
+        }
+        // Add blocks (18-26)
+        for i in 18..27 {
+            if let Some(group) = block_indices.get(&i) {
+                cell_groups.push(*group.clone());
+            }
+        }
+*/
         //#endregion
+        let x = &candidate_masks;
 
         // 34.
-        let mut step_change_made : bool = true;
+        let mut step_change_made: bool = true;
         while step_change_made  // 35.
         {
             step_change_made = false;
@@ -579,10 +605,10 @@ fn play() {
             // 38.
             if !change_made
             {
-                let mut group_descriptions : Vec<String> = Vec::new();
-                let mut candidate_row_indices : Vec<usize> = Vec::new();
-                let mut candidate_col_indices : Vec<usize> = Vec::new();
-                let mut candidates : Vec<u32> = Vec::new();
+                let mut group_descriptions: Vec<String> = Vec::new();
+                let mut candidate_row_indices: Vec<usize> = Vec::new();
+                let mut candidate_col_indices: Vec<usize> = Vec::new();
+                let mut candidates: Vec<u32> = Vec::new();
                 // 39.
                 for digit in 1..=9
                 {
@@ -690,41 +716,38 @@ fn play() {
                     .collect::<std::collections::HashSet<_>>()
                     .into_iter()
                     .collect();
-// 49.
-/*              var groups =
-                    two_digit_masks
-                        .SelectMany(mask =>
-                                    cell_groups
-                                        .Where(group => group.Count(tuple => candidate_masks[tuple.Index] == mask) == 2)
-                                        .Where(group => group.Any(tuple => candidate_masks[tuple.Index] != mask && (candidate_masks[tuple.Index] & mask) > 0))
-                                        .Select(group => new
-                                        {
-                                            Mask = mask,
-                                            Discriminator = group.Key,
-                                            Description = group.First().Description,
-                                            Cells = group
-                                        }))
-                        .ToList();*/
-                let groups: Vec<CellGroup> = two_digit_masks.into_iter()
+                /*              var groups =
+                                    two_digit_masks
+                                        .SelectMany(mask =>
+                                                    cell_groups
+                                                        .Where(group => group.Count(tuple => candidate_masks[tuple.Index] == mask) == 2)
+                                                        .Where(group => group.Any(tuple => candidate_masks[tuple.Index] != mask && (candidate_masks[tuple.Index] & mask) > 0))
+                                                        .Select(group => new
+                                                        {
+                                                            Mask = mask,
+                                                            Discriminator = group.Key,
+                                                            Description = group.First().Description,
+                                                            Cells = group
+                                                        }))
+                                        .ToList();*/
+                // 49.
+                let groups: Vec<u32> = two_digit_masks.into_iter()
                     .flat_map(|mask| {
                         cell_groups.iter()
                             .filter(|group| {
-                                group.cells.iter()
+                                group.iter()
                                     .filter(|tuple| candidate_masks[tuple.index] == mask)
                                     .count() == 2
                             })
                             .filter(|group| {
-                                group.cells.iter()
+                                group.iter()
                                     .any(|tuple| candidate_masks[tuple.index] != mask && (candidate_masks[tuple.index] & mask) > 0)
                             })
-                            .map(|group| Group {
+                            .map(|group| MDDC {
                                 mask,
                                 discriminator: group.key.clone(),
                                 description: group.description.clone(),
-                                index: 0,
-                                row: 0,
                                 cells: group.cells.clone(),
-                                column: 0,
                             })
                     })
                     .collect();
@@ -740,7 +763,7 @@ fn play() {
                                     candidate_masks[cell.Index] != group.Mask &&
                                         (candidate_masks[cell.Index] & group.Mask) > 0)
                                 .ToList();*/
-                        let cells: Vec<_> = group.cells
+                        let cells: Vec<CellGroup> = group.cells
                             .iter()
                             .filter(|cell| {
                                 candidate_masks[cell.index] != group.mask &&
@@ -802,8 +825,8 @@ fn play() {
                             for cell in cells
                             {
                                 let mask_to_remove = candidate_masks[cell.Index] & group.Mask;
-                                let mut values_to_remove : Vec<u32> = Vec::new();
-                                let mut cur_value : u32 = 1;
+                                let mut values_to_remove: Vec<u32> = Vec::new();
+                                let mut cur_value: u32 = 1;
                                 while mask_to_remove > 0
                                 {
                                     if (mask_to_remove & 1) > 0
@@ -821,7 +844,7 @@ fn play() {
                                     .collect();
                                 let values_report = string_values_to_remove.join(", ");
                                 let s = format!("{} cannot appear in ({}, {}).", values_report, cell.Row + 1, cell.Column + 1);
-                                println!("{}",s);
+                                println!("{}", s);
                                 candidate_masks[cell.Index] &= !group.mask;
                                 step_change_made = true;
                             }
@@ -870,7 +893,7 @@ fn play() {
                         .ToList(); */
                 let groups_with_n_masks = masks
                     .iter()
-                    .flat_map(|&mask | {
+                    .flat_map(|&mask| {
                         cell_groups
                             .iter()
                             .filter(|group| {
@@ -1037,9 +1060,9 @@ fn play() {
                 }
             }
             //#endregion
-        }
+        } // end while
 
-    //60.
+        //60.
         //#region Final attempt - look if the board has multiple solutions
         if !change_made
         {
@@ -1149,7 +1172,7 @@ fn play() {
                 //colIndexStack = new Stack<int>();
                 //usedDigitsStack = new Stack<bool[]>();
                 //lastDigitStack = new Stack<int>();
-                let mut state_stack: Vec<[u32;81]> = Vec::new();
+                let mut state_stack: Vec<[u32; 81]> = Vec::new();
                 let mut row_index_stack: Vec<usize> = Vec::new();
                 let mut col_index_stack: Vec<usize> = Vec::new();
                 let mut used_digits_stack: Vec<Vec<bool>> = Vec::new();
@@ -1161,7 +1184,7 @@ fn play() {
                 {
                     if command == "expand"
                     {
-                        let mut current_state : [u32; 81] = [0; 81];
+                        let mut current_state: [u32; 81] = [0; 81];
 
                         if !state_stack.is_empty()
                         {
@@ -1174,10 +1197,10 @@ fn play() {
 
                         let mut best_row = 9999;
                         let mut best_col = 9999;
-                        let mut best_used_digits : Vec<bool> = Vec::new();
+                        let mut best_used_digits: Vec<bool> = Vec::new();
                         let mut best_candidates_count = 9999;
                         let mut best_random_value = 9999;
-                        let mut contains_unsolvable_cells : bool = false;
+                        let mut contains_unsolvable_cells: bool = false;
 
                         // 67.
                         for index in 0..current_state.len()
@@ -1266,9 +1289,7 @@ fn play() {
                         if !state_stack.is_empty()
                         {
                             command = "move"; // Always try to move after collapse
-                        }
-                        else
-                        {
+                        } else {
                             command = "fail";
                         }
                     }
@@ -1383,8 +1404,8 @@ fn play() {
                     }
                 }
 
-                let s = format!("Guessing that {} and {} are arbitrary in {} (multiple solutions): Pick {}->({}, {}), {}->({}, {}).", digit1, digit2,description, final_state[index1], row1 + 1, col1 + 1, final_state[index2], row2 + 1, col2 + 1);
-                println("{}", s);
+                let s = format!("Guessing that {} and {} are arbitrary in {} (multiple solutions): Pick {}->({}, {}), {}->({}, {}).", digit1, digit2, description, final_state[index1], row1 + 1, col1 + 1, final_state[index2], row2 + 1, col2 + 1);
+                println!("{}", s);
             }
         }
         //#endregion
@@ -1413,6 +1434,8 @@ fn play() {
             //#endregion
         }
     }
+}
+
 fn main()
 {
     play();
