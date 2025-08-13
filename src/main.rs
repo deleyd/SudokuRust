@@ -2,7 +2,6 @@ use rand::{Rng, SeedableRng};
 use std::collections::HashMap;
 use std::collections::VecDeque;
 use std::io;
-use itertools::Itertools;
 
 fn print_board(board : &[[char; 13]; 13])
 {
@@ -35,7 +34,7 @@ where
 }
 
 #[derive(Debug, Clone)]
-struct RowColBlk {
+struct Cell {
     discriminator: usize,
     description: String,
     index: usize,
@@ -43,17 +42,13 @@ struct RowColBlk {
     column: usize,
 }
 
-struct B
-{
 
-}
-//noinspection ALL
 #[derive(Debug, Clone)]
 struct MDDC {
     mask: u32,
     discriminator : u32,
     description: String,
-    cells: RowColBlk
+    cells: Cell
 }
 
 #[derive(Debug, Clone)]
@@ -65,23 +60,6 @@ struct Group {
     column: usize,
     cells: Vec<Vec<char>>,
     mask: u32,
-}
-
-struct Cell {
-    discriminator: usize,
-    description: String,
-    index: usize,
-    row: usize,
-    column: usize,
-}
-
-#[derive(Debug, Clone)]
-struct CellInfo {
-    discriminator: usize,
-    description: String,
-    index: usize,
-    row: usize,
-    column: usize,
 }
 
 struct GroupWithMask {
@@ -432,7 +410,7 @@ fn play() {
         // Group by rows
         // 30.
         // Group elements by row
-        let mut rows_indices: HashMap<usize, RowColBlk> = HashMap::new();
+        let mut row_cells: HashMap<usize, Cell> = HashMap::new();
 
         for (index, item) in state.iter().enumerate() {
             let discriminator : usize = index / 9; // Calculate the group key
@@ -440,119 +418,85 @@ fn play() {
             let row : usize = index / 9;
             let column : usize = index % 9;
 
-            let row_col_blk = RowColBlk {
+            let cell = Cell {
                 discriminator,
                 description,
                 index,
                 row,
                 column,
             };
-            rows_indices.insert(index, row_col_blk);
+            row_cells.insert(discriminator, cell);
         }
-
-        let rows_indices: Vec<HashMap<usize, RowColBlk>> = state
-            .iter()
-            .enumerate()
-            .map(|(index, value)| RowColBlk {
-                discriminator: index / 9,
-                description: format!("row #{}", index / 9 + 1),
-                index,
-                row: index / 9,
-                column: index % 9,
-            })
-            .chunk_by(|tuple| tuple.discriminator)
-            .into_iter()
-            .map(|(value, group)| group.collect())
-            .collect();
-
-
-        /*
-        let rows_indices: Vec<HashMap<usize, RowColBlk>> = state
-            .iter()
-            .enumerate()
-            .map(|(index, &value)| {
-                let discriminator  = index / 9;
-                RowColBlk {
-                    discriminator,
-                    description: format!("row #{}", discriminator + 1),
-                    index,
-                    row : discriminator,
-                    column: index % 9,
-                }
-            })
-            .fold(HashMap::new(), |mut acc, item| {
-                acc.entry(item.discriminator).or_insert_with(Vec::new)
-                    .push(item);
-
 
         let x = &candidate_masks;
 
         // Group by columns
         // 31.
-        let column_indices: Vec<HashMap<usize, RowColBlk>> = state
-            .iter()
-            .enumerate()
-            .map(|(index, _)| {
-                let column = index % 9;
-                RowColBlk {
-                    discriminator: 9 + column,
-                    description: format!("column #{}", column + 1),
-                    index,
-                    row: index / 9,
-                    column,
-                }
-            })
-            .fold(HashMap::new(), |mut acc, info| {
-                acc.entry(info.discriminator).or_default().push(info);
-                acc
-            });
+        // Group elements by row
+        let mut column_cells: HashMap<usize, Cell> = HashMap::new();
+
+        for (index, item) in state.iter().enumerate() {
+            let discriminator : usize = 9 + index % 9; // Calculate the group key
+            let description : String = format!("column #{}", index % 9 + 1);
+            let row : usize = index / 9;
+            let column : usize = index % 9;
+
+            let cell = Cell {
+                discriminator,
+                description,
+                index,
+                row,
+                column,
+            };
+            column_cells.insert(discriminator, cell);
+        }
+
         // Group by blocks
         // 32.
-        let block_indices: Vec<HashMap<usize, RowColBlk>> = state
-            .iter()
-            .enumerate()
-            .map(|(index, _)| {
-                let row = index / 9;
-                let column = index % 9;
-                let block_row = row / 3;
-                let block_col = column / 3;
-                RowColBlk {
-                    discriminator: 18 + 3 * block_row + block_col,
-                    description: format!("block ({}, {})", block_row + 1, block_col + 1),
-                    index,
-                    row,
-                    column,
-                }
-            })
-            .fold(HashMap::new(), |mut acc, info| {
-                acc.entry(info.discriminator).or_default().push(info);
-                acc
-            });
+        let mut block_cells: HashMap<usize, Cell> = HashMap::new();
+        for (index, item) in state.iter().enumerate() {
+            let row = index / 9;
+            let column = index % 9;
+            let block_row = row / 3;
+            let block_column = column / 3;
+
+            let discriminator : usize = 18 * block_row + block_column; // Calculate the group key
+            let description : String = format!("block {} {}", block_row + 1, block_column / 3 + 1);
+
+            let cell = Cell {
+                discriminator,
+                description,
+                index,
+                row,
+                column,
+            };
+            column_cells.insert(discriminator, cell);
+        }
+
         let x = &candidate_masks;
 
         // Combine all groups
         // 33.
-        let mut cell_groups: Vec<HashMap<usize,RowColBlk>> = Vec::new();
-        cell_groups.extend(rows_indices.iter().cloned());
+        let mut cell_groups: Vec<Cell> = Vec::new();
         // Add rows (0-8)
         for i in 0..9 {
-            if let Some(group) = rows_indices.get(&i) {
-                cell_groups.push(*group.clone());
+            if let Some(group) = row_cells.get(&i) {
+                cell_groups.push(group.clone());
             }
         }
         // Add columns (9-17)
         for i in 9..18 {
-            if let Some(group) = column_indices.get(&i) {
-                cell_groups.push(*group.clone());
+            if let Some(group) = column_cells.get(&i) {
+                cell_groups.push(group.clone());
             }
         }
         // Add blocks (18-26)
         for i in 18..27 {
-            if let Some(group) = block_indices.get(&i) {
-                cell_groups.push(*group.clone());
+            if let Some(group) = block_cells.get(&i) {
+                cell_groups.push(group.clone());
             }
         }
-*/
+
         //#endregion
         let x = &candidate_masks;
 
@@ -731,7 +675,7 @@ fn play() {
                                                         }))
                                         .ToList();*/
                 // 49.
-                let groups: Vec<u32> = two_digit_masks.into_iter()
+                let groups: Vec<MDDC> = two_digit_masks.into_iter()
                     .flat_map(|mask| {
                         cell_groups.iter()
                             .filter(|group| {
@@ -763,7 +707,7 @@ fn play() {
                                     candidate_masks[cell.Index] != group.Mask &&
                                         (candidate_masks[cell.Index] & group.Mask) > 0)
                                 .ToList();*/
-                        let cells: Vec<CellGroup> = group.cells
+                        let cells: Vec<Cell> = group.cells
                             .iter()
                             .filter(|cell| {
                                 candidate_masks[cell.index] != group.mask &&
