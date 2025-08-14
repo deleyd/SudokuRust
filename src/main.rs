@@ -477,23 +477,23 @@ fn play() {
 
         // Combine all groups
         // 33.
-        let mut cell_groups: Vec<Cell> = Vec::new();
+        let mut cell_groups: HashMap<usize, Cell> = HashMap::new();
         // Add rows (0-8)
         for i in 0..9 {
             if let Some(group) = row_cells.get(&i) {
-                cell_groups.push(group.clone());
+                cell_groups.extend(group.clone());
             }
         }
         // Add columns (9-17)
         for i in 9..18 {
             if let Some(group) = column_cells.get(&i) {
-                cell_groups.push(group.clone());
+                cell_groups.extend(group.clone());
             }
         }
         // Add blocks (18-26)
         for i in 18..27 {
             if let Some(group) = block_cells.get(&i) {
-                cell_groups.push(group.clone());
+                cell_groups.extend(group.clone());
             }
         }
 
@@ -660,21 +660,33 @@ fn play() {
                     .collect::<std::collections::HashSet<_>>()
                     .into_iter()
                     .collect();
-                /*              var groups =
-                                    two_digit_masks
-                                        .SelectMany(mask =>
-                                                    cell_groups
-                                                        .Where(group => group.Count(tuple => candidate_masks[tuple.Index] == mask) == 2)
-                                                        .Where(group => group.Any(tuple => candidate_masks[tuple.Index] != mask && (candidate_masks[tuple.Index] & mask) > 0))
-                                                        .Select(group => new
-                                                        {
-                                                            Mask = mask,
-                                                            Discriminator = group.Key,
-                                                            Description = group.First().Description,
-                                                            Cells = group
-                                                        }))
-                                        .ToList();*/
+
                 // 49.
+
+                let mut groups: Vec<Result> = Vec::new();
+
+                for &mask in &two_digit_masks {
+                    for group in &cell_groups {
+                        let count = group.iter()
+                            .filter(|tuple| candidate_masks[tuple.index] == mask)
+                            .count();
+
+                        if count == 2 {
+                            let any_condition = group.tuples.iter()
+                                .any(|tuple| candidate_masks[tuple.index] != mask && (candidate_masks[tuple.index] & mask) > 0);
+
+                            if any_condition {
+                                groups.push(Result {
+                                    mask,
+                                    discriminator: group.key,
+                                    description: group.tuples.first().unwrap().description.clone(),
+                                    cells: group.tuples.clone(),
+                                });
+                            }
+                        }
+                    }
+                }
+
                 let groups: Vec<MDDC> = two_digit_masks.into_iter()
                     .flat_map(|mask| {
                         cell_groups.iter()
@@ -739,7 +751,7 @@ fn play() {
                         {
                             let mut upper = 0;
                             let mut lower = 0;
-                            let mut temp = group.Mask;
+                            let mut temp = group.mask;
 
                             let mut value = 1;
                             while temp > 0
@@ -757,7 +769,7 @@ fn play() {
                                 "Values {} and {} in {} are in cells ({}, {}) and ({}, {}).",
                                 lower,
                                 upper,
-                                group.Description,
+                                group.description,
                                 mask_cells[0].Row + 1,
                                 mask_cells[0].Column + 1,
                                 mask_cells[1].Row + 1,
@@ -768,7 +780,7 @@ fn play() {
                             // 52.
                             for cell in cells
                             {
-                                let mask_to_remove = candidate_masks[cell.Index] & group.Mask;
+                                let mask_to_remove = candidate_masks[cell.index] & group.mask;
                                 let mut values_to_remove: Vec<u32> = Vec::new();
                                 let mut cur_value: u32 = 1;
                                 while mask_to_remove > 0
@@ -787,9 +799,9 @@ fn play() {
                                     .map(|&num| num.to_string())
                                     .collect();
                                 let values_report = string_values_to_remove.join(", ");
-                                let s = format!("{} cannot appear in ({}, {}).", values_report, cell.Row + 1, cell.Column + 1);
+                                let s = format!("{} cannot appear in ({}, {}).", values_report, cell.row + 1, cell.column + 1);
                                 println!("{}", s);
-                                candidate_masks[cell.Index] &= !group.mask;
+                                candidate_masks[cell.index] &= !group.mask;
                                 step_change_made = true;
                             }
                         }
