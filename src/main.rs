@@ -795,15 +795,15 @@ fn play() {
                                         || (mask & (1 << (state[cell.index] - 1))) == 0
                                 })
                             })
-                            .map(|group| {
+                            .map(move |group| {
                                 let cells_with_mask: Vec<Cell> = group.1
                                     .iter()
+                                    .cloned()
                                     .filter(|cell| {
                                         state[cell.index] == 0
                                             && (candidate_masks[cell.index] & mask) != 0
                                     })
-                                    .map(|&x| x)
-                                    //.clone()
+                                    //.map(|&x| x)
                                     .collect();
 
                                 let cleanable_cells_count : u32 = group.1
