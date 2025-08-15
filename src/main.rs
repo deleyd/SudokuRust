@@ -16,7 +16,7 @@ fn print_board(board : &[[char; 13]; 13])
 
 #[derive(Debug, Clone)]
 struct Cell {
-    discriminator: usize,
+    _discriminator: usize,
     description: String,
     index: usize,
     row: usize,
@@ -26,7 +26,7 @@ struct Cell {
 #[derive(Debug, Clone)]
 pub struct MDDC {
     mask: u32,
-    discriminator : usize,
+    _discriminator : usize,
     description: String,
     cells: (usize, Vec<Cell>)
 }
@@ -37,7 +37,7 @@ struct GroupWithNMask {
     description: String,
     cells: Vec<Cell>,
     cells_with_mask: Vec<Cell>,
-    cleanable_cells_count: u32,
+    //cleanable_cells_count: u32,
 }
 
 fn play() {
@@ -99,13 +99,11 @@ fn play() {
     // - move - finds next candidate number at current pos and applies it to current state
     // - collapse - pops current state from stack as it did not yield a solution
     let mut command: &str = "expand";
-    println!("state_stack.len() ={}", state_stack.len());
+
     while state_stack.len() <= 9 * 9  // 8.
     {
-        println!("before if");
         if command == "expand"
         {
-            println!("in if");
             let mut current_state: [u32; 81] = [0; 81];
             if state_stack.len() > 0  // 9.
             {
@@ -382,7 +380,7 @@ fn play() {
             .iter()
             .enumerate()
             .map(|(index, _)| (index, Cell {
-                discriminator: index / 9,
+                _discriminator: index / 9,
                 description: format!("row #{}", index / 9 + 1),
                 index,
                 row: index / 9,
@@ -394,19 +392,19 @@ fn play() {
         let mut row_cells: HashMap<usize, Cell> = HashMap::new();
 
         for (index, _) in state.iter().enumerate() {
-            let discriminator : usize = index / 9; // Calculate the group key
+            let _discriminator : usize = index / 9; // Calculate the group key
             let description : String = format!("row #{}", index / 9 + 1);
             let row : usize = index / 9;
             let column : usize = index % 9;
 
             let cell = Cell {
-                discriminator,
+                _discriminator,
                 description,
                 index,
                 row,
                 column,
             };
-            row_cells.insert(discriminator, cell);
+            row_cells.insert(_discriminator, cell);
         }
 
         // Group by columns
@@ -416,7 +414,7 @@ fn play() {
             .iter()
             .enumerate()
             .map(|(index, _)| (index, Cell {
-                discriminator: 9 + index % 9,
+                _discriminator: 9 + index % 9,
                 description: format!("column #{}", index % 9 + 1),
                 index,
                 row: index / 9,
@@ -430,7 +428,7 @@ fn play() {
             .iter()
             .enumerate()
             .map(|(index, _)| (index, Cell {
-                discriminator: 18 + 3 * ((index / 9) / 3) + (index % 9) / 3,
+                _discriminator: 18 + 3 * ((index / 9) / 3) + (index % 9) / 3,
                 description: format!("block #{},{}", (index / 9) / 3 + 1, (index % 9) / 3 + 1),
                 index,
                 row: (index / 9) / 3,
@@ -625,7 +623,7 @@ fn play() {
                             })
                             .map(move |group| MDDC {
                                 mask,
-                                discriminator: group.0.clone(),
+                                _discriminator: group.0.clone(),
                                 description: group.1.iter().next().unwrap().description.clone(),
                                 cells: (*group.0, (*group.1.clone()).to_owned())
                             })
@@ -761,7 +759,7 @@ fn play() {
                                     //.map(|&x| x)
                                     .collect();
 
-                                let cleanable_cells_count : u32 = group.1
+                                let _cleanable_cells_count : u32 = group.1
                                     .iter()
                                     .filter(|cell| {
                                         state[cell.index] == 0
@@ -775,7 +773,7 @@ fn play() {
                                     description: group.1.iter().next().unwrap().description.clone(),
                                     cells: group.1.clone(),
                                     cells_with_mask,
-                                    cleanable_cells_count,
+                                    //cleanable_cells_count,
                                 }
                             })
                     })
@@ -980,7 +978,7 @@ fn play() {
                 {
                     if command == "expand"
                     {
-                        let mut current_state: [u32; 81] = [0; 81];
+                        let current_state;
 
                         if !state_stack.is_empty()
                         {
