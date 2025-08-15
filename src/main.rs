@@ -45,13 +45,21 @@ struct Cell {
 
 
 #[derive(Debug, Clone)]
-struct MDDC {
+pub struct MDDC {
     mask: u32,
     discriminator : usize,
     description: String,
     cells: (usize, Vec<Cell>)
 }
 
+#[derive(Debug, Clone)]
+struct GroupWithNMask<T> {
+    mask: u32,
+    description: String,
+    cells: Vec<T>,
+    cells_with_mask: Vec<T>,
+    cleanable_cells_count: usize,
+}
 
 /*struct B
 {
@@ -833,9 +841,10 @@ fn play() {
                             })
                             .cloned() // or .copied() depending on the type of cell and if you need to clone or copy it
                             .collect();*/
-                        let mask_cells: Vec<_> = group.cells
+                        let mask_cells: Vec<Cell> = group.cells.1
                             .iter()
                             .filter(|cell| candidate_masks[cell.index] == group.mask)
+                            .map(|&x| x)
                             .collect();
 
                         // 51.
@@ -862,17 +871,17 @@ fn play() {
                                 lower,
                                 upper,
                                 group.description,
-                                mask_cells[0].Row + 1,
-                                mask_cells[0].Column + 1,
-                                mask_cells[1].Row + 1,
-                                mask_cells[1].Column + 1
+                                mask_cells[0].row + 1,
+                                mask_cells[0].column + 1,
+                                mask_cells[1].row + 1,
+                                mask_cells[1].column + 1
                             );
                             println!("{}", s);
 
                             // 52.
                             for cell in cells
                             {
-                                let mask_to_remove = candidate_masks[cell.index] & group.mask;
+                                let mut mask_to_remove = candidate_masks[cell.index] & group.mask;
                                 let mut values_to_remove: Vec<u32> = Vec::new();
                                 let mut cur_value: u32 = 1;
                                 while mask_to_remove > 0
@@ -945,21 +954,23 @@ fn play() {
                         cell_groups
                             .iter()
                             .filter(|group| {
-                                group.iter().all(|cell| {
+                                group.1.iter().all(|cell| {
                                     state[cell.index] == 0
                                         || (mask & (1 << (state[cell.index] - 1))) == 0
                                 })
                             })
                             .map(|group| {
-                                let cells_with_mask: Vec<&Cell> = group
+                                let cells_with_mask: Vec<Cell> = group.1
                                     .iter()
                                     .filter(|cell| {
                                         state[cell.index] == 0
                                             && (candidate_masks[cell.index] & mask) != 0
                                     })
+                                    .map(|&x| x)
+                                    //.clone()
                                     .collect();
 
-                                let cleanable_cells_count = group
+                                let cleanable_cells_count = group.1
                                     .iter()
                                     .filter(|cell| {
                                         state[cell.index] == 0
@@ -968,10 +979,10 @@ fn play() {
                                     })
                                     .count();
 
-                                GroupWithMask {
+                                GroupWithNMask {
                                     mask,
-                                    description: group.first().unwrap().description.clone(),
-                                    cells: group.clone(),
+                                    description: group.1.iter().next().unwrap().description.clone(),
+                                    cells: group.1.clone(),
                                     cells_with_mask,
                                     cleanable_cells_count,
                                 }
