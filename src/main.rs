@@ -2,6 +2,7 @@ use rand::{Rng, SeedableRng};
 use std::collections::HashMap;
 use std::collections::VecDeque;
 use std::io;
+use itertools::Itertools;
 
 fn print_board(board : &[[char; 13]; 13])
 {
@@ -46,30 +47,35 @@ struct Cell {
 #[derive(Debug, Clone)]
 struct MDDC {
     mask: u32,
-    discriminator : u32,
+    discriminator : usize,
     description: String,
-    cells: Cell
+    cells: (usize, Vec<Cell>)
 }
 
+
+/*struct B
+{
+    discriminator: u32,
+    description: String,
+    index: u32,
+    row : u32,
+    column : u32,
+}
+struct A
+{
+    mask : u32,
+    discriminator : u32,
+    description : String,
+    cells : Grouping<u32, B>
+}*/
 #[derive(Debug, Clone)]
-struct Group {
+struct RowIndex {
     discriminator: usize,
     description: String,
     index: usize,
     row: usize,
     column: usize,
-    cells: Vec<Vec<char>>,
-    mask: u32,
 }
-
-struct GroupWithMask {
-    mask: u32,
-    description: String,
-    cells: Vec<Cell>,
-    cells_with_mask: Vec<&'static Cell>, // Adjust lifetime as needed
-    cleanable_cells_count: usize,
-}
-
 
 fn play() {
     // 1. Prepare empty board
@@ -410,6 +416,19 @@ fn play() {
         // Group by rows
         // 30.
         // Group elements by row
+        let rows_indices: HashMap<usize, Vec<Cell>> = state
+            .iter()
+            .enumerate()
+            .map(|(index, value)| (index, Cell {
+                discriminator: index / 9,
+                description: format!("row #{}", index / 9 + 1),
+                index,
+                row: index / 9,
+                column: index % 9,
+            }))
+            .into_group_map();
+
+
         let mut row_cells: HashMap<usize, Cell> = HashMap::new();
 
         for (index, item) in state.iter().enumerate() {
@@ -433,8 +452,19 @@ fn play() {
         // Group by columns
         // 31.
         // Group elements by row
-        let mut column_cells: HashMap<usize, Cell> = HashMap::new();
-
+        let mut column_indices: HashMap<usize, Vec<Cell>> = HashMap::new();
+        let column_indices: HashMap<usize, Vec<Cell>> = state
+            .iter()
+            .enumerate()
+            .map(|(index, value)| (index, Cell {
+                discriminator: 9 + index % 9,
+                description: format!("column #{}", index % 9 + 1),
+                index,
+                row: index / 9,
+                column: index % 9,
+            }))
+            .into_group_map();
+        /*
         for (index, item) in state.iter().enumerate() {
             let discriminator : usize = 9 + index % 9; // Calculate the group key
             let description : String = format!("column #{}", index % 9 + 1);
@@ -450,10 +480,22 @@ fn play() {
             };
             column_cells.insert(discriminator, cell);
         }
-
+*/
         // Group by blocks
         // 32.
-        let mut block_cells: HashMap<usize, Cell> = HashMap::new();
+        let block_indices: HashMap<usize, Vec<Cell>> = state
+            .iter()
+            .enumerate()
+            .map(|(index, value)| (index, Cell {
+                discriminator: 18 + 3 * ((index / 9) / 3) + (index % 9) / 3,
+                description: format!("block #{},{}", ((index / 9) / 3 + 1), (index % 9) / 3 + 1),
+                index,
+                row: (index / 9) / 3,
+                column: (index % 9) / 3,
+            }))
+            .into_group_map();
+
+        /*let mut block_cells: HashMap<usize, Cell> = HashMap::new();
         for (index, item) in state.iter().enumerate() {
             let row = index / 9;
             let column = index % 9;
@@ -471,16 +513,19 @@ fn play() {
                 column,
             };
             column_cells.insert(discriminator, cell);
-        }
+        }*/
 
-        let x = &candidate_masks;
 
         // Combine all groups
         // 33.
-        let mut cell_groups: HashMap<usize, Cell> = HashMap::new();
+        let mut cell_groups: HashMap<usize, Vec<Cell>> = HashMap::new();
+        cell_groups.extend(rows_indices);
+        cell_groups.extend(column_indices);
+        cell_groups.extend(block_indices);
+/*
         // Add rows (0-8)
         for i in 0..9 {
-            if let Some(group) = row_cells.get(&i) {
+            if let Some(group) = rows_indices.get(&i) {
                 cell_groups.extend(group.clone());
             }
         }
@@ -496,7 +541,7 @@ fn play() {
                 cell_groups.extend(group.clone());
             }
         }
-
+*/
         //#endregion
         let x = &candidate_masks;
 
@@ -662,6 +707,53 @@ fn play() {
                     .collect();
 
                 // 49.
+                let groups: Vec<_> = two_digit_masks
+                    .iter()
+                    .flat_map(|&mask| {
+                        cell_groups
+                            .iter()
+                            .filter(|group| {
+                                // Count cells where candidateMasks[tuple.Index] == mask equals 2
+                                group.1.iter()
+                                    .filter(|tuple| candidate_masks[tuple.index] == mask)
+                                    .count() == 2
+                            })
+                            .filter(|group| {
+                                group.1.iter()
+                                    .any(|tuple| {
+                                        candidate_masks[tuple.index] != mask
+                                            && (candidate_masks[tuple.index] & mask) > 0
+                                    })
+                            })
+                            .map(|group| MDDC {
+                                mask,
+                                discriminator: group.0.clone(),
+                                description: group.1.iter().next().unwrap().description.clone(),
+                                cells: (*group.0, (*group.1.clone()).to_owned())
+                            })
+                    })
+                    .collect();
+                /*
+                let mut groups: Vec<A> = Vec::new();
+                for mask in &two_digit_masks {
+                    for group in &cell_groups {
+                        let mut count = 0;
+                        for tuple in group {
+                            if candidate_masks[tuple.index] == *mask {
+                                count += 1;
+                            }
+                        }
+                        if count == 2 {
+                            let g = A {
+                                Mask: *mask,
+                                Discriminator: group..key.clone(),
+                                Description: group.first().description.clone(),
+                                Cells: group.items.clone(),
+                            };
+                            groups.push(g);
+                        }
+                    }
+                }
 
                 let mut groups: Vec<Result> = Vec::new();
 
@@ -707,7 +799,7 @@ fn play() {
                             })
                     })
                     .collect();
-
+*/
                 // 50.
                 if !groups.is_empty()
                 {
@@ -716,10 +808,10 @@ fn play() {
                         /*var cells = group.Cells
                                 .Where(
                                     cell =>
-                                    candidate_masks[cell.Index] != group.Mask &&
-                                        (candidate_masks[cell.Index] & group.Mask) > 0)
+                                    candidate_masks[cell.index] != group.Mask &&
+                                        (candidate_masks[cell.index] & group.Mask) > 0)
                                 .ToList();*/
-                        let cells: Vec<Cell> = group.cells
+                        let cells: Vec<Cell> = group.cells.1
                             .iter()
                             .filter(|cell| {
                                 candidate_masks[cell.index] != group.mask &&
@@ -730,7 +822,7 @@ fn play() {
 
                         /*let mask_cells =
                             group.Cells
-                                .Where(cell => candidate_masks[cell.Index] == group.Mask)
+                                .Where(cell => candidate_masks[cell.index] == group.Mask)
                                 .ToArray();*/
 
                         /*let cells: Vec<_> = group.cells
@@ -831,19 +923,19 @@ fn play() {
                     masks
                         .SelectMany(mask =>
                                     cell_groups
-                                        .Where(group => group.All(cell => state[cell.Index] == 0 || (mask & (1 << (state[cell.Index] - 1))) == 0))
+                                        .Where(group => group.All(cell => state[cell.index] == 0 || (mask & (1 << (state[cell.index] - 1))) == 0))
                                         .Select(group => new
                                         {
                                             Mask = mask,
-                                            Description = group.First().Description,
+                                            description = group.First().description,
                                             Cells = group,
                                             CellsWithMask =
-                                            group.Where(cell => state[cell.Index] == 0 & & (candidate_masks[cell.Index] & mask) != 0).ToList(),
+                                            group.Where(cell => state[cell.index] == 0 & & (candidate_masks[cell.index] & mask) != 0).ToList(),
                                             CleanableCellsCount =
                                             group.Count(
-                                            cell => state[cell.Index] == 0 & &
-                                            (candidate_masks[cell.Index] & mask) != 0 & &
-                                            (candidate_masks[cell.Index] & ~mask) != 0)
+                                            cell => state[cell.index] == 0 & &
+                                            (candidate_masks[cell.index] & mask) != 0 & &
+                                            (candidate_masks[cell.index] & ~mask) != 0)
                                         }))
                         .Where(group => group.CellsWithMask.Count() == mask_to_ones_count[group.Mask])
                         .ToList(); */
@@ -892,7 +984,7 @@ fn play() {
                     .iter()
                     .flat_map(|&mask| {
                         cell_groups.iter().filter_map(move |group| {
-                            // Equivalent of group.All(cell => state[cell.Index] == 0 || (mask & (1 << (state[cell.Index] - 1))) == 0)
+                            // Equivalent of group.All(cell => state[cell.index] == 0 || (mask & (1 << (state[cell.index] - 1))) == 0)
                             let all_cells_match = group.cells.iter().all(|cell| {
                                 state[cell.index] == 0 || (mask & (1 << (state[cell.index] - 1))) == 0
                             });
@@ -943,8 +1035,8 @@ fn play() {
 
                     /*if (group_with_n_masks.Cells
                         .Any(cell =>
-                             (candidate_masks[cell.Index] & mask) != 0 &&
-                                 (candidate_masks[cell.Index] & ~mask) != 0)) */
+                             (candidate_masks[cell.index] & mask) != 0 &&
+                                 (candidate_masks[cell.index] & ~mask) != 0)) */
                     if group_with_n_masks.cells.iter().any(|cell| {
                         let candidate_mask_for_cell = candidate_masks[cell.index];
                         (candidate_mask_for_cell & mask) != 0 && (candidate_mask_for_cell & !mask) != 0
