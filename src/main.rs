@@ -14,26 +14,6 @@ fn print_board(board : &[[char; 13]; 13])
     }
 }
 
-fn join_values<I, S>(values: I, sep: &str) -> String
-where
-    I: IntoIterator<Item = S>,
-    S: AsRef<str>,
-{
-    let mut iter = values.into_iter();
-    match iter.next() {
-        None => String::new(),
-        Some(first) => {
-            // Start with the first element, then append separator + next elements
-            let mut result = first.as_ref().to_string();
-            for s in iter {
-                result.push_str(sep);
-                result.push_str(s.as_ref());
-            }
-            result
-        }
-    }
-}
-
 #[derive(Debug, Clone)]
 struct Cell {
     discriminator: usize,
@@ -42,7 +22,6 @@ struct Cell {
     row: usize,
     column: usize,
 }
-
 
 #[derive(Debug, Clone)]
 pub struct MDDC {
@@ -59,30 +38,6 @@ struct GroupWithNMask {
     cells: Vec<Cell>,
     cells_with_mask: Vec<Cell>,
     cleanable_cells_count: u32,
-}
-
-/*struct B
-{
-    discriminator: u32,
-    description: String,
-    index: u32,
-    row : u32,
-    column : u32,
-}
-struct A
-{
-    mask : u32,
-    discriminator : u32,
-    description : String,
-    cells : Grouping<u32, B>
-}*/
-#[derive(Debug, Clone)]
-struct RowIndex {
-    discriminator: usize,
-    description: String,
-    index: usize,
-    row: usize,
-    column: usize,
 }
 
 fn play() {
@@ -789,7 +744,7 @@ fn play() {
                     .flat_map(|&mask| {
                         cell_groups
                             .iter()
-                            .filter(|group| {
+                            .filter(move |group| {
                                 group.1.iter().all(|cell| {
                                     state[cell.index] == 0
                                         || (mask & (1 << (state[cell.index] - 1))) == 0
@@ -856,7 +811,7 @@ fn play() {
 
                         // 55.
                         message.push_str(&" appear only in cells".to_string());
-                        for cell in group_with_n_masks.cells_with_mask
+                        for cell in group_with_n_masks.cells_with_mask.clone()
                         {
                             message.push_str(&format!(" ({}, {})", cell.row + 1, cell.column + 1));
                         }
@@ -1039,8 +994,8 @@ fn play() {
                         let mut best_row = 9999;
                         let mut best_col = 9999;
                         let mut best_used_digits: Vec<bool> = Vec::new();
-                        let mut best_candidates_count = 9999;
-                        let mut best_random_value = 9999;
+                        let mut best_candidates_count : i32 = -1;
+                        let mut best_random_value : i32 = -1;
                         let mut contains_unsolvable_cells: bool = false;
 
                         // 67.
@@ -1089,17 +1044,17 @@ fn play() {
                                 }
 
                                 // 70.
-                                let random_value = rng.random::<u32>();
+                                let random_value = rng.random::<i32>();
                                 //let random_value = rng.Next();
 
                                 if best_candidates_count < 0 ||
-                                    candidates_count < best_candidates_count ||
-                                    (candidates_count == best_candidates_count && random_value < best_random_value)
+                                    candidates_count < best_candidates_count as usize ||
+                                    (candidates_count == best_candidates_count as usize && random_value < best_random_value)
                                 {
                                     best_row = row;
                                     best_col = col;
                                     best_used_digits = is_digit_used.to_vec();
-                                    best_candidates_count = candidates_count;
+                                    best_candidates_count = candidates_count as i32;
                                     best_random_value = random_value;
                                 }
                             }
@@ -1144,7 +1099,7 @@ fn play() {
                         let row_to_write: usize = row_to_move + row_to_move / 3 + 1;
                         let col_to_write: usize = col_to_move + col_to_move / 3 + 1;
 
-                        let used_digits = used_digits_stack.last().unwrap().clone();
+                        let mut used_digits = used_digits_stack.last().unwrap().clone();
                         let mut current_state = state_stack.last().unwrap().clone();
                         let current_state_index: usize = 9 * row_to_move + col_to_move;
 
