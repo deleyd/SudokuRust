@@ -353,7 +353,7 @@ fn play<T: Rng>(rng: &mut T) {
     //#endregion
 
     let mut change_made: bool = true;
-    while change_made  // 27
+    while change_made// 27
     {
         change_made = false;
 
@@ -393,7 +393,7 @@ fn play<T: Rng>(rng: &mut T) {
         //#endregion
         //#region Build a collection (named cellGroups) which maps cell indices into distinct groups (rows/columns/blocks)
         // 29.
-        let mut state: [i32; 81] = [0; 81]; // Example state, replace with actual data
+        //let mut state: [i32; 81] = [0; 81]; // Example state, replace with actual data
 
         // Group by rows
         // 30.
@@ -410,7 +410,7 @@ fn play<T: Rng>(rng: &mut T) {
             }))
             .into_group_map();
 
-
+/*
         let mut row_cells: HashMap<usize, Cell> = HashMap::new();
 
         for (index, _) in state.iter().enumerate() {
@@ -428,7 +428,7 @@ fn play<T: Rng>(rng: &mut T) {
             };
             row_cells.insert(_discriminator, cell);
         }
-
+*/
         // Group by columns
         // 31.
         // Group elements by row
@@ -502,11 +502,12 @@ fn play<T: Rng>(rng: &mut T) {
                 let col_to_write = col + col / 3 + 1;
 
                 state[single_candidate_index] = candidate as i32 + 1;
-                board[row_to_write][col_to_write] = char::from_u32(b'0' as u32 + candidate as u32).expect("REASON");
+                let c = char::from_u32(b'1' as u32 + candidate as u32).expect("REASON");
+                board[row_to_write][col_to_write] = c;
                 candidate_masks[single_candidate_index] = 0;
                 change_made = true;
 
-                println!("37. ({0}, {1}) can only contain {2}.", row + 1, col + 1, candidate + 1);
+                println!("37e. ({0}, {1}) can only contain {2}.", row + 1, col + 1, candidate + 1);
             }
 
             //#endregion*
@@ -604,7 +605,9 @@ fn play<T: Rng>(rng: &mut T) {
                     let state_index = 9 * row + col;
                     state[state_index] = *digit;
                     candidate_masks[state_index] = 0;
-                    board[row_to_write][col_to_write] = char::from_u32((b'0' as i32 + digit) as u32).expect("REASON");
+                    let c = char::from_u32((b'0' as i32 + digit) as u32).expect("REASON");
+                    //println!("47. c={}",c);
+                    board[row_to_write][col_to_write] = c;
 
                     change_made = true;
 
@@ -761,37 +764,37 @@ fn play<T: Rng>(rng: &mut T) {
 
                 let groups_with_n_masks : Vec<GroupWithNMask> = masks
                     .iter()
-                    .flat_map(|&mask| {
+                    .flat_map(|mask| {
                         cell_groups
                             .iter()
-                            .filter(move |group| {
+                            .filter(|group| {
                                 group.1.iter().all(|cell| {
                                     state[cell.index] == 0
-                                        || (mask & (1 << (state[cell.index] - 1))) == 0
+                                        || (mask.clone() & (1 << (state[cell.index] - 1))) == 0
                                 })
                             })
-                            .map(move |group| {
+                            .map(|group| {
                                 let cells_with_mask: Vec<Cell> = group.1
                                     .iter()
-                                    .cloned()
                                     .filter(|cell| {
                                         state[cell.index] == 0
-                                            && (candidate_masks[cell.index] & mask) != 0
+                                            && (candidate_masks[cell.index] & mask.clone()) != 0
                                     })
                                     //.map(|&x| x)
+                                    .cloned()
                                     .collect();
 
                                 let _cleanable_cells_count : u32 = group.1
                                     .iter()
                                     .filter(|cell| {
                                         state[cell.index] == 0
-                                            && (candidate_masks[cell.index] & mask) != 0
-                                            && (candidate_masks[cell.index] & !mask) != 0
+                                            && (candidate_masks[cell.index] & mask.clone()) != 0
+                                            && (candidate_masks[cell.index] & !mask.clone()) != 0
                                     })
                                     .count() as u32;
 
                                 GroupWithNMask {
-                                    mask,
+                                    mask: *mask,
                                     description: group.1.iter().next().unwrap().description.clone(),
                                     cells: group.1.clone(),
                                     cells_with_mask,
@@ -1120,7 +1123,7 @@ fn play<T: Rng>(rng: &mut T) {
                         let col_to_write: usize = col_to_move + col_to_move / 3 + 1;
 
                         let mut used_digits = used_digits_stack.last().unwrap().clone();
-                        let mut current_state = state_stack.last().unwrap().clone();
+                        let current_state = state_stack.last_mut().unwrap();
                         let current_state_index: usize = 9 * row_to_move + col_to_move;
 
                         let mut moved_to_digit = digit_to_move + 1;
@@ -1142,7 +1145,7 @@ fn play<T: Rng>(rng: &mut T) {
                         {
                             last_digit_stack.push(moved_to_digit); // Equivalent of C# Push()
                             used_digits[moved_to_digit as usize - 1] = true; // DWD Problem here. Does not change stack
-                            println!("used_digits={:?}", used_digits);
+                            //println!("75. used_digits={:?}", used_digits);
                             current_state[current_state_index] = moved_to_digit; // Array access is similar
                             board[row_to_write][col_to_write] = char::from_u32((b'0' as i32 + moved_to_digit) as u32).expect("REASON"); // Converting integer to char
 
@@ -1217,12 +1220,14 @@ fn play<T: Rng>(rng: &mut T) {
                     board[row_to_write][col_to_write] = '.';
                     if state[i] > 0
                     {
-                        board[row_to_write][col_to_write] = char::from_u32((b'0' as i32 + state[i]) as u32).expect("REASON");
+                        let c : char = char::from_u32((b'0' as i32 + state[i]) as u32).expect("REASON");
+                        //println!("79. c={:?}", c);
+                        board[row_to_write][col_to_write] = c;
                     }
                 }
 
                 let s = format!("Guessing that {} and {} are arbitrary in {} (multiple solutions): Pick {}->({}, {}), {}->({}, {}).", digit1, digit2, description, final_state[index1], row1 + 1, col1 + 1, final_state[index2], row2 + 1, col2 + 1);
-                println!("{}", s);
+                println!("79. {}", s);
             }
         }
         //#endregion
@@ -1231,7 +1236,7 @@ fn play<T: Rng>(rng: &mut T) {
         if change_made
         {
             //#region Print the board as it looks after one change was made to it
-            //print_board(&board);
+            print_board(&board);
             /*string code =
                 string.Join(string.Empty, board.Select(s => new string(s)).ToArray())
                     .Replace("-", string.Empty)
@@ -1244,9 +1249,9 @@ fn play<T: Rng>(rng: &mut T) {
                 .collect::<String>() // Collect them into a single String
                 .replace('-', "")
                 .replace('+', "")
-                .replace('|', "")
-                .replace('.', "0");
-            println!("Code: {0}", code);
+                .replace('|', "");
+                //.replace('.', "0");
+            println!("80. Code: {0}", code);
             println!();
             //#endregion
         }
