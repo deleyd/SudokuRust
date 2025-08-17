@@ -2,13 +2,20 @@ use std::collections::HashMap;
 use std::collections::VecDeque;
 use itertools::Itertools;
 
+
+fn log(s : String)
+{
+    println!("{}", s);
+}
+
 fn print_board(board : &[[char; 13]; 13])
 {
     for row in board {
+        let mut s: String = "".to_owned();
         for &ch in row {
-            print!("{}", ch); // Print each character without a newline
+            s.push(ch); // Print each character without a newline
         }
-        println!(); // Print a newline after each row
+        log(s); // Print a newline after each row
     }
 }
 
@@ -62,7 +69,7 @@ fn play(mut rnglcg: PortableLCG) {
     board[11] = middle_chars.clone().try_into().expect("REASON");
     board[12] = line_chars.clone().try_into().expect("REASON");
     print_board(&board);
-    println!("EMPTY BOARD!");
+    log("EMPTY BOARD!".to_string());
 
     // 2. Construct board to be solved
     // 3. Top element is current state of the board
@@ -258,8 +265,8 @@ fn play(mut rnglcg: PortableLCG) {
     }
 
     // 20.
-    println!();
-    println!("Final look of the solved board:");
+    log("".to_string());
+    log("Final look of the solved board:".to_string());
     print_board(&board);
     //#endregion
 
@@ -312,17 +319,17 @@ fn play(mut rnglcg: PortableLCG) {
     }
 
     // 23
-    println!();
-    println!("Starting look of the board to solve:");
+    log("".to_string());
+    log("Starting look of the board to solve:".to_string());
     print_board(&board);
     //#endregion
 
     // 24.
     //#region Prepare lookup structures that will be used in further execution
-    println!();
+    log("".to_string());
     let s = "=".repeat(80);
-    println!("24. {}", s);
-    println!();
+    log(s);
+    log("".to_string());
 
     // 25.
     //Dictionary<int, int> maskToOnesCount = new Dictionary<int, int>();
@@ -506,7 +513,8 @@ fn play(mut rnglcg: PortableLCG) {
                 candidate_masks[single_candidate_index] = 0;
                 change_made = true;
 
-                println!("37e. ({0}, {1}) can only contain {2}.", row + 1, col + 1, candidate + 1);
+                let s = format!("({0}, {1}) can only contain {2}.", row + 1, col + 1, candidate + 1);
+                log(s);
             }
 
             //#endregion*
@@ -611,7 +619,7 @@ fn play(mut rnglcg: PortableLCG) {
                     change_made = true;
 
                     let message = format!("{} can contain {} only at ({}, {}).", description, digit, row + 1, col + 1);
-                    println!("47. {}", message);
+                    log(message);
                 }
             }
             //#endregion
@@ -709,7 +717,7 @@ fn play(mut rnglcg: PortableLCG) {
                                 mask_cells[1].row + 1,
                                 mask_cells[1].column + 1
                             );
-                            println!("51. {}", s);
+                            log(s);
 
                             // 52.
                             for cell in cells
@@ -734,7 +742,7 @@ fn play(mut rnglcg: PortableLCG) {
                                     .collect();
                                 let values_report = string_values_to_remove.join(", ");
                                 let s = format!("{} cannot appear in ({}, {}).", values_report, cell.row + 1, cell.column + 1);
-                                println!("{}", s);
+                                log(s);
                                 candidate_masks[cell.index] &= !group.mask;
                                 step_change_made = true;
                             }
@@ -841,7 +849,7 @@ fn play(mut rnglcg: PortableLCG) {
                         // 56.
                         message.push_str(&" and other values cannot appear in those cells.".to_string());
 
-                        println!("{}", message.to_string());
+                        log(message);
                     }
 
                     // 57.
@@ -875,7 +883,7 @@ fn play(mut rnglcg: PortableLCG) {
 
                         // 59.
                         message.push_str(&format!(" cannot appear in cell ({}, {}).", cell.row + 1, cell.column + 1));
-                        println!("{}", message.to_string());
+                        log(message);
                     }
                 }
             }
@@ -1226,7 +1234,7 @@ fn play(mut rnglcg: PortableLCG) {
                 }
 
                 let s = format!("Guessing that {} and {} are arbitrary in {} (multiple solutions): Pick {}->({}, {}), {}->({}, {}).", digit1, digit2, description, final_state[index1], row1 + 1, col1 + 1, final_state[index2], row2 + 1, col2 + 1);
-                println!("79. {}", s);
+                log(s);
             }
         }
         //#endregion
@@ -1250,8 +1258,8 @@ fn play(mut rnglcg: PortableLCG) {
                 .replace('+', "")
                 .replace('|', "");
                 //.replace('.', "0");
-            println!("80. Code: {0}", code);
-            println!();
+            log(format!("Code: {0}", code));
+            log("".to_string());
             //#endregion
         }
     }
@@ -1294,10 +1302,10 @@ fn main()
     for seed in 1..2
     {
         let my_rng = PortableLCG::new(seed);
-        println!("RUN {}", seed);
+        log(format!("RUN {}", seed));
         play(my_rng);
     }
-    println!("THE END!");
+    log("THE END!".to_string());
     //println!("Press ENTER to exit... ");
     //let mut input_string = String::new();
     //io::stdin().read_line(&mut input_string).expect("Failed to read line");
