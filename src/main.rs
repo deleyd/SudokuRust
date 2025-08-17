@@ -100,7 +100,7 @@ fn play() {
     // - collapse - pops current state from stack as it did not yield a solution
     let mut command: &str = "expand";
 
-    while state_stack.len() <= 3  // 8.
+    while state_stack.len() <= 81  // 8.
     {
         if command == "expand"
         {
@@ -1261,22 +1261,7 @@ fn play() {
 fn main()
 {
     play();
-    let mut best_used_digits: [bool; 9] = [false; 9];
-    let mut used_digits_stack: Vec<[bool; 9]> = Vec::new();
 
-    // Push the initial array onto the stack. This creates a mutable borrow for the push operation, but it's short-lived.
-    used_digits_stack.push(best_used_digits);
-
-    // Get a mutable reference to the last element *after* the push operation has completed.
-    // This ensures that the mutable borrow for 'push' is no longer active.
-    //if let Some(ud) = used_digits_stack.last_mut() {
-    //    ud[1] = true;
-    //    println!("used_digits_stack: {:?}", used_digits_stack);
-    //} else {
-        // Handle the case where the stack might be empty, though in this example, it won't be.
-        // For a more robust solution, you might consider if an empty stack is a valid state.
-        println!("Error: used_digits_stack is empty!");
-    //}
     println!("THE END!");
     println!("Press ENTER to exit... ");
     let mut input_string = String::new();
