@@ -347,7 +347,7 @@ fn play<T: Rng>(rng: &mut T) {
     }
     //println!("single_bit_to_index: {:?}", single_bit_to_index);
 
-    let all_ones = (1 << 9) - 1;
+    let all_ones : u32 = (1 << 9) - 1;
     //println!("all_ones: {:?}", all_ones);
 
     //#endregion
@@ -369,16 +369,20 @@ fn play<T: Rng>(rng: &mut T) {
                 let block_row = row / 3;
                 let block_col = col / 3;
 
-                let mut colliding_numbers = 0;
+                let mut colliding_numbers : u32 = 0;
                 for j in 0..9
                 {
                     let row_sibling_index = 9 * row + j;
                     let col_sibling_index = 9 * j + col;
                     let block_sibling_index = 9 * (block_row * 3 + j / 3) + block_col * 3 + j % 3;
-println!("row_sibling_index={}, state[row_sibling_index]={}", row_sibling_index, state[row_sibling_index]);
-                    let row_sibling_mask = 1 << (state[row_sibling_index] - 1);
-                    let col_sibling_mask = 1 << (state[col_sibling_index] - 1);
-                    let block_sibling_mask = 1 << (state[block_sibling_index] - 1);
+
+                    let row_shift_amount = if state[row_sibling_index] == 0 { 31 } else { state[row_sibling_index] - 1 };
+                    let col_shift_amount = if state[col_sibling_index] == 0 { 31 } else { state[col_sibling_index] - 1 };
+                    let block_shift_amount = if state[block_sibling_index] == 0 { 31 } else { state[block_sibling_index] - 1 };
+
+                    let row_sibling_mask : u32 = 1 << row_shift_amount;
+                    let col_sibling_mask : u32 = 1 <<col_shift_amount;
+                    let block_sibling_mask : u32 = 1 << block_shift_amount;
 
                     colliding_numbers = colliding_numbers | row_sibling_mask | col_sibling_mask | block_sibling_mask;
                 }
@@ -1227,7 +1231,7 @@ println!("row_sibling_index={}, state[row_sibling_index]={}", row_sibling_index,
         if change_made
         {
             //#region Print the board as it looks after one change was made to it
-            print_board(&board);
+            //print_board(&board);
             /*string code =
                 string.Join(string.Empty, board.Select(s => new string(s)).ToArray())
                     .Replace("-", string.Empty)
