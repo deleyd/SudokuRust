@@ -100,7 +100,7 @@ fn play() {
     // - collapse - pops current state from stack as it did not yield a solution
     let mut command: &str = "expand";
 
-    while state_stack.len() <= 9 * 9  // 8.
+    while state_stack.len() <= 3  // 8.
     {
         if command == "expand"
         {
@@ -111,10 +111,12 @@ fn play() {
                 //Array.Copy(state_stack.last(), current_state, current_state.len());
                 let opt_owned = state_stack.last().cloned();
                 current_state = opt_owned.unwrap();
+                //println!("8. state_stack={:?}", state_stack);
+                //println!("8. current_state={:?}", current_state);
             }
 
-            let mut best_row: usize = 999;
-            let mut best_col: usize = 999;
+            let mut best_row: i32 = -1;
+            let mut best_col: i32 = -1;
             let mut best_used_digits: [bool; 9] = [false; 9];
             let mut best_candidates_count: i32 = -1;
             let mut best_random_value: i32 = -1;
@@ -130,8 +132,11 @@ fn play() {
 
                     let mut is_digit_used: [bool; 9] = [false; 9];
 
+                    //println!("11. current_state={:?}", current_state);
                     for i in 0..9  // 12.
                     {
+                        //println!("current_state: {:?} i={}", current_state, i);
+
                         let row_digit = current_state[9 * i + col];
                         if row_digit > 0
                         {
@@ -169,8 +174,9 @@ fn play() {
                         candidates_count < best_candidates_count ||
                         (candidates_count == best_candidates_count && random_value < best_random_value)
                     {
-                        best_row = row;
-                        best_col = col;
+                        best_row = row as i32;
+                        best_col = col as i32;
+                        //println!("13. is_digit_used: {:?}", is_digit_used);
                         best_used_digits = is_digit_used;
                         best_candidates_count = candidates_count;
                         best_random_value = random_value;
@@ -178,13 +184,22 @@ fn play() {
                 }
             } // for (i = 0..8)
 
-            if !contains_unsolvable_cells  // 16
+            if !contains_unsolvable_cells  // 16.
             {
                 state_stack.push(current_state);
-                row_index_stack.push(best_row);
-                col_index_stack.push(best_col);
+                row_index_stack.push(best_row as usize);
+                col_index_stack.push(best_col as usize);
+                //println!("16. best_used_digits: {:?}", best_used_digits);
                 used_digits_stack.push(best_used_digits);
                 last_digit_stack.push(0); // No digit was tried at this position
+
+                /*let ud = &mut used_digits_stack;
+                if let Some(_array_ref) = ud.get_mut(1) {
+                    // array_ref is a &mut [bool; 9]
+                    //array_ref[4] = true;
+                }*/
+                //println!("16. used_digits_stack: {:?}", used_digits_stack);
+
             }
 
             // Always try to move after expand
@@ -204,16 +219,20 @@ fn play() {
         {
             let row_to_move = row_index_stack.last().unwrap();  // panic if empty which it should never be
             let col_to_move = col_index_stack.last().unwrap();
+            //println!("19a. last_digit_stack: {:?}", last_digit_stack);
             let digit_to_move: u32 = *last_digit_stack.last().unwrap();
 
             let row_to_write = row_to_move + row_to_move / 3 + 1;
             let col_to_write = col_to_move + col_to_move / 3 + 1;
 
-            let mut used_digits = used_digits_stack.last().unwrap().clone();
-            let mut current_state = state_stack.last().unwrap().clone();
+            //println!("19b. used_digits_stack.last(): {:?}", used_digits_stack.last());
+            let used_digits = used_digits_stack.last_mut().unwrap();
+            let current_state = state_stack.last_mut().unwrap();
             let current_state_index = 9 * row_to_move + col_to_move;
 
             let mut moved_to_digit = digit_to_move + 1;
+            //println!("19c. used_digits: {:?} moved_to_digit={:?}", used_digits, moved_to_digit);
+
             while moved_to_digit <= 9 && used_digits[moved_to_digit as usize - 1]
             {
                 moved_to_digit += 1;
@@ -228,10 +247,15 @@ fn play() {
 
             if moved_to_digit <= 9
             {
+                //println!("19d. moved_to_digit: {:?}", moved_to_digit);
                 last_digit_stack.push(moved_to_digit);
-                used_digits[moved_to_digit as usize - 1] = true;
+                used_digits[moved_to_digit as usize - 1] = true;  // DWD This needs to modify the value in *used_digits_stack.last()[moved_to_digit as usize - 1]
+                //println!("19e. used_digits: {:?}", used_digits);
+                //println!("19e. used_digits_stack: {:?}", used_digits_stack);
                 current_state[current_state_index] = moved_to_digit;
+                //println!("19f. New Board Value: {} current_state_index={} current_state={:?}",moved_to_digit, current_state_index, current_state);
                 board[row_to_write][col_to_write] = char::from_u32(b'0' as u32 + moved_to_digit).expect("REASON");
+                //println!("19g. row={}, col={}, Board: {:?}", row_to_write, col_to_write, board);
 
                 // Next possible digit was found at current position
                 // Next step will be to expand the state
@@ -248,6 +272,7 @@ fn play() {
     println!();
     println!("Final look of the solved board:");
     print_board(&board);
+    return;
     //#endregion
 
     //#region Generate initial board from the completely solved one
@@ -264,8 +289,10 @@ fn play() {
     //Array.Copy(state, final_state, final_state.len());
 
     let mut removed_pos = 0;
+    //println!("remaining_digits {:?}",remaining_digits);
     while removed_pos < 9 * 9 - remaining_digits  // 21.
     {
+        //println!("positions {:?}",positions);
         let cur_remaining_digits = positions.len() - removed_pos;
         let index_to_pick = removed_pos + rng.random_range(0..cur_remaining_digits);
 
@@ -307,7 +334,7 @@ fn play() {
     //#region Prepare lookup structures that will be used in further execution
     println!();
     let s = "=".repeat(80);
-    println!("{}", s);
+    println!("24. {}", s);
     println!();
 
     // 25.
@@ -484,7 +511,7 @@ fn play() {
                 candidate_masks[single_candidate_index] = 0;
                 change_made = true;
 
-                println!("({0}, {1}) can only contain {2}.", row + 1, col + 1, candidate + 1);
+                println!("37. ({0}, {1}) can only contain {2}.", row + 1, col + 1, candidate + 1);
             }
 
             //#endregion*
@@ -587,7 +614,7 @@ fn play() {
                     change_made = true;
 
                     let message = format!("{} can contain {} only at ({}, {}).", description, digit, row + 1, col + 1);
-                    println!("{}", message);
+                    println!("47. {}", message);
                 }
             }
             //#endregion
@@ -685,7 +712,7 @@ fn play() {
                                 mask_cells[1].row + 1,
                                 mask_cells[1].column + 1
                             );
-                            println!("{}", s);
+                            println!("51. {}", s);
 
                             // 52.
                             for cell in cells
@@ -1119,7 +1146,8 @@ fn play() {
                         if moved_to_digit <= 9
                         {
                             last_digit_stack.push(moved_to_digit); // Equivalent of C# Push()
-                            used_digits[moved_to_digit as usize - 1] = true; // Array access is similar
+                            used_digits[moved_to_digit as usize - 1] = true; // DWD Problem here. Does not change stack
+                            println!("used_digits={:?}", used_digits);
                             current_state[current_state_index] = moved_to_digit; // Array access is similar
                             board[row_to_write][col_to_write] = char::from_u32(b'0' as u32 + moved_to_digit).expect("REASON"); // Converting integer to char
 
@@ -1233,7 +1261,22 @@ fn play() {
 fn main()
 {
     play();
+    let mut best_used_digits: [bool; 9] = [false; 9];
+    let mut used_digits_stack: Vec<[bool; 9]> = Vec::new();
 
+    // Push the initial array onto the stack. This creates a mutable borrow for the push operation, but it's short-lived.
+    used_digits_stack.push(best_used_digits);
+
+    // Get a mutable reference to the last element *after* the push operation has completed.
+    // This ensures that the mutable borrow for 'push' is no longer active.
+    //if let Some(ud) = used_digits_stack.last_mut() {
+    //    ud[1] = true;
+    //    println!("used_digits_stack: {:?}", used_digits_stack);
+    //} else {
+        // Handle the case where the stack might be empty, though in this example, it won't be.
+        // For a more robust solution, you might consider if an empty stack is a valid state.
+        println!("Error: used_digits_stack is empty!");
+    //}
     println!("THE END!");
     println!("Press ENTER to exit... ");
     let mut input_string = String::new();
