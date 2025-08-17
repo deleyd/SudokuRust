@@ -2,6 +2,7 @@ use rand::{Rng, SeedableRng};
 use std::collections::HashMap;
 use std::collections::VecDeque;
 use itertools::Itertools;
+use std::ops::{Deref, DerefMut};
 
 fn print_board(board : &[[char; 13]; 13])
 {
@@ -39,7 +40,7 @@ struct GroupWithNMask {
     //cleanable_cells_count: u32,
 }
 
-fn play<T: Rng>(rng: &mut T) {
+fn play<T: Rng>(mut rng: T) {
     // 1. Prepare empty board
     let line: &str = "+---+---+---+";
     let middle: &str = "|...|...|...|";
@@ -1258,13 +1259,80 @@ fn play<T: Rng>(rng: &mut T) {
     }
 }
 
+
+struct Ranq1 {
+    //Recommended generator for everyday use. The period is 1:8  1019.
+    v: u64,
+}
+
+impl Ranq1 {
+    pub fn new(seed: u64) -> Self {
+        let mut ranq1 = Ranq1 {
+            v: 4101842887655102017,
+        };
+        ranq1.v ^= seed;
+        ranq1.next();
+        ranq1
+    }
+
+    pub fn next(&mut self) -> i32 {
+        self.v ^= self.v >> 21;
+        self.v ^= self.v << 35;
+        self.v ^= self.v >> 4;
+        let u = self.v.wrapping_mul(2685821657736338717);
+        let u = u >> 33;
+        let w = u as i32;
+        w
+    }
+
+    pub fn next_range(&mut self, r: i32) -> i32 {
+        // return integer in range 0..r (not including r)
+        let w = self.next();
+        let d = (w as f64) / (0x7FFFFFFF as f64);
+        let d1 = d * (r as f64);
+        let x = d1 as i32;  // integer division
+        if x > r || x < 0 {
+            let _y = 1;
+        }
+        x
+    }
+}
+
+
+pub struct PortableLCG {
+    seed: u64,
+    a: u64, // Multiplier
+    c: u64, // Increment
+    m_mask: u64, // Modulus mask (for 48-bit modulus: 2^48 - 1)
+}
+
+impl PortableLCG {
+    pub fn new(seed: u64) -> Self {
+        PortableLCG {
+            seed,
+            a: 25214903917, // POSIX multiplier
+            c: 11,          // POSIX increment
+            m_mask: (1u64 << 48) - 1, // 2^48 - 1
+        }
+    }
+
+    // Generates the next random 32-bit unsigned integer
+    pub fn next_u32(&mut self) -> i32 {
+        // Apply the LCG formula, handling overflow with wrapping_mul and wrapping_add,
+        // and using a bitmask for the modulus.
+        self.seed = (self.seed.wrapping_mul(self.a).wrapping_add(self.c)) & self.m_mask;
+        // Extract the upper 32 bits from the 48-bit state.
+        (self.seed >> 17) as i32
+    }
+}
+
 fn main()
 {
     for seed in 1..2
     {
+        let mut my_rng = PortableLCG::new(seed);
         println!("RUN {}", seed);
-        let mut my_rng = rand_chacha::ChaCha8Rng::seed_from_u64(seed);
-        play(&mut my_rng);
+        play(my_rng);
     }
     println!("THE END!");
     //println!("Press ENTER to exit... ");
