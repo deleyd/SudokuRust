@@ -1,8 +1,6 @@
-use rand::{Rng, SeedableRng};
 use std::collections::HashMap;
 use std::collections::VecDeque;
 use itertools::Itertools;
-use std::ops::{Deref, DerefMut};
 
 fn print_board(board : &[[char; 13]; 13])
 {
@@ -40,7 +38,7 @@ struct GroupWithNMask {
     //cleanable_cells_count: u32,
 }
 
-fn play<T: Rng>(mut rng: T) {
+fn play(mut rnglcg: PortableLCG) {
     // 1. Prepare empty board
     let line: &str = "+---+---+---+";
     let middle: &str = "|...|...|...|";
@@ -159,7 +157,7 @@ fn play<T: Rng>(mut rng: T) {
                         break;
                     }
 
-                    let random_value = rng.random::<i32>();  // 15.
+                    let random_value = rnglcg.next();  // 15.
 
                     if best_candidates_count < 0 ||
                         candidates_count < best_candidates_count ||
@@ -268,7 +266,7 @@ fn play<T: Rng>(mut rng: T) {
     //#region Generate initial board from the completely solved one
     // Board is solved at this point.
     // Now pick subset of digits as the starting position.
-    let remaining_digits = 30;
+    let remaining_digits : usize = 30;
     let max_removed_per_block = 6;
     let mut removed_per_block: [[i32; 3]; 3] = [[0; 3]; 3];
     //int[] positions = Enumerable.Range(0, 9 * 9).ToArray();
@@ -277,13 +275,13 @@ fn play<T: Rng>(mut rng: T) {
 
     let final_state = state.clone(); // new int[state.len()]; Array.Copy(state, final_state, final_state.len());
 
-    let mut removed_pos = 0;
+    let mut removed_pos : usize = 0;
     //println!("remaining_digits {:?}",remaining_digits);
     while removed_pos < 9 * 9 - remaining_digits  // 21.
     {
         //println!("positions {:?}",positions);
-        let cur_remaining_digits = positions.len() - removed_pos;
-        let index_to_pick = removed_pos + rng.random_range(0..cur_remaining_digits);
+        let cur_remaining_digits : i32 = (positions.len() - removed_pos) as i32;
+        let index_to_pick = removed_pos + rnglcg.next_range(cur_remaining_digits) as usize;
 
         let row: usize = positions[index_to_pick] / 9;
         let col: usize = positions[index_to_pick] % 9;
@@ -491,7 +489,7 @@ fn play<T: Rng>(mut rng: T) {
             // 37.
             if single_candidate_indices.len() > 0
             {
-                let pick_single_candidate_index = rng.random_range(0..single_candidate_indices.len());
+                let pick_single_candidate_index : usize = rnglcg.next_range(single_candidate_indices.len() as i32).try_into().unwrap();
                 let single_candidate_index = single_candidate_indices[pick_single_candidate_index];
                 let candidate_mask = candidate_masks[single_candidate_index];
                 let candidate = single_bit_to_index[&(candidate_mask as usize)];
@@ -595,7 +593,7 @@ fn play<T: Rng>(mut rng: T) {
                 // 47
                 if candidates.len() > 0
                 {
-                    let index = rng.random_range(0..candidates.len());
+                    let index = rnglcg.next_range(candidates.len() as i32) as usize;
                     let description = group_descriptions.get(index).unwrap();
                     let row = candidate_row_indices.get(index).unwrap();
                     let col = candidate_col_indices.get(index).unwrap();
@@ -1068,7 +1066,7 @@ fn play<T: Rng>(mut rng: T) {
                                 }
 
                                 // 70.
-                                let random_value = rng.random::<i32>();
+                                let random_value = rnglcg.next();
                                 //let random_value = rng.Next();
 
                                 if best_candidates_count < 0 ||
@@ -1182,7 +1180,7 @@ fn play<T: Rng>(mut rng: T) {
             // 78.
             if !state_index1.is_empty()
             {
-                let pos = rng.random_range(0..state_index1.len());
+                let pos = rnglcg.next_range(state_index1.len() as i32) as usize;
                 let index1 = state_index1[pos];
                 let index2 = state_index2[pos];
                 let digit1 = value1[pos];
@@ -1260,45 +1258,7 @@ fn play<T: Rng>(mut rng: T) {
 }
 
 
-struct Ranq1 {
-    //Recommended generator for everyday use. The period is 1:8  1019.
-    v: u64,
-}
-
-impl Ranq1 {
-    pub fn new(seed: u64) -> Self {
-        let mut ranq1 = Ranq1 {
-            v: 4101842887655102017,
-        };
-        ranq1.v ^= seed;
-        ranq1.next();
-        ranq1
-    }
-
-    pub fn next(&mut self) -> i32 {
-        self.v ^= self.v >> 21;
-        self.v ^= self.v << 35;
-        self.v ^= self.v >> 4;
-        let u = self.v.wrapping_mul(2685821657736338717);
-        let u = u >> 33;
-        let w = u as i32;
-        w
-    }
-
-    pub fn next_range(&mut self, r: i32) -> i32 {
-        // return integer in range 0..r (not including r)
-        let w = self.next();
-        let d = (w as f64) / (0x7FFFFFFF as f64);
-        let d1 = d * (r as f64);
-        let x = d1 as i32;  // integer division
-        if x > r || x < 0 {
-            let _y = 1;
-        }
-        x
-    }
-}
-
-
+#[derive(Clone, Copy)]
 pub struct PortableLCG {
     seed: u64,
     a: u64, // Multiplier
@@ -1316,13 +1276,16 @@ impl PortableLCG {
         }
     }
 
-    // Generates the next random 32-bit unsigned integer
-    pub fn next_u32(&mut self) -> i32 {
+    // Generates the next random 32-bit integer
+    pub fn next(&mut self) -> i32 {
         // Apply the LCG formula, handling overflow with wrapping_mul and wrapping_add,
         // and using a bitmask for the modulus.
         self.seed = (self.seed.wrapping_mul(self.a).wrapping_add(self.c)) & self.m_mask;
         // Extract the upper 32 bits from the 48-bit state.
         (self.seed >> 17) as i32
+    }
+    pub fn next_range(&mut self,r:i32) -> i32 {
+        return ((self.next() as f64 / 0x7FFFFFFF as f64) * r as f64) as i32;
     }
 }
 
@@ -1330,7 +1293,7 @@ fn main()
 {
     for seed in 1..2
     {
-        let mut my_rng = PortableLCG::new(seed);
+        let my_rng = PortableLCG::new(seed);
         println!("RUN {}", seed);
         play(my_rng);
     }
