@@ -1,7 +1,6 @@
 use rand::{Rng, SeedableRng};
 use std::collections::HashMap;
 use std::collections::VecDeque;
-use std::io;
 use itertools::Itertools;
 
 fn print_board(board : &[[char; 13]; 13])
@@ -67,11 +66,9 @@ fn play<T: Rng>(rng: &mut T) {
     println!("EMPTY BOARD!");
 
     // 2. Construct board to be solved
-    println!("Random u32: {}", rng.random::<u32>());
-
     // 3. Top element is current state of the board
     //Stack<int[]> state_stack = new Stack<int[]>();
-    let mut state_stack: Vec<[u32; 9 * 9]> = Vec::new(); // Explicitly typed for clarity
+    let mut state_stack: Vec<[i32; 9 * 9]> = Vec::new(); // Explicitly typed for clarity
 
     // 4. Top elements are (row, col) of cell which has been modified compared to previous state
     //Stack<int> rowIndexStack = new Stack<int>();
@@ -85,7 +82,7 @@ fn play<T: Rng>(rng: &mut T) {
 
     // 6. Top element is the value that was set on (row, col)
     //Stack<int> lastDigitStack = new Stack<int>();
-    let mut last_digit_stack: Vec<u32> = Vec::new();
+    let mut last_digit_stack: Vec<i32> = Vec::new();
 
     // 7. Indicates operation to perform next
     // - expand - finds next empty cell and puts new state on stacks
@@ -97,7 +94,7 @@ fn play<T: Rng>(rng: &mut T) {
     {
         if command == "expand"
         {
-            let mut current_state: [u32; 81] = [0; 81];
+            let mut current_state: [i32; 81] = [0; 81];
             if state_stack.len() > 0  // 9.
             {
                 // source array is state_stack.last(), destination is current_state, length is 81
@@ -213,7 +210,7 @@ fn play<T: Rng>(rng: &mut T) {
             let row_to_move = row_index_stack.last().unwrap();  // panic if empty which it should never be
             let col_to_move = col_index_stack.last().unwrap();
             //println!("19a. last_digit_stack: {:?}", last_digit_stack);
-            let digit_to_move: u32 = *last_digit_stack.last().unwrap();
+            let digit_to_move: i32 = *last_digit_stack.last().unwrap();
 
             let row_to_write = row_to_move + row_to_move / 3 + 1;
             let col_to_write = col_to_move + col_to_move / 3 + 1;
@@ -247,7 +244,7 @@ fn play<T: Rng>(rng: &mut T) {
                 //println!("19e. used_digits_stack: {:?}", used_digits_stack);
                 current_state[current_state_index] = moved_to_digit;
                 //println!("19f. New Board Value: {} current_state_index={} current_state={:?}",moved_to_digit, current_state_index, current_state);
-                board[row_to_write][col_to_write] = char::from_u32(b'0' as u32 + moved_to_digit).expect("REASON");
+                board[row_to_write][col_to_write] = char::from_u32((b'0' as i32 + moved_to_digit) as u32).expect("REASON");
                 //println!("19g. row={}, col={}, Board: {:?}", row_to_write, col_to_write, board);
 
                 // Next possible digit was found at current position
@@ -265,7 +262,6 @@ fn play<T: Rng>(rng: &mut T) {
     println!();
     println!("Final look of the solved board:");
     print_board(&board);
-    return;
     //#endregion
 
     //#region Generate initial board from the completely solved one
@@ -273,13 +269,12 @@ fn play<T: Rng>(rng: &mut T) {
     // Now pick subset of digits as the starting position.
     let remaining_digits = 30;
     let max_removed_per_block = 6;
-    let mut removed_per_block: [[u32; 3]; 3] = [[0; 3]; 3];
+    let mut removed_per_block: [[i32; 3]; 3] = [[0; 3]; 3];
     //int[] positions = Enumerable.Range(0, 9 * 9).ToArray();
     let mut positions: [usize; 9 * 9] = std::array::from_fn(|i| i);
-    let mut state = state_stack.last().unwrap().clone();
+    let state = state_stack.last_mut().unwrap();
 
-    let final_state = state.clone(); // new int[state.len()];
-    //Array.Copy(state, final_state, final_state.len());
+    let final_state = state.clone(); // new int[state.len()]; Array.Copy(state, final_state, final_state.len());
 
     let mut removed_pos = 0;
     //println!("remaining_digits {:?}",remaining_digits);
@@ -339,19 +334,22 @@ fn play<T: Rng>(rng: &mut T) {
         let smaller : u32 = i >> 1;
         let increment : usize = (i & 1) as usize;
         let usize_value = mask_to_ones_count[&smaller] + increment;
-        mask_to_ones_count.insert(i, usize_value + increment);
+        mask_to_ones_count.insert(i, usize_value);
     }
+    //println!("mask_to_ones_count: {:?}", mask_to_ones_count);
 
     // 26.
     //Dictionary < int, int > single_bit_to_index = new
     let mut single_bit_to_index: HashMap<usize, usize> = HashMap::new();
-
     for i in 0..9
     {
         single_bit_to_index.insert(1 << i, i);
     }
+    //println!("single_bit_to_index: {:?}", single_bit_to_index);
 
     let all_ones = (1 << 9) - 1;
+    //println!("all_ones: {:?}", all_ones);
+
     //#endregion
 
     let mut change_made: bool = true;
@@ -377,7 +375,7 @@ fn play<T: Rng>(rng: &mut T) {
                     let row_sibling_index = 9 * row + j;
                     let col_sibling_index = 9 * j + col;
                     let block_sibling_index = 9 * (block_row * 3 + j / 3) + block_col * 3 + j % 3;
-
+println!("row_sibling_index={}, state[row_sibling_index]={}", row_sibling_index, state[row_sibling_index]);
                     let row_sibling_mask = 1 << (state[row_sibling_index] - 1);
                     let col_sibling_mask = 1 << (state[col_sibling_index] - 1);
                     let block_sibling_mask = 1 << (state[block_sibling_index] - 1);
@@ -391,7 +389,7 @@ fn play<T: Rng>(rng: &mut T) {
         //#endregion
         //#region Build a collection (named cellGroups) which maps cell indices into distinct groups (rows/columns/blocks)
         // 29.
-        let mut state: [u32; 81] = [0; 81]; // Example state, replace with actual data
+        let mut state: [i32; 81] = [0; 81]; // Example state, replace with actual data
 
         // Group by rows
         // 30.
@@ -499,7 +497,7 @@ fn play<T: Rng>(rng: &mut T) {
                 let row_to_write = row + row / 3 + 1;
                 let col_to_write = col + col / 3 + 1;
 
-                state[single_candidate_index] = candidate as u32 + 1;
+                state[single_candidate_index] = candidate as i32 + 1;
                 board[row_to_write][col_to_write] = char::from_u32(b'0' as u32 + candidate as u32).expect("REASON");
                 candidate_masks[single_candidate_index] = 0;
                 change_made = true;
@@ -516,7 +514,7 @@ fn play<T: Rng>(rng: &mut T) {
                 let mut group_descriptions: Vec<String> = Vec::new();
                 let mut candidate_row_indices: Vec<usize> = Vec::new();
                 let mut candidate_col_indices: Vec<usize> = Vec::new();
-                let mut candidates: Vec<u32> = Vec::new();
+                let mut candidates: Vec<i32> = Vec::new();
                 // 39.
                 for digit in 1..=9
                 {
@@ -602,7 +600,7 @@ fn play<T: Rng>(rng: &mut T) {
                     let state_index = 9 * row + col;
                     state[state_index] = *digit;
                     candidate_masks[state_index] = 0;
-                    board[row_to_write][col_to_write] = char::from_u32(b'0' as u32 + digit).expect("REASON");
+                    board[row_to_write][col_to_write] = char::from_u32((b'0' as i32 + digit) as u32).expect("REASON");
 
                     change_made = true;
 
@@ -711,8 +709,8 @@ fn play<T: Rng>(rng: &mut T) {
                             for cell in cells
                             {
                                 let mut mask_to_remove = candidate_masks[cell.index] & group.mask;
-                                let mut values_to_remove: Vec<u32> = Vec::new();
-                                let mut cur_value: u32 = 1;
+                                let mut values_to_remove: Vec<i32> = Vec::new();
+                                let mut cur_value: i32 = 1;
                                 while mask_to_remove > 0
                                 {
                                     if (mask_to_remove & 1) > 0
@@ -892,10 +890,10 @@ fn play<T: Rng>(rng: &mut T) {
             //Queue<int> candidate_index2 = new Queue<int>();
             //Queue<int> candidate_digit1 = new Queue<int>();
             //Queue<int> candidate_digit2 = new Queue<int>();
-            let mut candidate_index1: VecDeque<u32> = VecDeque::new();
-            let mut candidate_index2: VecDeque<u32> = VecDeque::new();
-            let mut candidate_digit1: VecDeque<u32> = VecDeque::new();
-            let mut candidate_digit2: VecDeque<u32> = VecDeque::new();
+            let mut candidate_index1: VecDeque<i32> = VecDeque::new();
+            let mut candidate_index2: VecDeque<i32> = VecDeque::new();
+            let mut candidate_digit1: VecDeque<i32> = VecDeque::new();
+            let mut candidate_digit2: VecDeque<i32> = VecDeque::new();
 
             // 61.
             for i in 0..candidate_masks.len() - 1
@@ -936,8 +934,8 @@ fn play<T: Rng>(rng: &mut T) {
 
                             if row == row1 || col == col1 || block_index == block_index1
                             {
-                                candidate_index1.push_back(i as u32);
-                                candidate_index2.push_back(j as u32);
+                                candidate_index1.push_back(i as i32);
+                                candidate_index2.push_back(j as i32);
                                 candidate_digit1.push_back(lower);
                                 candidate_digit2.push_back(upper);
                             }
@@ -955,8 +953,8 @@ fn play<T: Rng>(rng: &mut T) {
             //List<int> value2 = new List<int>();
             let mut state_index1: Vec<usize> = Vec::new();
             let mut state_index2: Vec<usize> = Vec::new();
-            let mut value1: Vec<u32> = Vec::new();
-            let mut value2: Vec<u32> = Vec::new();
+            let mut value1: Vec<i32> = Vec::new();
+            let mut value2: Vec<i32> = Vec::new();
 
             // 64.
             while !candidate_index1.is_empty()
@@ -986,11 +984,11 @@ fn play<T: Rng>(rng: &mut T) {
                 //colIndexStack = new Stack<int>();
                 //usedDigitsStack = new Stack<bool[]>();
                 //lastDigitStack = new Stack<int>();
-                let mut state_stack: Vec<[u32; 81]> = Vec::new();
+                let mut state_stack: Vec<[i32; 81]> = Vec::new();
                 let mut row_index_stack: Vec<usize> = Vec::new();
                 let mut col_index_stack: Vec<usize> = Vec::new();
                 let mut used_digits_stack: Vec<Vec<bool>> = Vec::new();
-                let mut last_digit_stack: Vec<u32> = Vec::new();
+                let mut last_digit_stack: Vec<i32> = Vec::new();
 
                 // 66.
                 command = "expand";
@@ -1142,7 +1140,7 @@ fn play<T: Rng>(rng: &mut T) {
                             used_digits[moved_to_digit as usize - 1] = true; // DWD Problem here. Does not change stack
                             println!("used_digits={:?}", used_digits);
                             current_state[current_state_index] = moved_to_digit; // Array access is similar
-                            board[row_to_write][col_to_write] = char::from_u32(b'0' as u32 + moved_to_digit).expect("REASON"); // Converting integer to char
+                            board[row_to_write][col_to_write] = char::from_u32((b'0' as i32 + moved_to_digit) as u32).expect("REASON"); // Converting integer to char
 
                             /*if (current_state.Any(digit => digit == 0))
                             command = "expand";
@@ -1215,7 +1213,7 @@ fn play<T: Rng>(rng: &mut T) {
                     board[row_to_write][col_to_write] = '.';
                     if state[i] > 0
                     {
-                        board[row_to_write][col_to_write] = char::from_u32(b'0' as u32 + state[i]).expect("REASON");
+                        board[row_to_write][col_to_write] = char::from_u32((b'0' as i32 + state[i]) as u32).expect("REASON");
                     }
                 }
 
@@ -1255,13 +1253,13 @@ fn main()
 {
     for seed in 1..2
     {
+        println!("RUN {}", seed);
         let mut my_rng = rand_chacha::ChaCha8Rng::seed_from_u64(seed);
         play(&mut my_rng);
-        println!("RUN AGAIN!");
     }
     println!("THE END!");
-    println!("Press ENTER to exit... ");
-    let mut input_string = String::new();
-    io::stdin().read_line(&mut input_string).expect("Failed to read line");
+    //println!("Press ENTER to exit... ");
+    //let mut input_string = String::new();
+    //io::stdin().read_line(&mut input_string).expect("Failed to read line");
 }
 
