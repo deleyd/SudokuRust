@@ -40,7 +40,7 @@ struct GroupWithNMask {
     //cleanable_cells_count: u32,
 }
 
-fn play() {
+fn play<T: Rng>(rng: &mut T) {
     // 1. Prepare empty board
     let line: &str = "+---+---+---+";
     let middle: &str = "|...|...|...|";
@@ -63,17 +63,10 @@ fn play() {
     board[10] = middle_chars.clone().try_into().expect("REASON");
     board[11] = middle_chars.clone().try_into().expect("REASON");
     board[12] = line_chars.clone().try_into().expect("REASON");
-    // Iterating and printing
-    for row in &board {
-        for &c in row {
-            print!("{}", c);
-        }
-        println!();
-    }
-    println!("XYZZY");
+    print_board(&board);
+    println!("EMPTY BOARD!");
 
     // 2. Construct board to be solved
-    let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(10);
     println!("Random u32: {}", rng.random::<u32>());
 
     // 3. Top element is current state of the board
@@ -1260,8 +1253,12 @@ fn play() {
 
 fn main()
 {
-    play();
-
+    for seed in 1..2
+    {
+        let mut my_rng = rand_chacha::ChaCha8Rng::seed_from_u64(seed);
+        play(&mut my_rng);
+        println!("RUN AGAIN!");
+    }
     println!("THE END!");
     println!("Press ENTER to exit... ");
     let mut input_string = String::new();
