@@ -1,12 +1,17 @@
 use std::collections::HashMap;
 use std::collections::VecDeque;
 use itertools::Itertools;
+use std::fs::{File, OpenOptions};
+use std::io::{self, Write};
+use std::sync::Mutex;
+use std::fs;
+use std::io::ErrorKind;
 
+// Declare a global static variable to hold the file.
+// Mutex is used for thread-safe access to the file.
+// Option is used because the file might not be initialized yet.
+static GLOBAL_FILE: Mutex<Option<File>> = Mutex::new(None);
 
-fn log(s : String)
-{
-    println!("{}", s);
-}
 
 fn print_board(board : &[[char; 13]; 13])
 {
@@ -1297,8 +1302,59 @@ impl PortableLCG {
     }
 }
 
+
+fn write_from_function(content: &str) -> io::Result<()> {
+    // Lock the mutex to get access to the global file.
+    let mut file_guard = GLOBAL_FILE.lock().unwrap();
+
+    // Check if the file is initialized and write to it.
+    if let Some(ref mut file) = *file_guard {
+        file.write_all(content.as_bytes())?;
+    } else {
+        // Handle the case where the file is not yet initialized (e.g., error or not set up).
+        eprintln!("Error: File not initialized in GLOBAL_FILE.");
+        return Err(io::Error::new(io::ErrorKind::Other, "File not initialized"));
+    }
+    Ok(())
+}
+
+fn log(s : String)
+{
+    println!("{}", s);
+    write_from_function(&*s).expect("TODO: panic message");
+    write_from_function("\n").expect("TODO: panic message");
+}
+
+
 fn main()
 {
+    let file_path = "rust_output.txt";
+
+    match fs::remove_file(file_path) {
+        Ok(_) => {
+            println!("File '{}' removed successfully.", file_path);
+        }
+        Err(e) => {
+            // If the error is Kind::NotFound, the file didn't exist, which is acceptable
+            if e.kind() == ErrorKind::NotFound {
+                println!("File '{}' does not exist, no action needed.", file_path);
+            } else {
+                // Handle other potential errors during file deletion
+                eprintln!("Error removing file '{}': {}", file_path, e);
+            }
+        }
+    }
+
+    // Open the file in main and store it in the global static variable.
+    let file = OpenOptions::new()
+        .write(true)
+        .create(true)
+        .append(true) // Open in append mode to add content without overwriting
+        .open(file_path);
+
+    // Lock the mutex and store the file.
+    *GLOBAL_FILE.lock().unwrap() = Some(file.expect("REASON"));
+
     for seed in 1..2
     {
         let my_rng = PortableLCG::new(seed);
@@ -1306,8 +1362,5 @@ fn main()
         play(my_rng);
     }
     log("THE END!".to_string());
-    //println!("Press ENTER to exit... ");
-    //let mut input_string = String::new();
-    //io::stdin().read_line(&mut input_string).expect("Failed to read line");
 }
 
