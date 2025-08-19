@@ -12,120 +12,6 @@ use std::io::ErrorKind;
 static GLOBAL_FILE: Mutex<Option<File>> = Mutex::new(None);
 
 
-#[derive(Clone, Debug, PartialEq)]
-pub struct CustomGrouping<TKey, TElement> {
-    pub key: TKey,
-    pub elements: Vec<TElement>,
-}
-
-impl<TKey, TElement> CustomGrouping<TKey, TElement> {
-    pub fn new(key: TKey) -> Self {
-        Self {
-            key,
-            elements: Vec::new(),
-        }
-    }
-
-    // Methods to work with elements like IGrouping would
-    pub fn all<F>(&self, predicate: F) -> bool
-    where
-        F: Fn(&TElement) -> bool,
-    {
-        for i in 0..self.elements.len() {
-            if !predicate(&self.elements[i]) {
-                return false;
-            }
-        }
-        true
-    }
-
-    pub fn any(&self) -> bool {
-        self.elements.len() > 0
-    }
-
-    pub fn any_predicate<F>(&self, predicate: F) -> bool
-    where
-        F: Fn(&TElement) -> bool,
-    {
-        for i in 0..self.elements.len() {
-            if predicate(&self.elements[i]) {
-                return true;
-            }
-        }
-        false
-    }
-
-    pub fn first(&self) -> &TElement {
-        if self.elements.len() == 0 {
-            panic!("Sequence contains no elements");
-        }
-        &self.elements[0]
-    }
-
-    pub fn where_predicate<F>(&self, predicate: F) -> Vec<TElement>
-    where
-        F: Fn(&TElement) -> bool,
-        TElement: Clone,
-    {
-        let mut result = Vec::new();
-        for i in 0..self.elements.len() {
-            if predicate(&self.elements[i]) {
-                result.push(self.elements[i].clone());
-            }
-        }
-        result
-    }
-
-    pub fn count_predicate<F>(&self, predicate: F) -> i32
-    where
-        F: Fn(&TElement) -> bool,
-    {
-        let mut count = 0;
-        for i in 0..self.elements.len() {
-            if predicate(&self.elements[i]) {
-                count += 1;
-            }
-        }
-        count
-    }
-
-    pub fn count(&self) -> i32 {
-        self.elements.len() as i32
-    }
-
-    pub fn element_at(&self, k: i32) -> &TElement {
-        &self.elements[k as usize]
-    }
-
-    // Extended functionality: add extend method
-    pub fn extend<I>(&mut self, iter: I)
-    where
-        I: IntoIterator<Item = TElement>,
-    {
-        self.elements.extend(iter);
-    }
-    pub fn iter(&self) -> std::slice::Iter<TElement> {
-        self.elements.iter()
-    }
-
-    pub fn iter_mut(&mut self) -> std::slice::IterMut<TElement> {
-        self.elements.iter_mut()
-    }
-} //impl CustomGrouping<TKey, TElement>
-
-impl<TKey, TElement> Default for CustomGrouping<TKey, TElement>
-where
-    TKey: Default,
-{
-    fn default() -> Self {
-        Self {
-            key: TKey::default(),
-            elements: Vec::new(),
-        }
-    }
-}
-
-
 #[derive(Debug, Clone)]
 struct Cell {
     discriminator: usize,
@@ -135,25 +21,20 @@ struct Cell {
     column: usize,
 }
 
-pub struct AKeyValuePair {
-    key: usize,
-    value: Vec<Cell>,
-}
-
 #[derive(Debug, Clone)]
 pub struct CellGroup {
     pub mask: u32,
     pub discriminator: i32,
     pub description: String,
-    pub cells: Vec<Cell>,
+    cells: Vec<Cell>,
 }
 
 
 pub struct CellWithMask<'a> {
     pub mask: u32,
     pub description: String,
-    pub cell_group: (&'a usize, &'a Vec<Cell>),
-    pub cells_with_mask: Vec<Cell>,
+    cell_group: (&'a usize, &'a Vec<Cell>),
+    cells_with_mask: Vec<Cell>,
     pub cleanable_cells_count: u32,
 }
 
@@ -603,12 +484,12 @@ fn play(mut rnglcg: PortableLCG) {
         // Create the projected items using a for loop instead of Select
         for index in 0..state.len() {
             let _cell_value = &state[index]; // Note: cellValue is not used in the original code
-            let blockRow = index / 9;
-            let blockColumn = index % 9;
+            let block_row = index / 9;
+            let block_column = index % 9;
 
             let cell = Cell {
-                discriminator: 18 + 3 * (blockRow / 3) + blockColumn / 3,
-                description: format!("block {} {}", blockRow / 3 + 1, blockColumn / 3 + 1),
+                discriminator: 18 + 3 * (block_row / 3) + block_column / 3,
+                description: format!("block {} {}", block_row / 3 + 1, block_column / 3 + 1),
                 index: index as usize,
                 row: index as usize / 9,
                 column: index as usize % 9,
@@ -811,16 +692,16 @@ fn play(mut rnglcg: PortableLCG) {
                 let mut groups = Vec::new();
 
                 // Outer loop equivalent to SelectMany over twoDigitMasks
-                for mask in two_digit_masks
+                for mask in &two_digit_masks
                 {
                     // Inner processing equivalent to the SelectMany lambda
-                    for tuple_kvp in cell_groups
+                    for tuple_kvp in &cell_groups
                     {
                         // First Where condition: group.Count(tuple => candidateMasks[tuple.Index] == mask) == 2
                         let mut matching_count = 0;
                         let cell_list = tuple_kvp.1;
                         for cell in cell_list {
-                            if candidate_masks[cell.index] == mask {
+                            if candidate_masks[cell.index] == *mask {
                                 matching_count += 1;
                             }
                         }
@@ -832,7 +713,7 @@ fn play(mut rnglcg: PortableLCG) {
                         // Second Where condition: group.Any(tuple => candidateMasks[tuple.Index] != mask && (candidateMasks[tuple.Index] & mask) > 0)
                         let mut has_overlapping_non_matching = false;
                         for cell in cell_list {
-                            if candidate_masks[cell.index] != mask && (candidate_masks[cell.index] & mask) > 0 {
+                            if candidate_masks[cell.index] != *mask && (candidate_masks[cell.index] & mask) > 0 {
                                 has_overlapping_non_matching = true;
                                 break;
                             }
@@ -845,16 +726,16 @@ fn play(mut rnglcg: PortableLCG) {
 
                         // Get first description from the group
                         let mut description = String::new();
-                        if let Some(first_cell) = cell_list.first() {
+                        if let Some(first_cell) = &cell_list.first() {
                             description = first_cell.description.clone();
                         }
 
                         // Select equivalent: create the anonymous object equivalent
                         let cell_group = CellGroup {
-                            mask,
+                            mask: *mask,
                             discriminator: tuple_kvp.0.clone() as i32,
                             description,
-                            cells: cell_list,
+                            cells: cell_list.clone(),
                         };
 
                         groups.push(cell_group);
@@ -867,7 +748,7 @@ fn play(mut rnglcg: PortableLCG) {
                         log("50. Groups is empty".to_string());
                     } else {
                         log("50. Groups is NOT empty".to_string());
-                        for group in groups
+                        for group in &groups
                         {
                             // Translation of the original C# code
                             let mut cells: Vec<Cell> = Vec::new();
@@ -878,7 +759,7 @@ fn play(mut rnglcg: PortableLCG) {
                                     cells.push(cell.clone());
                                 }
                             }
-                            let cells: Vec<_> = group.cells
+                            let mut cells: Vec<_> = group.cells
                                 .iter()
                                 .filter(|cell| {
                                     candidate_masks[cell.index] != group.mask &&
@@ -892,7 +773,7 @@ fn play(mut rnglcg: PortableLCG) {
                                     cells.push(cell);
                                 }
                             }
-                            let cells: Vec<Cell> = group.cells
+                            let cells: Vec<Cell> = group.cells.clone()
                                 .iter()
                                 .filter(|cell| {
                                     candidate_masks[cell.index] != group.mask &&
@@ -901,7 +782,7 @@ fn play(mut rnglcg: PortableLCG) {
                                 .cloned() // or .copied() depending on the type of cell and if you need to clone or copy it
                                 .collect();
 
-                            let mask_cells: Vec<Cell> = group.cells
+                            let mask_cells: Vec<Cell> = group.cells.clone()
                                 .into_iter()
                                 .filter(|cell| candidate_masks[cell.index] == group.mask)
                                 .map(|x| x)
@@ -939,7 +820,7 @@ fn play(mut rnglcg: PortableLCG) {
                                 log(s);
 
                                 // 52.
-                                for cell in cells
+                                for cell in &cells
                                 {
                                     let mut mask_to_remove = candidate_masks[cell.index] & group.mask;
                                     let mut values_to_remove: Vec<i32> = Vec::new();
