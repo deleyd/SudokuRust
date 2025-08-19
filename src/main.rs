@@ -96,6 +96,21 @@ impl<TKey, TElement> CustomGrouping<TKey, TElement> {
     pub fn element_at(&self, k: i32) -> &TElement {
         &self.elements[k as usize]
     }
+
+    // Extended functionality: add extend method
+    pub fn extend<I>(&mut self, iter: I)
+    where
+        I: IntoIterator<Item = TElement>,
+    {
+        self.elements.extend(iter);
+    }
+    pub fn iter(&self) -> std::slice::Iter<TElement> {
+        self.elements.iter()
+    }
+
+    pub fn iter_mut(&mut self) -> std::slice::IterMut<TElement> {
+        self.elements.iter_mut()
+    }
 } //impl CustomGrouping<TKey, TElement>
 
 impl<TKey, TElement> Default for CustomGrouping<TKey, TElement>
@@ -120,23 +135,27 @@ struct Cell {
     column: usize,
 }
 
+pub struct AKeyValuePair {
+    key: usize,
+    value: Vec<Cell>,
+}
+
 #[derive(Debug, Clone)]
 pub struct CellGroup {
-    pub mask: i32,
+    pub mask: u32,
     pub discriminator: i32,
     pub description: String,
-    pub cells: CustomGrouping<i32, Cell>,
+    pub cells: Vec<Cell>,
 }
 
-#[derive(Debug, Clone)]
-pub struct CellWithMask {
-    pub mask: i32,
+
+pub struct CellWithMask<'a> {
+    pub mask: u32,
     pub description: String,
-    pub cells: CustomGrouping<i32, Cell>,
+    pub cell_group: (&'a usize, &'a Vec<Cell>),
     pub cells_with_mask: Vec<Cell>,
-    pub cleanable_cells_count: i32,
+    pub cleanable_cells_count: u32,
 }
-
 
 
 fn print_board(board : &[[char; 13]; 13])
@@ -150,16 +169,7 @@ fn print_board(board : &[[char; 13]; 13])
     }
 }
 
-/*
-#[derive(Debug, Clone)]
-struct GroupWithNMask {
-    mask: u32,
-    description: String,
-    cells: Vec<Cell>,
-    cells_with_mask: Vec<Cell>,
-    //cleanable_cells_count: u32,
-}
-*/
+
 fn play(mut rnglcg: PortableLCG) {
     // 1. Prepare empty board
     let line: &str = "+---+---+---+";
@@ -522,7 +532,7 @@ fn play(mut rnglcg: PortableLCG) {
 
         // Create the projected items using a for loop instead of Select
         for index in 0..state.len() {
-            let cell_value = &state[index]; // Note: cellValue is not used in the original code
+            let _cell_value = &state[index]; // Note: cellValue is not used in the original code
             let cell = Cell {
                 discriminator: index as usize / 9,
                 description: format!("row #{}", index as i32 / 9 + 1),
@@ -535,8 +545,7 @@ fn play(mut rnglcg: PortableLCG) {
 
         // Group manually using for loops instead of GroupBy
         let mut group_dictionary_row = HashMap::<usize, Vec<Cell>>::new();
-        for i in 0..temp_list_row.len() {
-            let cell = temp_list_row[i].clone();
+        for cell in temp_list_row {
             let discriminator = cell.discriminator;
 
             if !group_dictionary_row.contains_key(&discriminator) {
@@ -546,17 +555,9 @@ fn play(mut rnglcg: PortableLCG) {
         }
 
         // Convert dictionary to custom grouping structure
-        let mut rows_indices = Vec::<CustomGrouping<usize, Cell>>::new();
-        let mut keys: Vec<_> = group_dictionary_row.keys().collect();
-        keys.sort(); // Sort keys to maintain consistent ordering
-
-        for key in keys {
-            let kvp_value = group_dictionary_row.get(key).unwrap();
-            let custom_group = CustomGrouping {
-                key: *key,
-                elements: kvp_value.clone(),
-            };
-            rows_indices.push(custom_group);
+        let mut rows_indices = HashMap::<usize, Vec<Cell>>::new();
+        for kvp in group_dictionary_row {
+            rows_indices.insert(kvp.0, kvp.1);
         }
 
 
@@ -566,7 +567,7 @@ fn play(mut rnglcg: PortableLCG) {
 
         // Create the projected items using a for loop instead of Select
         for index in 0..state.len() {
-            let cell_value = &state[index]; // Note: cellValue is not used in the original code
+            let _cell_value = &state[index]; // Note: cellValue is not used in the original code
             let cell = Cell {
                 discriminator: 9 + index % 9,
                 description: format!("column #{}", index % 9 + 1),
@@ -579,8 +580,7 @@ fn play(mut rnglcg: PortableLCG) {
 
         // Group manually using for loops instead of GroupBy
         let mut group_dictionary_col = HashMap::<usize, Vec<Cell>>::new();
-        for i in 0..temp_list_col.len() {
-            let cell = temp_list_col[i].clone();
+        for cell in temp_list_col {
             let discriminator = cell.discriminator;
 
             if !group_dictionary_col.contains_key(&discriminator) {
@@ -590,43 +590,55 @@ fn play(mut rnglcg: PortableLCG) {
         }
 
         // Convert dictionary to custom grouping structure
-        let mut column_indices = Vec::<CustomGrouping<usize, Cell>>::new();
-        let mut keys: Vec<_> = group_dictionary_col.keys().collect();
-        keys.sort(); // Sort keys to maintain consistent ordering
-
-        for key in keys {
-            let kvp_value = group_dictionary_col.get(key).unwrap();
-            let custom_group = CustomGrouping {
-                key: *key,
-                elements: kvp_value.clone(),
-            };
-            column_indices.push(custom_group);
+        let mut column_indices = HashMap::<usize, Vec<Cell>>::new();
+        for kvp in group_dictionary_col {
+            column_indices.insert(kvp.0, kvp.1);
         }
 
 
         // Group by blocks
         // 32.
-        let mut block_cells: Vec<Cell>  = Vec::new();
-        for (index, _value) in state.iter().enumerate() {
+        let mut temp_list_block = Vec::<Cell>::new();
+
+        // Create the projected items using a for loop instead of Select
+        for index in 0..state.len() {
+            let _cell_value = &state[index]; // Note: cellValue is not used in the original code
+            let blockRow = index / 9;
+            let blockColumn = index % 9;
+
             let cell = Cell {
-                discriminator: 18 + 3 * ((index / 9) / 3) + (index % 9) / 3,
-                description: format!("block #{},{}", (index / 9) / 3 + 1, (index % 9) / 3 + 1),
-                index,
-                row: (index / 9) / 3,
-                column: (index % 9) / 3,
+                discriminator: 18 + 3 * (blockRow / 3) + blockColumn / 3,
+                description: format!("block {} {}", blockRow / 3 + 1, blockColumn / 3 + 1),
+                index: index as usize,
+                row: index as usize / 9,
+                column: index as usize % 9,
             };
-            block_cells.push(cell);
+            temp_list_block.push(cell);
         }
-        // Group by discriminator
-        let mut block_indices: HashMap<i32, Vec<Cell>> = HashMap::new();
-        for cell in block_cells {
-            block_indices.entry(cell.discriminator).or_insert_with(Vec::new).push(cell);
+
+        // Group manually using for loops instead of GroupBy
+        let mut group_dictionary_block = HashMap::<usize, Vec<Cell>>::new();
+        for i in 0..temp_list_block.len() {
+            let cell = temp_list_block[i].clone();
+            let discriminator = cell.discriminator;
+
+            if !group_dictionary_block.contains_key(&discriminator) {
+                group_dictionary_block.insert(discriminator, Vec::<Cell>::new());
+            }
+            group_dictionary_block.get_mut(&discriminator).unwrap().push(cell);
         }
+
+        // Convert dictionary to custom grouping structure
+        let mut block_indices = HashMap::<usize, Vec<Cell>>::new();
+        for kvp in group_dictionary_block {
+            block_indices.insert(kvp.0, kvp.1);
+        }
+
 
         // Combine all groups
         // 33.
-        let mut cell_groups: HashMap<usize, Vec<Cell>> = HashMap::new();
-        cell_groups.extend(column_indices);
+        let mut cell_groups = HashMap::<usize, Vec<Cell>>::new();
+        cell_groups.extend(rows_indices);
         cell_groups.extend(column_indices);
         cell_groups.extend(block_indices);
         //#endregion
@@ -802,12 +814,13 @@ fn play(mut rnglcg: PortableLCG) {
                 for mask in two_digit_masks
                 {
                     // Inner processing equivalent to the SelectMany lambda
-                    for group in cell_groups
+                    for tuple_kvp in cell_groups
                     {
                         // First Where condition: group.Count(tuple => candidateMasks[tuple.Index] == mask) == 2
                         let mut matching_count = 0;
-                        for tuple in &group.cells {
-                            if candidate_masks[tuple.index] == *mask {
+                        let cell_list = tuple_kvp.1;
+                        for cell in cell_list {
+                            if candidate_masks[cell.index] == mask {
                                 matching_count += 1;
                             }
                         }
@@ -818,8 +831,8 @@ fn play(mut rnglcg: PortableLCG) {
 
                         // Second Where condition: group.Any(tuple => candidateMasks[tuple.Index] != mask && (candidateMasks[tuple.Index] & mask) > 0)
                         let mut has_overlapping_non_matching = false;
-                        for tuple in &group.cells {
-                            if candidate_masks[tuple.index] != *mask && (candidate_masks[tuple.index] & mask) > 0 {
+                        for cell in cell_list {
+                            if candidate_masks[cell.index] != mask && (candidate_masks[cell.index] & mask) > 0 {
                                 has_overlapping_non_matching = true;
                                 break;
                             }
@@ -829,44 +842,24 @@ fn play(mut rnglcg: PortableLCG) {
                             continue;
                         }
 
+
+                        // Get first description from the group
+                        let mut description = String::new();
+                        if let Some(first_cell) = cell_list.first() {
+                            description = first_cell.description.clone();
+                        }
+
                         // Select equivalent: create the anonymous object equivalent
-                        let result = GroupResult {
-                            mask: *mask,
-                            discriminator: group.key.clone(),
-                            description: group.first().description.clone(),
-                            cells: group.cells.clone(),
+                        let cell_group = CellGroup {
+                            mask,
+                            discriminator: tuple_kvp.0.clone() as i32,
+                            description,
+                            cells: cell_list,
                         };
 
-                        groups.push(result);
+                        groups.push(cell_group);
                     }
 
-
-                    let groups: Vec<_> = two_digit_masks
-                        .into_iter()
-                        .flat_map(|mask| {
-                            cell_groups
-                                .iter()
-                                .filter(move |group| {
-                                    // Count cells where candidateMasks[tuple.Index] == mask equals 2
-                                    group.1.iter()
-                                        .filter(|tuple| candidate_masks[tuple.index] == mask)
-                                        .count() == 2
-                                })
-                                .filter(move |group| {
-                                    group.1.iter()
-                                        .any(|tuple| {
-                                            candidate_masks[tuple.index] != mask
-                                                && (candidate_masks[tuple.index] & mask) > 0
-                                        })
-                                })
-                                .map(move |group| Cell {
-                                    mask,
-                                    _discriminator: group.0.clone(),
-                                    description: group.1.iter().next().unwrap().description.clone(),
-                                    cells: (*group.0, (*group.1.clone()).to_owned())
-                                })
-                        })
-                        .collect();
 
                     // 50.
                     if groups.is_empty()
@@ -892,14 +885,14 @@ fn play(mut rnglcg: PortableLCG) {
                                         (candidate_masks[cell.index] & group.mask) > 0
                                 })
                                 .collect();
-                            let mut cells = Vec::new();
+
                             for cell in &group.cells {
-                                if candidate_masks[cell.1.index] != group.mask &&
+                                if candidate_masks[cell.index] != group.mask &&
                                     (candidate_masks[cell.index] & group.mask) > 0 {
                                     cells.push(cell);
                                 }
                             }
-                            let cells: Vec<Cell> = group.cells.1
+                            let cells: Vec<Cell> = group.cells
                                 .iter()
                                 .filter(|cell| {
                                     candidate_masks[cell.index] != group.mask &&
@@ -908,7 +901,7 @@ fn play(mut rnglcg: PortableLCG) {
                                 .cloned() // or .copied() depending on the type of cell and if you need to clone or copy it
                                 .collect();
 
-                            let mask_cells: Vec<Cell> = group.cells.1
+                            let mask_cells: Vec<Cell> = group.cells
                                 .into_iter()
                                 .filter(|cell| candidate_masks[cell.index] == group.mask)
                                 .map(|x| x)
@@ -996,19 +989,19 @@ fn play(mut rnglcg: PortableLCG) {
                     .map(|(mask, _)| *mask)
                     .collect();
 
-                let groups_with_n_masks : Vec<GroupWithNMask> = masks
+                let groups_with_n_masks : Vec<CellWithMask> = masks
                     .iter()
                     .flat_map(|mask| {
                         cell_groups
                             .iter()
-                            .filter(|group| {
-                                group.1.iter().all(|cell| {
+                            .filter(|cell_group1| {
+                                cell_group1.1.iter().all(|cell| {
                                     state[cell.index] == 0
                                         || (mask.clone() & (1 << (state[cell.index] - 1))) == 0
                                 })
                             })
-                            .map(|group| {
-                                let cells_with_mask: Vec<Cell> = group.1
+                            .map(|cell_group2| {
+                                let cells_with_mask: Vec<Cell> = cell_group2.1
                                     .iter()
                                     .filter(|cell| {
                                         state[cell.index] == 0
@@ -1018,7 +1011,7 @@ fn play(mut rnglcg: PortableLCG) {
                                     .cloned()
                                     .collect();
 
-                                let _cleanable_cells_count : u32 = group.1
+                                let cleanable_cells_count : u32 = cell_group2.1
                                     .iter()
                                     .filter(|cell| {
                                         state[cell.index] == 0
@@ -1027,12 +1020,12 @@ fn play(mut rnglcg: PortableLCG) {
                                     })
                                     .count() as u32;
 
-                                GroupWithNMask {
+                                CellWithMask {
                                     mask: *mask,
-                                    description: group.1.iter().next().unwrap().description.clone(),
-                                    cells: group.1.clone(),
+                                    description: cell_group2.1.iter().next().unwrap().description.clone(),
+                                    cell_group: cell_group2.clone(),
                                     cells_with_mask,
-                                    //cleanable_cells_count,
+                                    cleanable_cells_count,
                                 }
                             })
                     })
@@ -1044,7 +1037,7 @@ fn play(mut rnglcg: PortableLCG) {
                 {
                     let mask = group_with_n_masks.mask;
 
-                    if group_with_n_masks.cells.iter().any(|cell| {
+                    if group_with_n_masks.cell_group.1.iter().any(|cell| {
                         let candidate_mask_for_cell = candidate_masks[cell.index];
                         (candidate_mask_for_cell & mask) != 0 && (candidate_mask_for_cell & !mask) != 0
                     })
