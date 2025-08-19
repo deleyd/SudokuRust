@@ -74,8 +74,8 @@ fn play(mut rnglcg: PortableLCG) {
     board[10] = middle_chars.clone().try_into().expect("REASON");
     board[11] = middle_chars.clone().try_into().expect("REASON");
     board[12] = line_chars.clone().try_into().expect("REASON");
-    print_board(&board);
-    log("EMPTY BOARD!".to_string());
+    //print_board(&board);
+    //log("EMPTY BOARD!".to_string());
 
     // 2. Construct board to be solved
     // 3. Top element is current state of the board
@@ -104,6 +104,7 @@ fn play(mut rnglcg: PortableLCG) {
 
     while state_stack.len() <= 81  // 8.
     {
+        //log("Top of while 8".to_string());
         if command == "expand"
         {
             let mut current_state: [i32; 81] = [0; 81];
@@ -194,12 +195,6 @@ fn play(mut rnglcg: PortableLCG) {
                 //println!("16. best_used_digits: {:?}", best_used_digits);
                 used_digits_stack.push(best_used_digits);
                 last_digit_stack.push(0); // No digit was tried at this position
-
-                /*let ud = &mut used_digits_stack;
-                if let Some(_array_ref) = ud.get_mut(1) {
-                    // array_ref is a &mut [bool; 9]
-                    //array_ref[4] = true;
-                }*/
                 //println!("16. used_digits_stack: {:?}", used_digits_stack);
 
             }
@@ -217,12 +212,29 @@ fn play(mut rnglcg: PortableLCG) {
             last_digit_stack.pop();
 
             command = "move";   // Always try to move after collapse
-        } else if command == "move"  // 19.
+        }
+        else if command == "move"  // 19.
         {
-            let row_to_move = row_index_stack.last().unwrap();  // panic if empty which it should never be
+            let rtm = row_index_stack.last().unwrap();
+            log(format!("rowIndexStack Count={} rowToMove={}", row_index_stack.len(), rtm));
+            if row_index_stack.len() == 20
+            {
+                let _z = 1;
+            }
+            if row_index_stack.len() == 0
+            {
+                //log("row_index_stack.len()= == 0 !!!".to_string());
+            }
+            let ris_last = row_index_stack.last();
+            if ris_last.is_none() {
+                //log("ris_last.is_none() !!!".to_string());
+            }
+            let ris_unwrap = ris_last.unwrap().clone();
+
+            let row_to_move = ris_unwrap;// row_index_stack.last().unwrap();  // panic if empty which it should never be
             let col_to_move = col_index_stack.last().unwrap();
             //println!("19a. last_digit_stack: {:?}", last_digit_stack);
-            let digit_to_move: i32 = *last_digit_stack.last().unwrap();
+            let digit_to_move: i32 = last_digit_stack.pop().unwrap();
 
             let row_to_write = row_to_move + row_to_move / 3 + 1;
             let col_to_write = col_to_move + col_to_move / 3 + 1;
@@ -240,6 +252,8 @@ fn play(mut rnglcg: PortableLCG) {
                 moved_to_digit += 1;
             }
 
+            log(format!("digitToMove:{0} movedToDigit:{1} rowToMove:{2} colToMove:{3} rowToWrite:{4} colToWrite:{5} currentStateIndex:{6}", digit_to_move, moved_to_digit, row_to_move, col_to_move, row_to_write, col_to_write, current_state_index));
+
             if digit_to_move > 0
             {
                 used_digits[digit_to_move as usize - 1] = false;
@@ -249,7 +263,11 @@ fn play(mut rnglcg: PortableLCG) {
 
             if moved_to_digit <= 9
             {
-                //println!("19d. moved_to_digit: {:?}", moved_to_digit);
+                if moved_to_digit == 9
+                {
+                    let _z = 1;
+                }
+                log(format!("19d. moved_to_digit: {:?}", moved_to_digit));
                 last_digit_stack.push(moved_to_digit);
                 used_digits[moved_to_digit as usize - 1] = true;  // DWD This needs to modify the value in *used_digits_stack.last()[moved_to_digit as usize - 1]
                 //println!("19e. used_digits: {:?}", used_digits);
@@ -266,6 +284,7 @@ fn play(mut rnglcg: PortableLCG) {
                 // No viable candidate was found at current position - pop it in the next iteration
                 last_digit_stack.push(0);
                 command = "collapse";
+                log(format!("collapse. last_digit_stack.last():{}", last_digit_stack.last().unwrap().clone()));
             }
         } // if (command == "move")
     }
@@ -687,7 +706,7 @@ fn play(mut rnglcg: PortableLCG) {
                     .collect();
 
                 // 49.
-                log(format!("two_digit_masks={:?}", two_digit_masks));
+                //log(format!("two_digit_masks={:?}", two_digit_masks));
 
                 let mut groups = Vec::new();
 
@@ -745,9 +764,9 @@ fn play(mut rnglcg: PortableLCG) {
                     // 50.
                     if groups.is_empty()
                     {
-                        log("50. Groups is empty".to_string());
+                        //log("50. Groups is empty".to_string());
                     } else {
-                        log("50. Groups is NOT empty".to_string());
+                        //log("50. Groups is NOT empty".to_string());
                         for group in &groups
                         {
                             // Translation of the original C# code
@@ -1370,7 +1389,8 @@ fn play(mut rnglcg: PortableLCG) {
             }
         }
             //#endregion
-    }
+    }//while change_made// 27
+    log("BOARD SOLVED.".to_string())
 }
 
 
@@ -1458,7 +1478,7 @@ fn main()
     // Lock the mutex and store the file.
     *GLOBAL_FILE.lock().unwrap() = Some(file.expect("REASON"));
 
-    for seed in 1..2
+    for seed in 1..10
     {
         let my_rng = PortableLCG::new(seed);
         log(format!("RUN {}", seed));
