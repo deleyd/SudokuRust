@@ -5,6 +5,7 @@ use std::io::{self, Write};
 use std::sync::Mutex;
 use std::fs;
 use std::io::ErrorKind;
+use itertools::Itertools;
 
 // Declare a global static variable to hold the file.
 // Mutex is used for thread-safe access to the file.
@@ -435,7 +436,7 @@ fn play(mut rnglcg: PortableLCG) {
             let _cell_value = &state[index]; // Note: cellValue is not used in the original code
             let cell = Cell {
                 discriminator: index as usize / 9,
-                description: format!("row #{}", index as i32 / 9 + 1),
+                description: format!("row #{}", index / 9 + 1),
                 index: index as usize,
                 row: index as usize / 9,
                 column: index as usize % 9,
@@ -508,7 +509,7 @@ fn play(mut rnglcg: PortableLCG) {
 
             let cell = Cell {
                 discriminator: 18 + 3 * (block_row / 3) + block_column / 3,
-                description: format!("block {} {}", block_row / 3 + 1, block_column / 3 + 1),
+                description: format!("block ({}, {})", block_row / 3 + 1, block_column / 3 + 1),
                 index: index as usize,
                 row: index as usize / 9,
                 column: index as usize % 9,
@@ -745,7 +746,7 @@ fn play(mut rnglcg: PortableLCG) {
 
                         // Get first description from the group
                         let mut description = String::new();
-                        if let Some(first_cell) = &cell_list.first() {
+                        if let Some(first_cell) = cell_list.first() {
                             description = first_cell.description.clone();
                         }
 
@@ -767,7 +768,7 @@ fn play(mut rnglcg: PortableLCG) {
                         //log("50. Groups is empty".to_string());
                     } else {
                         //log("50. Groups is NOT empty".to_string());
-                        for group in &groups
+                        for group in groups.iter().sorted_by_key(|cell_group| cell_group.discriminator)
                         {
                             // Translation of the original C# code
                             let mut cells: Vec<Cell> = Vec::new();
@@ -784,7 +785,8 @@ fn play(mut rnglcg: PortableLCG) {
                                     candidate_masks[cell.index] != group.mask &&
                                         (candidate_masks[cell.index] & group.mask) > 0
                                 })
-                                .collect();
+                                .sorted_by_key(|cell| cell.index)
+                                .collect::<Vec<_>>();
 
                             for cell in &group.cells {
                                 if candidate_masks[cell.index] != group.mask &&
