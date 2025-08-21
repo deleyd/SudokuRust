@@ -1,11 +1,12 @@
 use std::collections::HashMap;
 use std::collections::VecDeque;
 use std::fs::{File, OpenOptions};
-use std::io::{self, Write};
+use std::io::{self, Write, BufReader, BufRead};
 use std::sync::Mutex;
 use std::fs;
 use std::io::ErrorKind;
 use itertools::Itertools;
+
 
 // Declare a global static variable to hold the file.
 // Mutex is used for thread-safe access to the file.
@@ -31,6 +32,7 @@ pub struct CellGroup {
 }
 
 
+#[derive(Debug, Clone)]
 pub struct CellWithMask<'a> {
     pub mask: u32,
     pub description: String,
@@ -1451,9 +1453,117 @@ fn log(s : String)
 }
 
 
+
+fn compare_files_line_by_line(file1_path: &str, file2_path: &str) -> io::Result<()> {
+    let file1 = File::open(file1_path)?;
+    let file2 = File::open(file2_path)?;
+
+    let reader1 = BufReader::new(file1);
+    let reader2 = BufReader::new(file2);
+
+    let mut line1_num = 0;
+    let mut line2_num = 0;
+    let mut differences_found = false;
+
+    // Create iterators for lines in each file
+    let mut lines1 = reader1.lines();
+    let mut lines2 = reader2.lines();
+    /*for i in 1..5
+    {
+        let line1_opt = lines1.next();
+        let line2_opt = lines2.next();
+        match (line1_opt, line2_opt) {
+            (Some(Ok(line1)), Some(Ok(line2))) => {
+                println!("{} line1: {} line2: {}", i, line1, line2);
+            },
+            (Some(Ok(line1)), None) => {
+                println!("No line2");
+                break;
+            },
+            (None, Some(Ok(line2))) => {
+                println!("No line1");
+                break;
+                break;
+            },
+            (None, None) => {
+                // End of both files
+                println!("End of both files");
+                break;
+            },
+            (Some(Err(e)), _) | (_, Some(Err(e))) => {
+                return Err(e); // Handle potential I/O errors during line reading
+            },
+        }
+    }*/
+
+    loop {
+        // loop until we read a line which isn't "BOARD SOLVED.", "RUN x", or "THE END!"
+        let line1_opt = loop {
+            match lines1.next() {
+                Some(Ok(line)) => {
+                    line1_num += 1;
+                    let trimmed_s = line.trim();
+                    //println!("f1 line: {} trimmed_s={}", line1_num, trimmed_s);
+                    if trimmed_s == "BOARD SOLVED." || trimmed_s == "THE END!" || trimmed_s.starts_with("RUN") {
+                       continue;
+                    } else {
+                        // Found a line that doesn't match our patterns - break the loop
+                        break Some(Ok(line)); // Found a valid line
+                    }
+                }
+                Some(Err(e)) => break Some(Err(e)), // Encountered an error reading line1
+                None => break None, // End of file 1
+            }
+        };
+
+        let line2_opt = lines2.next();
+        line2_num += 1;
+
+        match (line1_opt, line2_opt) {
+            (Some(Ok(line1)), Some(Ok(line2))) => {
+                //println!("f2 line: {} trimmed_s={}", line2_num, line2);
+                if *line1 != line2 {
+                    println!("Difference at file1 line {}, file2 line {}:", line1_num, line2_num);
+                    println!("  File 1: {}", line1);
+                    println!("  File 2: {}", line2);
+                    differences_found = true;
+                    break;
+                }
+            },
+            (Some(Ok(line1)), None) => {
+                println!("Difference at file1 line {}, file2 line {}: File 1 has extra line: {}", line1_num, line2_num, line1);
+                differences_found = true;
+                break;
+            },
+            (None, Some(Ok(line2))) => {
+                println!("Difference at file1 line {}, file2 line {}: File 2 has extra line: {}", line1_num, line2_num, line2);
+                differences_found = true;
+                break;
+            },
+            (None, None) => {
+                // End of both files
+                break;
+            },
+            (Some(Err(e)), _) | (_, Some(Err(e))) => {
+                return Err(e); // Handle potential I/O errors during line reading
+            },
+        }
+    }
+
+
+    if !differences_found {
+        println!("Files are identical.");
+    } else {
+        println!("Differences found between files.");
+    }
+
+    Ok(())
+}
+
 fn main()
 {
     let file_path = "rust_output.txt";
+    let reffile_path = r"C:\Users\David\OneDrive\Sudoku\ORIG\SudokuKata\bin\Debug\csharp_output.txt";
 
     match fs::remove_file(file_path) {
         Ok(_) => {
@@ -1486,6 +1596,12 @@ fn main()
         log(format!("RUN {}", seed));
         play(my_rng);
     }
-    log("THE END!".to_string());
-}
 
+    log("THE END!".to_string());
+    // Close file by setting the global file to None (this drops the file handle)
+    *GLOBAL_FILE.lock().unwrap() = None;
+
+    if let Err(e) = compare_files_line_by_line(file_path, reffile_path) {
+        eprintln!("Error comparing files: {}", e);
+    }
+}
