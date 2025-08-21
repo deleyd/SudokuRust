@@ -1563,7 +1563,7 @@ fn compare_files_line_by_line(file1_path: &str, file2_path: &str) -> io::Result<
 fn main()
 {
     let file_path = "rust_output.txt";
-    let reffile_path = r"C:\Users\David\OneDrive\Sudoku\ORIG\SudokuKata\bin\Debug\csharp_output.txt";
+    let reffile_path = r"C:\Users\Charlene\OneDrive\Sudoku\ORIG\SudokuKata\bin\Debug\csharp_output.txt";
 
     match fs::remove_file(file_path) {
         Ok(_) => {
