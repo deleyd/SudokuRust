@@ -402,8 +402,15 @@ fn play(mut rnglcg: PortableLCG) {
         //#region Calculate candidates for current state of the board
         let mut candidate_masks: [u32; 81] = [0; 81];
 
+        // go through every cell of board, calculcate candicate numbers for each cell that does not already have a number in it.
+        // candidate numbers are any digit 1-9 not already in that cell's row, column, and block
+        // candidate numbers are stored as a bitmask where bits 0-8 represent digits 1-9
         for i in 0..state.len()  // 28.
         {
+            // if this cell doesn't already have a number in it,
+            // then calculate all the numbers which can go in this cell
+            // candidate_mask is bits 0-8 representing numbers 1-9
+            // Array candidate_masks[81] is all candidate numbers for each cell of board
             if state[i] == 0
             {
                 let row = i / 9;
@@ -417,25 +424,30 @@ fn play(mut rnglcg: PortableLCG) {
                     let row_sibling_index = 9 * row + j;
                     let col_sibling_index = 9 * j + col;
                     let block_sibling_index = 9 * (block_row * 3 + j / 3) + block_col * 3 + j % 3;
-
+// state[81] holds numbers for each cell (or 0 if no number set yet).
                     let row_shift_amount = if state[row_sibling_index] == 0 { 31 } else { state[row_sibling_index] - 1 };
                     let col_shift_amount = if state[col_sibling_index] == 0 { 31 } else { state[col_sibling_index] - 1 };
                     let block_shift_amount = if state[block_sibling_index] == 0 { 31 } else { state[block_sibling_index] - 1 };
-
+// mask has one bit set indicating the digit in state cell. bit 0 = 1, bit 1 = 2,... bit8 = 9. Only bits 0-8 are used.
                     let row_sibling_mask : u32 = 1 << row_shift_amount;
                     let col_sibling_mask : u32 = 1 <<col_shift_amount;
                     let block_sibling_mask : u32 = 1 << block_shift_amount;
-
+// colliding_numbers bits 0-8 indicate what numbers are already present in this cell's row, column, and block.
+                    // This is complete list of numbers already used. Stored in one integer.
                     colliding_numbers = colliding_numbers | row_sibling_mask | col_sibling_mask | block_sibling_mask;
                 }
-
-                candidate_masks[i] = all_ones & !colliding_numbers;
+// candidate_mask is all numbers available to put in cell[i] of board (state)
+                // all the not "already used" numbers
+                candidate_masks[i] = all_ones & !colliding_numbers; // mask indicating what numbers are available for this cell.
             }
         }
         //#endregion
         //#region Build a collection (named cellGroups) which maps cell indices into distinct groups (rows/columns/blocks)
         // 29.
-
+        // generate cell_groups which isa BTreeMap<int, Vec<Cell>>
+        // int is the Cell discriminator. 0-8 is row this cell is in, 9-17 is column, 18-27 is block
+        // for discriminator in range 9-17, subtract 9 to get column
+        // for discriminator in range 18-27, subtract 18 to get block
         // Group by rows
         // 30.
         // Group elements by row
@@ -455,6 +467,7 @@ fn play(mut rnglcg: PortableLCG) {
         }
 
         // Group manually using for loops instead of GroupBy
+        // Create list of all 81 cells, grouped by row. Discriminator is row, varies from 0 to 8
         let mut group_dictionary_row = HashMap::<usize, Vec<Cell>>::new();
         for cell in temp_list_row {
             let discriminator = cell.discriminator;
@@ -466,6 +479,7 @@ fn play(mut rnglcg: PortableLCG) {
         }
 
         // Convert dictionary to custom grouping structure
+        // THIS MAY NOT BE NECESSARY?
         let mut rows_indices = HashMap::<usize, Vec<Cell>>::new();
         for kvp in group_dictionary_row {
             rows_indices.insert(kvp.0, kvp.1);
@@ -474,6 +488,7 @@ fn play(mut rnglcg: PortableLCG) {
 
         // 31.
         // Group by columns
+        // Create list of all 81 cells, grouped by COLUMN. Discriminator is COLUMN, varies from 9 - 17 (subtract 9 to get column)
         let mut temp_list_col = Vec::<Cell>::new();
 
         // Create the projected items using a for loop instead of Select
@@ -501,6 +516,7 @@ fn play(mut rnglcg: PortableLCG) {
         }
 
         // Convert dictionary to custom grouping structure
+        // NOT NECESSARY?
         let mut column_indices = HashMap::<usize, Vec<Cell>>::new();
         for kvp in group_dictionary_col {
             column_indices.insert(kvp.0, kvp.1);
@@ -508,6 +524,7 @@ fn play(mut rnglcg: PortableLCG) {
 
 
         // Group by blocks
+        // Create list of all 81 cells, grouped by BLOCK. Discriminator is BLOCK, varies from 18-26 (subtract 18 to get BLOCK)
         // 32.
         let mut temp_list_block = Vec::<Cell>::new();
 
@@ -527,7 +544,7 @@ fn play(mut rnglcg: PortableLCG) {
             temp_list_block.push(cell);
         }
 
-        // Group manually using for loops instead of GroupBy
+        // Group BY DISCRIMINATOR
         let mut group_dictionary_block = HashMap::<usize, Vec<Cell>>::new();
         for i in 0..temp_list_block.len() {
             let cell = temp_list_block[i].clone();
@@ -540,6 +557,7 @@ fn play(mut rnglcg: PortableLCG) {
         }
 
         // Convert dictionary to custom grouping structure
+        // not necessary?
         let mut block_indices = HashMap::<usize, Vec<Cell>>::new();
         for kvp in group_dictionary_block {
             block_indices.insert(kvp.0, kvp.1);
@@ -774,10 +792,8 @@ fn play(mut rnglcg: PortableLCG) {
 
 
                     // 50.
-                    if groups.is_empty()
+                    if !groups.is_empty()
                     {
-                        //log("50. Groups is empty".to_string());
-                    } else {
                         //log("50. Groups is NOT empty".to_string());
                         for group in groups.iter().sorted_by_key(|cell_group| cell_group.discriminator)
                         {
@@ -830,7 +846,7 @@ fn play(mut rnglcg: PortableLCG) {
                                 let mut value = 1;
                                 while temp > 0
                                 {
-                                    if (temp & 1) > 0
+                                    if (temp & 1) > 0  // if low bit is set
                                     {
                                         lower = upper;
                                         upper = value;
