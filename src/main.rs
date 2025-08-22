@@ -1,11 +1,11 @@
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::collections::VecDeque;
+use itertools::Itertools;
 use std::fs::{File, OpenOptions};
 use std::io::{self, Write, BufReader, BufRead};
 use std::sync::Mutex;
 use std::fs;
 use std::io::ErrorKind;
-use itertools::Itertools;
 
 
 // Declare a global static variable to hold the file.
@@ -41,6 +41,14 @@ pub struct CellWithMask<'a> {
     pub cleanable_cells_count: u32,
 }
 
+#[derive(Debug, PartialEq)]
+enum Commands {
+    Expand,
+    Move,
+    Collapse,
+    Complete,
+    Fail,
+}
 
 fn print_board(board : &[[char; 13]; 13])
 {
@@ -103,12 +111,12 @@ fn play(mut rnglcg: PortableLCG) {
     // - expand - finds next empty cell and puts new state on stacks
     // - move - finds next candidate number at current pos and applies it to current state
     // - collapse - pops current state from stack as it did not yield a solution
-    let mut command: &str = "expand";
+    let mut command = Commands::Expand;
 
     while state_stack.len() <= 81  // 8.
     {
         //log("Top of while 8".to_string());
-        if command == "expand"
+        if command == Commands::Expand
         {
             let mut current_state: [i32; 81] = [0; 81];
             if state_stack.len() > 0  // 9.
@@ -203,10 +211,10 @@ fn play(mut rnglcg: PortableLCG) {
             }
 
             // Always try to move after expand
-            command = "move";  // 17.
+            command = Commands::Move;  // 17.
 
-        } // if (command == "expand")
-        else if command == "collapse"  // 18.
+        } // if (command == Commands::Expand)
+        else if command == Commands::Collapse  // 18.
         {
             state_stack.pop();
             row_index_stack.pop();
@@ -214,9 +222,9 @@ fn play(mut rnglcg: PortableLCG) {
             used_digits_stack.pop();
             last_digit_stack.pop();
 
-            command = "move";   // Always try to move after collapse
+            command = Commands::Move;   // Always try to move after collapse
         }
-        else if command == "move"  // 19.
+        else if command == Commands::Move  // 19.
         {
             let rtm = row_index_stack.last().unwrap();
             log(format!("rowIndexStack Count={} rowToMove={}", row_index_stack.len(), rtm));
@@ -282,14 +290,14 @@ fn play(mut rnglcg: PortableLCG) {
 
                 // Next possible digit was found at current position
                 // Next step will be to expand the state
-                command = "expand";
+                command = Commands::Expand;
             } else {
                 // No viable candidate was found at current position - pop it in the next iteration
                 last_digit_stack.push(0);
-                command = "collapse";
+                command = Commands::Collapse;
                 log(format!("collapse. last_digit_stack.last():{}", last_digit_stack.last().unwrap().clone()));
             }
-        } // if (command == "move")
+        } // if (command == Commands::Move)
     }
 
     // 20.
@@ -361,7 +369,7 @@ fn play(mut rnglcg: PortableLCG) {
 
     // 25.
     //Dictionary<int, int> maskToOnesCount = new Dictionary<int, int>();
-    let mut mask_to_ones_count: HashMap<u32, usize> = HashMap::new();
+    let mut mask_to_ones_count: BTreeMap<u32, usize> = BTreeMap::new();
     mask_to_ones_count.insert(0, 0);
     for i in 1..(1 << 9)
     {
@@ -437,11 +445,11 @@ fn play(mut rnglcg: PortableLCG) {
         for index in 0..state.len() {
             let _cell_value = &state[index]; // Note: cellValue is not used in the original code
             let cell = Cell {
-                discriminator: index as usize / 9,
+                discriminator: index / 9,
                 description: format!("row #{}", index / 9 + 1),
-                index: index as usize,
-                row: index as usize / 9,
-                column: index as usize % 9,
+                index,
+                row: index / 9,
+                column: index % 9,
             };
             temp_list_row.push(cell);
         }
@@ -474,9 +482,9 @@ fn play(mut rnglcg: PortableLCG) {
             let cell = Cell {
                 discriminator: 9 + index % 9,
                 description: format!("column #{}", index % 9 + 1),
-                index: index as usize,
-                row: index as usize / 9,
-                column: index as usize % 9,
+                index,
+                row: index / 9,
+                column: index % 9,
             };
             temp_list_col.push(cell);
         }
@@ -512,9 +520,9 @@ fn play(mut rnglcg: PortableLCG) {
             let cell = Cell {
                 discriminator: 18 + 3 * (block_row / 3) + block_column / 3,
                 description: format!("block ({}, {})", block_row / 3 + 1, block_column / 3 + 1),
-                index: index as usize,
-                row: index as usize / 9,
-                column: index as usize % 9,
+                index,
+                row: index / 9,
+                column: index % 9,
             };
             temp_list_block.push(cell);
         }
@@ -540,7 +548,7 @@ fn play(mut rnglcg: PortableLCG) {
 
         // Combine all groups
         // 33.
-        let mut cell_groups = HashMap::<usize, Vec<Cell>>::new();
+        let mut cell_groups = BTreeMap::<usize, Vec<Cell>>::new();
         cell_groups.extend(rows_indices);
         cell_groups.extend(column_indices);
         cell_groups.extend(block_indices);
@@ -703,13 +711,14 @@ fn play(mut rnglcg: PortableLCG) {
             if !change_made
             {
                 //let two_digit_masks = candidate_masks.Where(mask => mask_to_ones_count[mask] == 2).Distinct().ToList();
-                let two_digit_masks: Vec<u32> = candidate_masks
+                let two_digit_masks1: Vec<u32> = candidate_masks
                     .into_iter()
                     .filter(|&mask| mask_to_ones_count[&mask] == 2)
                     .collect();
+                let two_digit_masks: Vec<u32>  = two_digit_masks1.into_iter().unique().collect();
+                log(format!("two_digit_masks={:?}", two_digit_masks));
 
                 // 49.
-                //log(format!("two_digit_masks={:?}", two_digit_masks));
 
                 let mut groups = Vec::new();
 
@@ -776,8 +785,8 @@ fn play(mut rnglcg: PortableLCG) {
                             let mut cells: Vec<Cell> = Vec::new();
 
                             for cell in &group.cells {
-                                if candidate_masks[cell.index as usize] != group.mask &&
-                                    (candidate_masks[cell.index as usize] & group.mask) > 0 {
+                                if candidate_masks[cell.index] != group.mask &&
+                                    (candidate_masks[cell.index] & group.mask) > 0 {
                                     cells.push(cell.clone());
                                 }
                             }
@@ -865,6 +874,11 @@ fn play(mut rnglcg: PortableLCG) {
                                         .collect();
                                     let values_report = string_values_to_remove.join(", ");
                                     let s = format!("{} cannot appear in ({}, {}).", values_report, cell.row + 1, cell.column + 1);
+
+                                    if cell.row + 1 == 7 && cell.column + 1 == 4 //s == "4 cannot appear in (7, 4)"
+                                    {
+                                        println!("Found cannot appear in (7, 4).")
+                                    }
                                     log(s);
                                     candidate_masks[cell.index] &= !group.mask;
                                     step_change_made = true;
@@ -1129,10 +1143,10 @@ fn play(mut rnglcg: PortableLCG) {
                 let mut last_digit_stack: Vec<i32> = Vec::new();
 
                 // 66.
-                command = "expand";
-                while command != "complete" && command != "fail"
+                command = Commands::Expand;
+                while command != Commands::Complete && command != Commands::Fail
                 {
-                    if command == "expand"
+                    if command == Commands::Expand
                     {
                         let current_state;
 
@@ -1225,10 +1239,10 @@ fn play(mut rnglcg: PortableLCG) {
                         }
 
                         // Always try to move after expand
-                        command = "move";
-                    } // if (command == "expand")
+                        command = Commands::Move;
+                    } // if (command == Commands::Expand)
                     // 72.
-                    else if command == "collapse"
+                    else if command == Commands::Collapse
                     {
                         state_stack.pop();
                         row_index_stack.pop();
@@ -1238,13 +1252,13 @@ fn play(mut rnglcg: PortableLCG) {
 
                         if !state_stack.is_empty()
                         {
-                            command = "move"; // Always try to move after collapse
+                            command = Commands::Move; // Always try to move after collapse
                         } else {
-                            command = "fail";
+                            command = Commands::Fail;
                         }
                     }
                     // 73.
-                    else if command == "move"
+                    else if command == Commands::Move
                     {
                         let row_to_move: usize = row_index_stack.last().unwrap().clone();
                         let col_to_move: usize = col_index_stack.last().unwrap().clone();
@@ -1285,22 +1299,22 @@ fn play(mut rnglcg: PortableLCG) {
                             else
                             command = "complete";*/
                             command = if current_state.iter().any(|&digit| digit == 0) {
-                                "expand"
+                                Commands::Expand
                             } else {
-                                "complete"
+                                Commands::Complete
                             };
                         } else {
                             // 76.
                             // No viable candidate was found at current position - pop it in the next iteration
                             last_digit_stack.push(0);
-                            command = "collapse";
+                            command = Commands::Collapse;
                         }
-                    } // if (command == "move")
+                    } // if (command == Commands::Move)
 
-                } // while (command != "complete" && command != "fail")
+                } // while (command != Commands::Complete && command != Commands::Fail)
 
                 // 77.
-                if command == "complete"
+                if command == Commands::Complete
                 {   // Board was solved successfully even with two digits swapped
                     state_index1.push(index1);
                     state_index2.push(index2);
@@ -1390,6 +1404,7 @@ fn play(mut rnglcg: PortableLCG) {
             if s2 == s1
             {
                 let _y = 1;
+                println!("FOUND MATCHING CODE");
             }
         }
             //#endregion
@@ -1468,33 +1483,6 @@ fn compare_files_line_by_line(file1_path: &str, file2_path: &str) -> io::Result<
     // Create iterators for lines in each file
     let mut lines1 = reader1.lines();
     let mut lines2 = reader2.lines();
-    /*for i in 1..5
-    {
-        let line1_opt = lines1.next();
-        let line2_opt = lines2.next();
-        match (line1_opt, line2_opt) {
-            (Some(Ok(line1)), Some(Ok(line2))) => {
-                println!("{} line1: {} line2: {}", i, line1, line2);
-            },
-            (Some(Ok(line1)), None) => {
-                println!("No line2");
-                break;
-            },
-            (None, Some(Ok(line2))) => {
-                println!("No line1");
-                break;
-                break;
-            },
-            (None, None) => {
-                // End of both files
-                println!("End of both files");
-                break;
-            },
-            (Some(Err(e)), _) | (_, Some(Err(e))) => {
-                return Err(e); // Handle potential I/O errors during line reading
-            },
-        }
-    }*/
 
     loop {
         // loop until we read a line which isn't "BOARD SOLVED.", "RUN x", or "THE END!"
@@ -1590,7 +1578,7 @@ fn main()
     // Lock the mutex and store the file.
     *GLOBAL_FILE.lock().unwrap() = Some(file.expect("REASON"));
 
-    for seed in 1..10
+    for seed in 1..25
     {
         let my_rng = PortableLCG::new(seed);
         log(format!("RUN {}", seed));
