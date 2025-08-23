@@ -459,22 +459,18 @@ fn play(mut rnglcg: PortableLCG) {
 
         // Group manually using for loops instead of GroupBy
         // Create list of all 81 cells, grouped by row. Discriminator is row, varies from 0 to 8
-        let mut group_dictionary_row = HashMap::<usize, Vec<Cell>>::new();
-        for cell in temp_list_row {
-            let discriminator = cell.discriminator;
+        let rows_indices = {
+            let mut temp_map = HashMap::<usize, Vec<Cell>>::new();
+            for cell in temp_list_row {
+                let discriminator = cell.discriminator;
 
-            if !group_dictionary_row.contains_key(&discriminator) {
-                group_dictionary_row.insert(discriminator, Vec::<Cell>::new());
+                if !temp_map.contains_key(&discriminator) {
+                    temp_map.insert(discriminator, Vec::<Cell>::new());
+                }
+                temp_map.get_mut(&discriminator).unwrap().push(cell);
             }
-            group_dictionary_row.get_mut(&discriminator).unwrap().push(cell);
-        }
-
-        // Convert dictionary to custom grouping structure
-        // THIS MAY NOT BE NECESSARY?
-        let mut rows_indices = HashMap::<usize, Vec<Cell>>::new();
-        for kvp in group_dictionary_row {
-            rows_indices.insert(kvp.0, kvp.1);
-        }
+            temp_map
+        };
 
 
         // 31.
@@ -496,22 +492,18 @@ fn play(mut rnglcg: PortableLCG) {
         }
 
         // Group manually using for loops instead of GroupBy
-        let mut group_dictionary_col = HashMap::<usize, Vec<Cell>>::new();
-        for cell in temp_list_col {
-            let discriminator = cell.discriminator;
+        let column_indices = {
+            let mut temp_map = HashMap::<usize, Vec<Cell>>::new();
+            for cell in temp_list_col {
+                let discriminator = cell.discriminator;
 
-            if !group_dictionary_col.contains_key(&discriminator) {
-                group_dictionary_col.insert(discriminator, Vec::<Cell>::new());
+                if !temp_map.contains_key(&discriminator) {
+                    temp_map.insert(discriminator, Vec::<Cell>::new());
+                }
+                temp_map.get_mut(&discriminator).unwrap().push(cell);
             }
-            group_dictionary_col.get_mut(&discriminator).unwrap().push(cell);
-        }
-
-        // Convert dictionary to custom grouping structure
-        // NOT NECESSARY?
-        let mut column_indices = HashMap::<usize, Vec<Cell>>::new();
-        for kvp in group_dictionary_col {
-            column_indices.insert(kvp.0, kvp.1);
-        }
+            temp_map
+        };
 
 
         // Group by blocks
@@ -536,23 +528,18 @@ fn play(mut rnglcg: PortableLCG) {
         }
 
         // Group BY DISCRIMINATOR
-        let mut group_dictionary_block = HashMap::<usize, Vec<Cell>>::new();
-        for i in 0..temp_list_block.len() {
-            let cell = temp_list_block[i].clone();
-            let discriminator = cell.discriminator;
+        let block_indices = {
+            let mut temp_map = HashMap::<usize, Vec<Cell>>::new();
+            for cell in temp_list_block {
+                let discriminator = cell.discriminator;
 
-            if !group_dictionary_block.contains_key(&discriminator) {
-                group_dictionary_block.insert(discriminator, Vec::<Cell>::new());
+                if !temp_map.contains_key(&discriminator) {
+                    temp_map.insert(discriminator, Vec::<Cell>::new());
+                }
+                temp_map.get_mut(&discriminator).unwrap().push(cell);
             }
-            group_dictionary_block.get_mut(&discriminator).unwrap().push(cell);
-        }
-
-        // Convert dictionary to custom grouping structure
-        // not necessary?
-        let mut block_indices = HashMap::<usize, Vec<Cell>>::new();
-        for kvp in group_dictionary_block {
-            block_indices.insert(kvp.0, kvp.1);
-        }
+            temp_map
+        };
 
 
         // Combine all groups
@@ -593,21 +580,20 @@ fn play(mut rnglcg: PortableLCG) {
             // (cells are identified by their index number)
             if single_candidate_indices.len() > 0
             {
+                // randomly pick a cell which has only one digit possibility
                 let pick_single_candidate_index : usize = rnglcg.next_range(single_candidate_indices.len() as i32).try_into().unwrap();
                 // single_candidate_index identifies the cell we are talking about
                 let single_candidate_index = single_candidate_indices[pick_single_candidate_index];
                 // candidate_mask is the one candidate digit we can use in this cell
-                let candidate_mask = candidate_masks[single_candidate_index];  // candidate_mask has 1 bit set in range 0-8 indicating which digit we can put in this cell
                 // candidate is the one digit we can use in this cell 0-8 (add one to get digit)
+                let candidate_mask = candidate_masks[single_candidate_index];  // candidate_mask has 1 bit set in range 0-8 indicating which digit we can put in this cell
                 let candidate = get_single_bit_to_index()[&(candidate_mask as usize)]; // candidate is 0-8
+                state[single_candidate_index] = candidate as i32 + 1;  // Set cell to the one digit it can be. Here's the +1 to convert to a digit 1-9
 
                 let row = single_candidate_index / 9;
                 let col = single_candidate_index % 9;
-
                 let row_to_write = row + row / 3 + 1;
                 let col_to_write = col + col / 3 + 1;
-
-                state[single_candidate_index] = candidate as i32 + 1;  // Here's the +1 to convert to a digit 1-9
                 let c = char::from_u32(b'1' as u32 + candidate as u32).expect("REASON");
                 board[row_to_write][col_to_write] = c;  // board parallels state but stores strings for printing
                 candidate_masks[single_candidate_index] = 0; // clear candidates for this cell now that we've set cell to a digit
@@ -624,10 +610,11 @@ fn play(mut rnglcg: PortableLCG) {
             // if there were no cells which could only be set to a single digit
             if !change_made
             {
+                // sync these 4
                 let mut group_descriptions: Vec<String> = Vec::new();
                 let mut candidate_row_indices: Vec<usize> = Vec::new();
                 let mut candidate_col_indices: Vec<usize> = Vec::new();
-                let mut candidates: Vec<i32> = Vec::new();
+                let mut digit_candidates: Vec<i32> = Vec::new();
                 // 39.
                 // candidate_masks is input
                 for digit in 1..=9
@@ -676,7 +663,7 @@ fn play(mut rnglcg: PortableLCG) {
                             group_descriptions.push(format!("Row #{}", cell_group + 1));
                             candidate_row_indices.push(cell_group);
                             candidate_col_indices.push(index_in_row);
-                            candidates.push(digit);
+                            digit_candidates.push(digit);
                         }
                         // 45.
                         if col_number_count == 1
@@ -684,7 +671,7 @@ fn play(mut rnglcg: PortableLCG) {
                             group_descriptions.push(format!("Column #{}", cell_group + 1));
                             candidate_row_indices.push(index_in_col);
                             candidate_col_indices.push(cell_group);
-                            candidates.push(digit);
+                            digit_candidates.push(digit);
                         }
                         // 46.
                         if block_number_count == 1
@@ -695,27 +682,27 @@ fn play(mut rnglcg: PortableLCG) {
                             group_descriptions.push(format!("Block ({}, {})", block_row + 1, block_col + 1));
                             candidate_row_indices.push(block_row * 3 + index_in_block / 3);
                             candidate_col_indices.push(block_col * 3 + index_in_block % 3);
-                            candidates.push(digit);
+                            digit_candidates.push(digit);
                         }
                     } // for (cell_group = 0..8)
                 } // for (digit = 1..9)
 
                 // 47
-                if candidates.len() > 0
+                if digit_candidates.len() > 0
                 {
-                    let index = rnglcg.next_range(candidates.len() as i32) as usize;
+                    let index = rnglcg.next_range(digit_candidates.len() as i32) as usize;
                     let description = group_descriptions.get(index).unwrap();
                     let row = candidate_row_indices.get(index).unwrap();
                     let col = candidate_col_indices.get(index).unwrap();
-                    let digit = candidates.get(index).unwrap();
-                    let row_to_write = row + row / 3 + 1;
-                    let col_to_write = col + col / 3 + 1;
+                    let digit = digit_candidates.get(index).unwrap();
 
                     let state_index = 9 * row + col;
                     state[state_index] = *digit;      // we can try digit in this cell
-                    candidate_masks[state_index] = 0;
+                    candidate_masks[state_index] = 0; // clear for this cell since we just set cell to a number
                     let c = char::from_u32((b'0' as i32 + digit) as u32).expect("REASON");
                     //println!("47. c={}",c);
+                    let row_to_write = row + row / 3 + 1;
+                    let col_to_write = col + col / 3 + 1;
                     board[row_to_write][col_to_write] = c;
 
                     change_made = true;
@@ -1322,20 +1309,6 @@ fn play(mut rnglcg: PortableLCG) {
                 let index1 = state_index1[pos];
                 let index2 = state_index2[pos];
 
-                let description: String;
-
-                if index1 / 9 == index2 / 9
-                {
-                    description = format!("row #{}", index1 / 9 + 1);
-                } else if index1 % 9 == index2 % 9
-                {
-                    description = format!("column #{}", index1 % 9 + 1);
-                } else {
-                    let row1 = index1 / 9;
-                    let col1 = index1 % 9;
-                    description = format!("block ({}, {})", row1 / 3 + 1, col1 / 3 + 1);
-                }
-
                 state[index1] = final_state[index1];
                 state[index2] = final_state[index2];
                 candidate_masks[index1] = 0;
@@ -1359,12 +1332,23 @@ fn play(mut rnglcg: PortableLCG) {
                     }
                 }
 
+                // print
                 let row1 = index1 / 9;
                 let col1 = index1 % 9;
                 let row2 = index2 / 9;
                 let col2 = index2 % 9;
                 let digit1 = value1[pos];
                 let digit2 = value2[pos];
+                let description: String;
+                if index1 / 9 == index2 / 9
+                {
+                    description = format!("row #{}", index1 / 9 + 1);
+                } else if index1 % 9 == index2 % 9
+                {
+                    description = format!("column #{}", index1 % 9 + 1);
+                } else {
+                    description = format!("block ({}, {})", row1 / 3 + 1, col1 / 3 + 1);
+                }
                 let s = format!("Guessing that {} and {} are arbitrary in {} (multiple solutions): Pick {}->({}, {}), {}->({}, {}).", digit1, digit2, description, final_state[index1], row1 + 1, col1 + 1, final_state[index2], row2 + 1, col2 + 1);
                 log(s);
             }
