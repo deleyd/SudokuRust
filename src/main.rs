@@ -126,54 +126,56 @@ fn play(mut rnglcg: PortableLCG) {
                 [0; 81]
             };
 
+            // input: current_state. output: contains_unsolvable_cells, best_row, best_col,  
             let mut best_row: i32 = -1;
             let mut best_col: i32 = -1;
             let mut best_used_digits: [bool; 9] = [false; 9];
             let mut best_candidates_count: i32 = -1;
             let mut best_random_value: i32 = -1;
             let mut contains_unsolvable_cells: bool = false;
+            // loop through all cells looking for empty ones
             for index in 0..81  // 10.
             {
                 if current_state[index] == 0  // 11.  if cell unused, then let's see what we can do with it
                 {
-                    let is_digit_used: [bool; 9] = get_row_col_block_used_digits(current_state, index);
-                    // for (i = 0..8)
+                    let is_digit_used: [bool; 9] = get_row_col_block_used_digits(current_state, index); // returns an array of 9 true/false values
 
                     // 13.
                     //let candidates_count = is_digit_used.Where(used => !used).Count();
                     let candidates_count: i32 = is_digit_used.iter() // Get an iterator over the elements
-                        .filter(|&&value| !value) // Filter for false values
+                        .filter(|&&value| !value) // count the 'false' values (filter out 'true' values)
                         .count() as i32; // Count the remaining elements
 
-                    if candidates_count == 0  // 14.
+                    if candidates_count == 0  // 14.  if there are no candidates, then this cell has no options and Sudoku is unsolvable
                     {
                         contains_unsolvable_cells = true;
                         break;
                     }
 
-                    let random_value = rnglcg.next();  // 15.
+                    let random_value = rnglcg.next();  // 15. random value if we need it
 
-                    if best_candidates_count < 0 ||
-                        candidates_count < best_candidates_count ||
-                        (candidates_count == best_candidates_count && random_value < best_random_value)
+                    // if we have no best candidates, or best candidates outnumber candidates, or
+                    // then update best everything
+                    if best_candidates_count < 0 ||                  // if we're just starting
+                        candidates_count < best_candidates_count ||  // looking for the cell with the LEAST number of candidates 
+                        (candidates_count == best_candidates_count && random_value < best_random_value) // if two cells both have the same number of candidates, randomly select one (this "random" looks not random)
                     {
                         let row: usize = index / 9;
                         let col: usize = index % 9;
-
-                        best_row = row as i32;
+                        best_row = row as i32; // this cell becomes the best cell (saved as row,col. we could save index instead?)
                         best_col = col as i32;
                         //println!("13. is_digit_used: {:?}", is_digit_used);
                         best_used_digits = is_digit_used;
-                        best_candidates_count = candidates_count;
+                        best_candidates_count = candidates_count;  // candidates_count is a function of is_digit_used array
                         best_random_value = random_value;
                     }
                 }
-            } // for (i = 0..8)
+            }
 
             if !contains_unsolvable_cells  // 16.
             {
-                state_stack.push(current_state);
-                row_index_stack.push(best_row as usize);
+                state_stack.push(current_state);          // current state came from state_stack?
+                row_index_stack.push(best_row as usize);  // save cell (as row, column)
                 col_index_stack.push(best_col as usize);
                 //println!("16. best_used_digits: {:?}", best_used_digits);
                 used_digits_stack.push(best_used_digits);
@@ -830,21 +832,9 @@ fn play(mut rnglcg: PortableLCG) {
                             if !cells.is_empty()
                             {
                                 // "Values {lower} and {upper} in {} are in cells ({mask_cells[0].row+1}, {mask_cells[0].col+1}) and ({mask_cells[1].row+1}, {mask_cells[1].col+1}).",
-                                let mut upper = 0;
-                                let mut lower = 0;
-                                let mut temp = group.mask;  // bits represent digits
+                                let temp = group.mask;  // bits represent digits
 // what the hell does this do? Find the upper two bits. upper & lower represent digits
-                                let mut value = 1;
-                                while temp > 0
-                                {
-                                    if (temp & 1) > 0  // if low bit is set
-                                    {
-                                        lower = upper;
-                                        upper = value;
-                                    }
-                                    temp = temp >> 1;  // shift to test next bit in temp
-                                    value += 1;  // counts number of bits we've tested
-                                }
+                                let (lower, upper) = top_two_digits(temp);
 
                                 let s = format!(
                                     "Values {} and {} in {} are in cells ({}, {}) and ({}, {}).",
@@ -1064,23 +1054,8 @@ fn play(mut rnglcg: PortableLCG) {
                     let col = i % 9;
                     let block_index = 3 * (row / 3) + col / 3;
 
-                    let mut temp = candidate_masks[i];
-                    let mut lower = 0;
-                    let mut upper = 0;
-                    let mut digit = 1;
-                    while temp > 0
-                    //for digit in 1..
-                    //temp > 0;
-                    //digit + +)
-                    {
-                        if (temp & 1) != 0
-                        {
-                            lower = upper;
-                            upper = digit;
-                        }
-                        temp = temp >> 1;
-                        digit += 1;
-                    }
+                    let temp = candidate_masks[i];
+                    let (lower, upper) = top_two_digits(temp);
 
                     // 63.
                     for j in i + 1..candidate_masks.len()
@@ -1417,6 +1392,24 @@ fn play(mut rnglcg: PortableLCG) {
             //#endregion
     }//while change_made// 27
     log("BOARD SOLVED.".to_string())
+}
+
+fn top_two_digits(value: u32) -> (i32, i32) {
+    let mut temp = value;
+    let mut lower = 0;
+    let mut upper = 0;
+    let mut digit = 1;
+    while temp > 0
+    {
+        if (temp & 1) != 0
+        {
+            lower = upper;
+            upper = digit;
+        }
+        temp = temp >> 1;
+        digit += 1;
+    }
+    (lower, upper)
 }
 
 fn get_row_col_block_used_digits(current_state: [i32; 81], index: usize) -> [bool; 9] {
