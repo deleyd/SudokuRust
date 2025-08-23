@@ -459,18 +459,7 @@ fn play(mut rnglcg: PortableLCG) {
 
         // Group manually using for loops instead of GroupBy
         // Create list of all 81 cells, grouped by row. Discriminator is row, varies from 0 to 8
-        let rows_indices = {
-            let mut temp_map = HashMap::<usize, Vec<Cell>>::new();
-            for cell in temp_list_row {
-                let discriminator = cell.discriminator;
-
-                if !temp_map.contains_key(&discriminator) {
-                    temp_map.insert(discriminator, Vec::<Cell>::new());
-                }
-                temp_map.get_mut(&discriminator).unwrap().push(cell);
-            }
-            temp_map
-        };
+        let rows_indices = get_indicies(temp_list_row);
 
 
         // 31.
@@ -492,18 +481,7 @@ fn play(mut rnglcg: PortableLCG) {
         }
 
         // Group manually using for loops instead of GroupBy
-        let column_indices = {
-            let mut temp_map = HashMap::<usize, Vec<Cell>>::new();
-            for cell in temp_list_col {
-                let discriminator = cell.discriminator;
-
-                if !temp_map.contains_key(&discriminator) {
-                    temp_map.insert(discriminator, Vec::<Cell>::new());
-                }
-                temp_map.get_mut(&discriminator).unwrap().push(cell);
-            }
-            temp_map
-        };
+        let column_indices = get_indicies(temp_list_col);
 
 
         // Group by blocks
@@ -528,18 +506,7 @@ fn play(mut rnglcg: PortableLCG) {
         }
 
         // Group BY DISCRIMINATOR
-        let block_indices = {
-            let mut temp_map = HashMap::<usize, Vec<Cell>>::new();
-            for cell in temp_list_block {
-                let discriminator = cell.discriminator;
-
-                if !temp_map.contains_key(&discriminator) {
-                    temp_map.insert(discriminator, Vec::<Cell>::new());
-                }
-                temp_map.get_mut(&discriminator).unwrap().push(cell);
-            }
-            temp_map
-        };
+        let block_indices = get_indicies(temp_list_block);
 
 
         // Combine all groups
@@ -1389,6 +1356,22 @@ fn play(mut rnglcg: PortableLCG) {
             //#endregion
     }//while change_made// 27
     log("BOARD SOLVED.".to_string())
+}
+
+fn get_indicies(temp_list_row: Vec<Cell>) -> HashMap<usize, Vec<Cell>> {
+    let indices = {
+        let mut temp_map = HashMap::<usize, Vec<Cell>>::new();
+        for cell in temp_list_row {
+            let discriminator = cell.discriminator;
+
+            if !temp_map.contains_key(&discriminator) {
+                temp_map.insert(discriminator, Vec::<Cell>::new());
+            }
+            temp_map.get_mut(&discriminator).unwrap().push(cell);
+        }
+        temp_map
+    };
+    indices
 }
 
 use std::sync::OnceLock;
