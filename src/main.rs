@@ -134,7 +134,7 @@ fn play(mut rnglcg: PortableLCG) {
             let mut contains_unsolvable_cells: bool = false;
             for index in 0..81  // 10.
             {
-                if current_state[index] == 0  // 11.
+                if current_state[index] == 0  // 11.  if cell unused, then let's see what we can do with it
                 {
                     let row: usize = index / 9;
                     let col: usize = index % 9;
@@ -144,6 +144,7 @@ fn play(mut rnglcg: PortableLCG) {
                     let mut is_digit_used: [bool; 9] = [false; 9];
 
                     //println!("11. current_state={:?}", current_state);
+                    // gather all digits used in cell's row, column, and block. output is_digit_used. input: current_state, row, col, block_row, block_col
                     for i in 0..9  // 12.
                     {
                         //println!("current_state: {:?} i={}", current_state, i);
