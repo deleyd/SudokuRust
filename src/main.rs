@@ -511,10 +511,11 @@ fn play(mut rnglcg: PortableLCG) {
 
         // Combine all groups
         // 33.
-        let mut cell_groups = BTreeMap::<usize, Vec<Cell>>::new();
-        cell_groups.extend(rows_indices);
-        cell_groups.extend(column_indices);
-        cell_groups.extend(block_indices);
+        let cell_groups: BTreeMap<usize, Vec<Cell>> = rows_indices
+            .into_iter()
+            .chain(column_indices)
+            .chain(block_indices)
+            .collect();
         //#endregion
 
         // cell_groups has 3x 81 cells. 81 for rows, 81 for columns, 81 for blocks
