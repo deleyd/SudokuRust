@@ -16,13 +16,23 @@ static GLOBAL_FILE: Mutex<Option<File>> = Mutex::new(None);
 
 #[derive(Debug, Clone)]
 struct Cell {
-    discriminator: usize,
+    //discriminator: usize,
     description: String,
     index: usize,
-    row: usize,
-    column: usize,
+    //row: usize,
+    //column: usize,
 }
-
+impl Cell {
+    fn get_row(&self) -> usize {
+        self.index / 9
+    }
+    fn get_column(&self) -> usize {
+        self.index % 9
+    }
+    /*fn get_index(&self) -> usize {
+        self.index
+    }*/
+}
 #[derive(Debug, Clone)]
 pub struct CellGroup {
     pub mask: u32,
@@ -50,32 +60,32 @@ impl CellCandidate {
             index: idx,
         }
     }
-    pub fn newrc(row: i32, col: i32) -> CellCandidate {
+    /*pub fn newrc(row: i32, col: i32) -> CellCandidate {
         println!("row: {} col: {}", row, col);
         CellCandidate {
             index: (row * 9 + col) as usize,
         }
-    }
+    }*/
     // Getter method
     fn get_index(&self) -> usize {
         self.index
     }
     // Setter method
-    fn set_index(&mut self, value: usize) {
+    /*fn set_index(&mut self, value: usize) {
         self.index = value;
-    }
+    }*/
     fn get_row(&self) -> usize {
         self.index / 9
     }
     fn get_col(&self) -> usize {
         self.index % 9
     }
-    fn get_blockrow(&self) -> usize {
+    /*fn get_blockrow(&self) -> usize {
         self.get_row() / 3
     }
     fn get_blockcol(&self) -> usize {
         self.get_col() /3
-    }
+    }*/
 }
 
 
@@ -444,17 +454,21 @@ fn play(mut rnglcg: PortableLCG) {
         // Group elements by row
 
         // Create the projected items using a for loop instead of Select
-        let temp_list_row: Vec<Cell> = (0..81).map(|index| Cell {
-            discriminator: index / 9,
-            description: format!("row #{}", index / 9 + 1),
-            index,
-            row: index / 9,
-            column: index % 9,
-        }).collect();
-
-        // Group manually using for loops instead of GroupBy
-        // Create list of all 81 cells, grouped by row. Discriminator is row, varies from 0 to 8
-        let rows_indices = get_indicies(temp_list_row);
+        let row_indices = {
+            let mut temp_map = HashMap::<usize, Vec<Cell>>::new();
+            for index in 0..81 {
+                let discriminator = index / 9;
+                let cell = Cell {
+                    //discriminator,
+                    description: format!("row #{}", discriminator + 1),
+                    index,
+                    //row: index / 9,
+                    //column: index % 9,
+                };
+                temp_map.entry(discriminator).or_insert_with(Vec::new).push(cell);
+            }
+            temp_map
+        };
 
 
         // 31.
@@ -462,15 +476,22 @@ fn play(mut rnglcg: PortableLCG) {
         // Create list of all 81 cells, grouped by COLUMN. Discriminator is COLUMN, varies from 9 - 17 (subtract 9 to get column)
 
         // Create the projected items using a for loop instead of Select
-        let temp_list_col: Vec<Cell> = (0..81).map(|index| Cell {
-            discriminator: 9 + index % 9,
-            description: format!("column #{}", index % 9 + 1),
-            index,
-            row: index / 9,
-            column: index % 9,
-        }).collect();
-        // Group manually using for loops instead of GroupBy
-        let column_indices = get_indicies(temp_list_col);
+        let column_indices = {
+            let mut temp_map = HashMap::<usize, Vec<Cell>>::new();
+            for index in 0..81 {
+                let discriminator = 9 + index / 9;
+                let cell = Cell {
+                    //discriminator,
+                    description: format!("column #{}", index % 9 + 1),
+                    index,
+                    //row:  index / 9,
+                    //column: index % 9,
+                };
+                temp_map.entry(discriminator).or_insert_with(Vec::new).push(cell);
+            }
+            temp_map
+        };
+
 
 
         // Group by blocks
@@ -478,26 +499,28 @@ fn play(mut rnglcg: PortableLCG) {
         // 32.
 
         // Create the projected items using a for loop instead of Select
-        let temp_list_block: Vec<Cell> = (0..81).map(|index|
-        {
-            let block_row = index / 9;
-            let block_column = index % 9;
-            Cell {
-                discriminator: 18 + 3 * (block_row / 3) + block_column / 3,
-                description: format!("block ({}, {})", block_row / 3 + 1, block_column / 3 + 1),
-                index,
-                row: index / 9,
-                column: index % 9,
+        let block_indices = {
+            let mut temp_map = HashMap::<usize, Vec<Cell>>::new();
+            for index in 0..81 {
+                let block_row = index / 9;
+                let block_column = index % 9;
+                let discriminator = 18 + 3 * (block_row / 3) + block_column / 3;
+                let cell = Cell {
+                    //discriminator,
+                    description: format!("block ({}, {})", block_row / 3 + 1, block_column / 3 + 1),
+                    index,
+                    //row:  index / 9,
+                    //column: index % 9,
+                };
+                temp_map.entry(discriminator).or_insert_with(Vec::new).push(cell);
             }
-        }).collect();
-
-        // Group BY DISCRIMINATOR
-        let block_indices = get_indicies(temp_list_block);
+            temp_map
+        };
 
 
         // Combine all groups
         // 33.
-        let cell_groups: BTreeMap<usize, Vec<Cell>> = rows_indices
+        let cell_groups: BTreeMap<usize, Vec<Cell>> = row_indices
             .into_iter()
             .chain(column_indices)
             .chain(block_indices)
@@ -795,10 +818,10 @@ fn play(mut rnglcg: PortableLCG) {
                                     lower,
                                     upper,
                                     group.description,
-                                    mask_cells[0].row + 1,
-                                    mask_cells[0].column + 1,
-                                    mask_cells[1].row + 1,
-                                    mask_cells[1].column + 1
+                                    mask_cells[0].get_row() + 1,
+                                    mask_cells[0].get_column() + 1,
+                                    mask_cells[1].get_row() + 1,
+                                    mask_cells[1].get_column() + 1
                                 );
                                 log(s);
 
@@ -814,9 +837,9 @@ fn play(mut rnglcg: PortableLCG) {
                                         .map(|&num| num.to_string())
                                         .collect();
                                     let values_report = string_values_to_remove.join(", ");
-                                    let s = format!("{} cannot appear in ({}, {}).", values_report, cell.row + 1, cell.column + 1);
+                                    let s = format!("{} cannot appear in ({}, {}).", values_report, cell.get_row() + 1, cell.get_column() + 1);
 
-                                    if cell.row + 1 == 7 && cell.column + 1 == 4 //s == "4 cannot appear in (7, 4)"
+                                    if cell.get_row() + 1 == 7 && cell.get_column() + 1 == 4 //s == "4 cannot appear in (7, 4)"
                                     {
                                         println!("Found cannot appear in (7, 4).")
                                     }
@@ -923,7 +946,7 @@ fn play(mut rnglcg: PortableLCG) {
                         message.push_str(&" appear only in cells".to_string());
                         for cell in group_with_n_masks.cells_with_mask.clone()
                         {
-                            message.push_str(&format!(" ({}, {})", cell.row + 1, cell.column + 1));
+                            message.push_str(&format!(" ({}, {})", cell.get_row() + 1, cell.get_column() + 1));
                         }
 
                         // 56.
@@ -963,7 +986,7 @@ fn play(mut rnglcg: PortableLCG) {
                         }
 
                         // 59.
-                        message.push_str(&format!(" cannot appear in cell ({}, {}).", cell.row + 1, cell.column + 1));
+                        message.push_str(&format!(" cannot appear in cell ({}, {}).", cell.get_row() + 1, cell.get_column() + 1));
                         log(message);
                     }
                 }
@@ -1345,21 +1368,7 @@ fn play(mut rnglcg: PortableLCG) {
     log("BOARD SOLVED.".to_string())
 }
 
-fn get_indicies(temp_list_row: Vec<Cell>) -> HashMap<usize, Vec<Cell>> {
-    let indices = {
-        let mut temp_map = HashMap::<usize, Vec<Cell>>::new();
-        for cell in temp_list_row {
-            let discriminator = cell.discriminator;
 
-            if !temp_map.contains_key(&discriminator) {
-                temp_map.insert(discriminator, Vec::<Cell>::new());
-            }
-            temp_map.get_mut(&discriminator).unwrap().push(cell);
-        }
-        temp_map
-    };
-    indices
-}
 
 use std::sync::OnceLock;
 static SINGLE_BIT_TO_INDEX: OnceLock<HashMap<usize, usize> > = OnceLock::new();
