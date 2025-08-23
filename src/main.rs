@@ -134,8 +134,8 @@ fn play(mut rnglcg: PortableLCG) {
     // 4. Top elements are (row, col) of cell which has been modified compared to previous state
     //Stack<int> rowIndexStack = new Stack<int>();
     //Stack<int> colIndexStack = new Stack<int>();
-    let mut row_index_stack: Vec<usize> = Vec::new();
-    let mut col_index_stack: Vec<usize> = Vec::new();
+    // let mut row_index_stack: Vec<usize> = Vec::new();
+    // let mut col_index_stack: Vec<usize> = Vec::new();
     let mut cell_candidate_stack: Vec<CellCandidate> = Vec::new();
 
     // 5. Top element indicates candidate digits (those with False) for (row, col)
@@ -214,8 +214,8 @@ fn play(mut rnglcg: PortableLCG) {
             if !contains_unsolvable_cells  // 16.
             {
                 state_stack.push(current_state);          // current state came from state_stack?
-                row_index_stack.push(best_row as usize);  // save cell (as row, column)
-                col_index_stack.push(best_col as usize);
+                // row_index_stack.push(best_row as usize);  // save cell (as row, column)
+                // col_index_stack.push(best_col as usize);
                 cell_candidate_stack.push(CellCandidate::newrc(best_row, best_col));
                 //println!("16. best_used_digits: {:?}", best_used_digits);
                 used_digits_stack.push(best_used_digits);
@@ -231,8 +231,8 @@ fn play(mut rnglcg: PortableLCG) {
         else if command == Commands::Collapse  // 18.
         {
             state_stack.pop();
-            row_index_stack.pop();
-            col_index_stack.pop();
+            // row_index_stack.pop();
+            // col_index_stack.pop();
             cell_candidate_stack.pop();
             used_digits_stack.pop();
             last_digit_stack.pop();
@@ -241,30 +241,22 @@ fn play(mut rnglcg: PortableLCG) {
         }
         else if command == Commands::Move  // 19.
         {
-            let rtm = row_index_stack.last().unwrap();
-            log(format!("rowIndexStack Count={} rowToMove={}", row_index_stack.len(), rtm));
-            if row_index_stack.len() == 20
-            {
-                let _z = 1;
-            }
-            if row_index_stack.len() == 0
-            {
-                //log("row_index_stack.len()= == 0 !!!".to_string());
-            }
+            let rtm = cell_candidate_stack.last().unwrap().get_row();
+            log(format!("rowIndexStack Count={} rowToMove={}", cell_candidate_stack.len(), rtm));
 
-            let row_to_move = row_index_stack.last().unwrap();  // panic if empty which it should never be
-            let col_to_move = col_index_stack.last().unwrap();
             let cell_to_move = cell_candidate_stack.last().unwrap();
+            let row_to_move = cell_to_move.get_row(); // row_index_stack.last().unwrap();  // panic if empty which it should never be
+            let col_to_move = cell_to_move.get_col();  // col_index_stack.last().unwrap();
             //println!("19a. last_digit_stack: {:?}", last_digit_stack);
             let digit_to_move: i32 = last_digit_stack.pop().unwrap();
 
-            let row_to_write = row_to_move + row_to_move / 3 + 1;
-            let col_to_write = col_to_move + col_to_move / 3 + 1;
+            let row_to_write : usize = (row_to_move + row_to_move / 3 + 1) as usize;
+            let col_to_write : usize = (col_to_move + col_to_move / 3 + 1) as usize;
 
             //println!("19b. used_digits_stack.last(): {:?}", used_digits_stack.last());
             let used_digits = used_digits_stack.last_mut().unwrap();
             let current_state = state_stack.last_mut().unwrap();
-            let current_state_index = 9 * row_to_move + col_to_move;
+            let current_state_index : usize = (9 * row_to_move + col_to_move) as usize;
 
             let mut moved_to_digit = digit_to_move + 1;
             //println!("19c. used_digits: {:?} moved_to_digit={:?}", used_digits, moved_to_digit);
