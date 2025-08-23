@@ -42,10 +42,10 @@ pub struct CellWithMask<'a> {
 }
 
 struct CellCandidate {
-    index: i32,
+    index: usize,
 }
 impl CellCandidate {
-    pub fn new(idx: i32) -> CellCandidate {
+    pub fn new(idx: usize) -> CellCandidate {
         CellCandidate {
             index: idx,
         }
@@ -53,27 +53,27 @@ impl CellCandidate {
     pub fn newrc(row: i32, col: i32) -> CellCandidate {
         println!("row: {} col: {}", row, col);
         CellCandidate {
-            index: row * 9 + col,
+            index: (row * 9 + col) as usize,
         }
     }
     // Getter method
-    fn get_index(&self) -> i32 {
+    fn get_index(&self) -> usize {
         self.index
     }
     // Setter method
-    fn set_index(&mut self, value: i32) {
+    fn set_index(&mut self, value: usize) {
         self.index = value;
     }
-    fn get_row(&self) -> i32 {
+    fn get_row(&self) -> usize {
         self.index / 9
     }
-    fn get_col(&self) -> i32 {
+    fn get_col(&self) -> usize {
         self.index % 9
     }
-    fn get_blockrow(&self) -> i32 {
+    fn get_blockrow(&self) -> usize {
         self.get_row() / 3
     }
-    fn get_blockcol(&self) -> i32 {
+    fn get_blockcol(&self) -> usize {
         self.get_col() /3
     }
 }
@@ -165,9 +165,10 @@ fn play(mut rnglcg: PortableLCG) {
                 [0; 81]
             };
 
-            // input: current_state. output: contains_unsolvable_cells, best_row, best_col,  
-            let mut best_row: i32 = -1;
-            let mut best_col: i32 = -1;
+            // input: current_state. output: contains_unsolvable_cells, best_row, best_col,
+            let mut best_index: usize = 9999;
+            // let mut best_row: usize = 9999;
+            // let mut best_col: usize = 9999;
             let mut best_used_digits: [bool; 9] = [false; 9];
             let mut best_candidates_count: i32 = -1;
             let mut best_random_value: i32 = -1;
@@ -199,10 +200,11 @@ fn play(mut rnglcg: PortableLCG) {
                         candidates_count < best_candidates_count ||  // looking for the cell with the LEAST number of candidates 
                         (candidates_count == best_candidates_count && random_value < best_random_value) // if two cells both have the same number of candidates, randomly select one (this "random" looks not random)
                     {
-                        let row: usize = index / 9;
-                        let col: usize = index % 9;
-                        best_row = row as i32; // this cell becomes the best cell (saved as row,col. we could save index instead?)
-                        best_col = col as i32;
+                        // let row: usize = index / 9;
+                        // let col: usize = index % 9;
+                        best_index = index; // this cell becomes the best cell (saved as row,col. we could save index instead?)
+                        // best_row = row;
+                        // best_col = col;
                         //println!("13. is_digit_used: {:?}", is_digit_used);
                         best_used_digits = is_digit_used;
                         best_candidates_count = candidates_count;  // candidates_count is a function of is_digit_used array
@@ -216,7 +218,7 @@ fn play(mut rnglcg: PortableLCG) {
                 state_stack.push(current_state);          // current state came from state_stack?
                 // row_index_stack.push(best_row as usize);  // save cell (as row, column)
                 // col_index_stack.push(best_col as usize);
-                cell_candidate_stack.push(CellCandidate::newrc(best_row, best_col));
+                cell_candidate_stack.push(CellCandidate::new(best_index));
                 //println!("16. best_used_digits: {:?}", best_used_digits);
                 used_digits_stack.push(best_used_digits);
                 last_digit_stack.push(0); // No digit was tried at this position
@@ -1160,8 +1162,9 @@ fn play(mut rnglcg: PortableLCG) {
                             //Array.Copy(alternate_state, current_state, current_state.Length);
                         }
 
-                        let mut best_row = 9999;
-                        let mut best_col = 9999;
+                        let mut best_index: usize = 9999;
+                        // let mut best_row = 9999;
+                        // let mut best_col = 9999;
                         let mut best_used_digits: Vec<bool> = Vec::new();
                         let mut best_candidates_count : i32 = -1;
                         let mut best_random_value : i32 = -1;
@@ -1220,8 +1223,9 @@ fn play(mut rnglcg: PortableLCG) {
                                     candidates_count < best_candidates_count as usize ||
                                     (candidates_count == best_candidates_count as usize && random_value < best_random_value)
                                 {
-                                    best_row = row;
-                                    best_col = col;
+                                    best_index = index;
+                                    // best_row = row;
+                                    // best_col = col;
                                     best_used_digits = is_digit_used.to_vec();
                                     best_candidates_count = candidates_count as i32;
                                     best_random_value = random_value;
@@ -1235,7 +1239,7 @@ fn play(mut rnglcg: PortableLCG) {
                             state_stack.push(current_state);
                             // row_index_stack.push(best_row);
                             // col_index_stack.push(best_col);
-                            cell_candidate_stack.push(CellCandidate::newrc(best_row as i32, best_col as i32));
+                            cell_candidate_stack.push(CellCandidate::new(best_index));
                             used_digits_stack.push(best_used_digits);
                             last_digit_stack.push(0); // No digit was tried at this position
                         }
