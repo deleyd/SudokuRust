@@ -6,7 +6,7 @@ use std::io::{self, Write, BufReader, BufRead};
 use std::sync::Mutex;
 use std::fs;
 use std::io::ErrorKind;
-
+use std::path::Path;
 
 // Declare a global static variable to hold the file.
 // Mutex is used for thread-safe access to the file.
@@ -136,37 +136,8 @@ fn play(mut rnglcg: PortableLCG) {
             {
                 if current_state[index] == 0  // 11.  if cell unused, then let's see what we can do with it
                 {
-                    let row: usize = index / 9;
-                    let col: usize = index % 9;
-                    let block_row: usize = row / 3;
-                    let block_col: usize = col / 3;
-
-                    let mut is_digit_used: [bool; 9] = [false; 9];
-
-                    //println!("11. current_state={:?}", current_state);
-                    // gather all digits used in cell's row, column, and block. output is_digit_used. input: current_state, row, col, block_row, block_col
-                    for i in 0..9  // 12.
-                    {
-                        //println!("current_state: {:?} i={}", current_state, i);
-
-                        let row_digit = current_state[9 * i + col];
-                        if row_digit > 0
-                        {
-                            is_digit_used[row_digit as usize - 1] = true;
-                        }
-
-                        let col_digit = current_state[9 * row + i];
-                        if col_digit > 0
-                        {
-                            is_digit_used[col_digit as usize - 1] = true;
-                        }
-
-                        let block_digit = current_state[(block_row * 3 + i / 3) * 9 + (block_col * 3 + i % 3)];
-                        if block_digit > 0
-                        {
-                            is_digit_used[block_digit as usize - 1] = true;
-                        }
-                    } // for (i = 0..8)
+                    let is_digit_used: [bool; 9] = get_row_col_block_used_digits(current_state, index);
+                    // for (i = 0..8)
 
                     // 13.
                     //let candidates_count = is_digit_used.Where(used => !used).Count();
@@ -186,6 +157,9 @@ fn play(mut rnglcg: PortableLCG) {
                         candidates_count < best_candidates_count ||
                         (candidates_count == best_candidates_count && random_value < best_random_value)
                     {
+                        let row: usize = index / 9;
+                        let col: usize = index % 9;
+
                         best_row = row as i32;
                         best_col = col as i32;
                         //println!("13. is_digit_used: {:?}", is_digit_used);
@@ -1445,6 +1419,40 @@ fn play(mut rnglcg: PortableLCG) {
     log("BOARD SOLVED.".to_string())
 }
 
+fn get_row_col_block_used_digits(current_state: [i32; 81], index: usize) -> [bool; 9] {
+    let row: usize = index / 9;
+    let col: usize = index % 9;
+    let block_row: usize = row / 3;
+    let block_col: usize = col / 3;
+
+    let mut is_digit_used: [bool; 9] = [false; 9];
+
+    //println!("11. current_state={:?}", current_state);
+    // gather all digits used in cell's row, column, and block. output is_digit_used. input: current_state, row, col, block_row, block_col
+    for i in 0..9  // 12.
+    {
+        //println!("current_state: {:?} i={}", current_state, i);
+
+        let row_digit = current_state[9 * i + col];
+        if row_digit > 0
+        {
+            is_digit_used[row_digit as usize - 1] = true;
+        }
+
+        let col_digit = current_state[9 * row + i];
+        if col_digit > 0
+        {
+            is_digit_used[col_digit as usize - 1] = true;
+        }
+
+        let block_digit = current_state[(block_row * 3 + i / 3) * 9 + (block_col * 3 + i % 3)];
+        if block_digit > 0
+        {
+            is_digit_used[block_digit as usize - 1] = true;
+        }
+    } // for (i = 0..8)
+    is_digit_used
+}
 
 #[derive(Clone, Copy)]
 pub struct PortableLCG {
@@ -1518,26 +1526,10 @@ fn compare_files_line_by_line(file1_path: &str, file2_path: &str) -> io::Result<
     let mut lines2 = reader2.lines();
 
     loop {
-        // loop until we read a line which isn't "BOARD SOLVED.", "RUN x", or "THE END!"
-        let line1_opt = loop {
-            match lines1.next() {
-                Some(Ok(line)) => {
-                    line1_num += 1;
-                    let trimmed_s = line.trim();
-                    //println!("f1 line: {} trimmed_s={}", line1_num, trimmed_s);
-                    if trimmed_s == "BOARD SOLVED." || trimmed_s == "THE END!" || trimmed_s.starts_with("RUN") {
-                       continue;
-                    } else {
-                        // Found a line that doesn't match our patterns - break the loop
-                        break Some(Ok(line)); // Found a valid line
-                    }
-                }
-                Some(Err(e)) => break Some(Err(e)), // Encountered an error reading line1
-                None => break None, // End of file 1
-            }
-        };
 
+        let line1_opt = lines1.next();
         let line2_opt = lines2.next();
+        line1_num += 1;
         line2_num += 1;
 
         match (line1_opt, line2_opt) {
@@ -1584,7 +1576,6 @@ fn compare_files_line_by_line(file1_path: &str, file2_path: &str) -> io::Result<
 fn main()
 {
     let file_path = "rust_output.txt";
-    let reffile_path = r"C:\Users\Charlene\OneDrive\Sudoku\ORIG\SudokuKata\bin\Debug\csharp_output.txt";
 
     match fs::remove_file(file_path) {
         Ok(_) => {
@@ -1621,6 +1612,15 @@ fn main()
     log("THE END!".to_string());
     // Close file by setting the global file to None (this drops the file handle)
     *GLOBAL_FILE.lock().unwrap() = None;
+
+    let reffile_path1 = r"C:\Users\Charlene\OneDrive\Sudoku\ORIG\SudokuKata\bin\Debug\csharp_output.txt";
+    let reffile_path2 = r"C:\Users\David\OneDrive\Sudoku\ORIG\SudokuKata\bin\Debug\csharp_output.txt";
+    let reffile_path: &str = if Path::new(reffile_path1).exists()  // 9.
+    {
+        reffile_path1
+    } else {
+        reffile_path2
+    };
 
     if let Err(e) = compare_files_line_by_line(file_path, reffile_path) {
         eprintln!("Error comparing files: {}", e);
