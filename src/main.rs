@@ -1137,8 +1137,9 @@ fn play(mut rnglcg: PortableLCG) {
                 //usedDigitsStack = new Stack<bool[]>();
                 //lastDigitStack = new Stack<int>();
                 let mut state_stack: Vec<[i32; 81]> = Vec::new();
-                let mut row_index_stack: Vec<usize> = Vec::new();
-                let mut col_index_stack: Vec<usize> = Vec::new();
+                // let mut row_index_stack: Vec<usize> = Vec::new();
+                // let mut col_index_stack: Vec<usize> = Vec::new();
+                let mut cell_candidate_stack: Vec<CellCandidate> = Vec::new();
                 let mut used_digits_stack: Vec<Vec<bool>> = Vec::new();
                 let mut last_digit_stack: Vec<i32> = Vec::new();
 
@@ -1232,8 +1233,9 @@ fn play(mut rnglcg: PortableLCG) {
                         if !contains_unsolvable_cells
                         {
                             state_stack.push(current_state);
-                            row_index_stack.push(best_row);
-                            col_index_stack.push(best_col);
+                            // row_index_stack.push(best_row);
+                            // col_index_stack.push(best_col);
+                            cell_candidate_stack.push(CellCandidate::newrc(best_row as i32, best_col as i32));
                             used_digits_stack.push(best_used_digits);
                             last_digit_stack.push(0); // No digit was tried at this position
                         }
@@ -1245,8 +1247,9 @@ fn play(mut rnglcg: PortableLCG) {
                     else if command == Commands::Collapse
                     {
                         state_stack.pop();
-                        row_index_stack.pop();
-                        col_index_stack.pop();
+                        // row_index_stack.pop();
+                        // col_index_stack.pop();
+                        cell_candidate_stack.pop();
                         used_digits_stack.pop();
                         last_digit_stack.pop();
 
@@ -1260,8 +1263,9 @@ fn play(mut rnglcg: PortableLCG) {
                     // 73.
                     else if command == Commands::Move
                     {
-                        let row_to_move: usize = row_index_stack.last().unwrap().clone();
-                        let col_to_move: usize = col_index_stack.last().unwrap().clone();
+                        let cell_to_move: &CellCandidate = cell_candidate_stack.last().unwrap();
+                        let row_to_move = cell_to_move.get_row() as usize;    // row_index_stack.last().unwrap();
+                        let col_to_move = cell_to_move.get_col() as usize;    //col_index_stack.last().unwrap();
                         let digit_to_move = last_digit_stack.pop().unwrap();
 
                         let row_to_write: usize = row_to_move + row_to_move / 3 + 1;
