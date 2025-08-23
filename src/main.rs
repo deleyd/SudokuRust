@@ -247,51 +247,39 @@ fn play(mut rnglcg: PortableLCG) {
             log(format!("rowIndexStack Count={} rowToMove={}", cell_candidate_stack.len(), rtm));
 
             let cell_to_move = cell_candidate_stack.last().unwrap();
-            let row_to_move = cell_to_move.get_row(); // row_index_stack.last().unwrap();  // panic if empty which it should never be
-            let col_to_move = cell_to_move.get_col();  // col_index_stack.last().unwrap();
-            //println!("19a. last_digit_stack: {:?}", last_digit_stack);
+            let current_state_index : usize = (cell_to_move.get_index());
+
             let digit_to_move: i32 = last_digit_stack.pop().unwrap();
-
-            let row_to_write : usize = (row_to_move + row_to_move / 3 + 1) as usize;
-            let col_to_write : usize = (col_to_move + col_to_move / 3 + 1) as usize;
-
-            //println!("19b. used_digits_stack.last(): {:?}", used_digits_stack.last());
-            let used_digits = used_digits_stack.last_mut().unwrap();
-            let current_state = state_stack.last_mut().unwrap();
-            let current_state_index : usize = (9 * row_to_move + col_to_move) as usize;
-
             let mut moved_to_digit = digit_to_move + 1;
-            //println!("19c. used_digits: {:?} moved_to_digit={:?}", used_digits, moved_to_digit);
 
+            let used_digits = used_digits_stack.last_mut().unwrap();
             while moved_to_digit <= 9 && used_digits[moved_to_digit as usize - 1]
             {
                 moved_to_digit += 1;
             }
 
+            let row_to_move = cell_to_move.get_row(); // row_index_stack.last().unwrap();  // panic if empty which it should never be
+            let col_to_move = cell_to_move.get_col();  // col_index_stack.last().unwrap();
+            let row_to_write : usize = (row_to_move + row_to_move / 3 + 1) as usize;
+            let col_to_write : usize = (col_to_move + col_to_move / 3 + 1) as usize;
             log(format!("digitToMove:{0} movedToDigit:{1} rowToMove:{2} colToMove:{3} rowToWrite:{4} colToWrite:{5} currentStateIndex:{6}", digit_to_move, moved_to_digit, row_to_move, col_to_move, row_to_write, col_to_write, current_state_index));
 
             if digit_to_move > 0
             {
                 used_digits[digit_to_move as usize - 1] = false;
+                let current_state = state_stack.last_mut().unwrap();
                 current_state[current_state_index] = 0;
                 board[row_to_write][col_to_write] = '.';
             }
 
             if moved_to_digit <= 9
             {
-                if moved_to_digit == 9
-                {
-                    let _z = 1;
-                }
                 log(format!("19d. moved_to_digit: {:?}", moved_to_digit));
                 last_digit_stack.push(moved_to_digit);
                 used_digits[moved_to_digit as usize - 1] = true;  // DWD This needs to modify the value in *used_digits_stack.last()[moved_to_digit as usize - 1]
-                //println!("19e. used_digits: {:?}", used_digits);
-                //println!("19e. used_digits_stack: {:?}", used_digits_stack);
+                let current_state = state_stack.last_mut().unwrap();
                 current_state[current_state_index] = moved_to_digit;
-                //println!("19f. New Board Value: {} current_state_index={} current_state={:?}",moved_to_digit, current_state_index, current_state);
                 board[row_to_write][col_to_write] = char::from_u32((b'0' as i32 + moved_to_digit) as u32).expect("REASON");
-                //println!("19g. row={}, col={}, Board: {:?}", row_to_write, col_to_write, board);
 
                 // Next possible digit was found at current position
                 // Next step will be to expand the state
