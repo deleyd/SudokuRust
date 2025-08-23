@@ -247,7 +247,7 @@ fn play(mut rnglcg: PortableLCG) {
             log(format!("rowIndexStack Count={} rowToMove={}", cell_candidate_stack.len(), rtm));
 
             let cell_to_move = cell_candidate_stack.last().unwrap();
-            let current_state_index : usize = (cell_to_move.get_index());
+            let current_state_index : usize = cell_to_move.get_index();
 
             let digit_to_move: i32 = last_digit_stack.pop().unwrap();
             let mut moved_to_digit = digit_to_move + 1;
@@ -332,18 +332,17 @@ fn play(mut rnglcg: PortableLCG) {
 
         removed_per_block[block_row_to_remove][block_col_to_remove] += 1;
         // 21.
-        let temp = positions[removed_pos];
-        positions[removed_pos] = positions[index_to_pick];
-        positions[index_to_pick] = temp;
-
-        let row_to_write: usize = row + row / 3 + 1;
-        let col_to_write: usize = col + col / 3 + 1;
-
-        board[row_to_write][col_to_write] = '.';
-
         let state_index: usize = 9 * row + col;
         state[state_index] = 0;
 
+        let row_to_write: usize = row + row / 3 + 1;
+        let col_to_write: usize = col + col / 3 + 1;
+        board[row_to_write][col_to_write] = '.';
+
+        // swap [removed_pos] with [index_to_pick]
+        let temp = positions[removed_pos];
+        positions[removed_pos] = positions[index_to_pick];
+        positions[index_to_pick] = temp;
         removed_pos += 1;
     }
 
@@ -362,15 +361,17 @@ fn play(mut rnglcg: PortableLCG) {
 
     // 25.
     //Dictionary<int, int> maskToOnesCount = new Dictionary<int, int>();
-    let mut mask_to_ones_count: BTreeMap<u32, usize> = BTreeMap::new();
-    mask_to_ones_count.insert(0, 0);
-    for i in 1..(1 << 9)
-    {
-        let smaller : u32 = i >> 1;
-        let increment : usize = (i & 1) as usize;
-        let usize_value = mask_to_ones_count[&smaller] + increment;
-        mask_to_ones_count.insert(i, usize_value);
-    }
+    let mask_to_ones_count: BTreeMap<u32, usize> = {
+        let mut temp_map = BTreeMap::new();
+        temp_map.insert(0, 0);
+        for i in 1..(1 << 9) {
+            let smaller: u32 = i >> 1;
+            let increment: usize = (i & 1) as usize;
+            let usize_value = temp_map[&smaller] + increment;
+            temp_map.insert(i, usize_value);
+        }
+        temp_map
+    };
     //println!("mask_to_ones_count: {:?}", mask_to_ones_count);
 
     // 26.
@@ -378,15 +379,8 @@ fn play(mut rnglcg: PortableLCG) {
     // single bit to digit might be a better name.
     // 0x00100 = 4 is bit 2? If we start counting from bit 0?
     // converts mask to bit number?
-    let mut single_bit_to_index: HashMap<usize, usize> = HashMap::new();
-    for i in 0..9
-    {
-        single_bit_to_index.insert(1 << i, i);
-    }
+    // let single_bit_to_index = get_single_bit_to_index();
     //println!("single_bit_to_index: {:?}", single_bit_to_index);
-
-    let all_ones : u32 = (1 << 9) - 1;
-    //println!("all_ones: {:?}", all_ones);
 
     //#endregion
 
@@ -434,6 +428,7 @@ fn play(mut rnglcg: PortableLCG) {
                 }
 // candidate_mask is all numbers available to put in cell[i] of board (state)
                 // all the not "already used" numbers
+                let all_ones : u32 = (1 << 9) - 1;
                 candidate_masks[i] = all_ones & !colliding_numbers; // mask indicating what numbers are available for this cell.
             }
         }
@@ -604,7 +599,7 @@ fn play(mut rnglcg: PortableLCG) {
                 // candidate_mask is the one candidate digit we can use in this cell
                 let candidate_mask = candidate_masks[single_candidate_index];  // candidate_mask has 1 bit set in range 0-8 indicating which digit we can put in this cell
                 // candidate is the one digit we can use in this cell 0-8 (add one to get digit)
-                let candidate = single_bit_to_index[&(candidate_mask as usize)]; // candidate is 0-8
+                let candidate = get_single_bit_to_index()[&(candidate_mask as usize)]; // candidate is 0-8
 
                 let row = single_candidate_index / 9;
                 let col = single_candidate_index % 9;
@@ -1326,12 +1321,6 @@ fn play(mut rnglcg: PortableLCG) {
                 let pos = rnglcg.next_range(state_index1.len() as i32) as usize;
                 let index1 = state_index1[pos];
                 let index2 = state_index2[pos];
-                let digit1 = value1[pos];
-                let digit2 = value2[pos];
-                let row1 = index1 / 9;
-                let col1 = index1 % 9;
-                let row2 = index2 / 9;
-                let col2 = index2 % 9;
 
                 let description: String;
 
@@ -1342,6 +1331,8 @@ fn play(mut rnglcg: PortableLCG) {
                 {
                     description = format!("column #{}", index1 % 9 + 1);
                 } else {
+                    let row1 = index1 / 9;
+                    let col1 = index1 % 9;
                     description = format!("block ({}, {})", row1 / 3 + 1, col1 / 3 + 1);
                 }
 
@@ -1368,6 +1359,12 @@ fn play(mut rnglcg: PortableLCG) {
                     }
                 }
 
+                let row1 = index1 / 9;
+                let col1 = index1 % 9;
+                let row2 = index2 / 9;
+                let col2 = index2 % 9;
+                let digit1 = value1[pos];
+                let digit2 = value2[pos];
                 let s = format!("Guessing that {} and {} are arbitrary in {} (multiple solutions): Pick {}->({}, {}), {}->({}, {}).", digit1, digit2, description, final_state[index1], row1 + 1, col1 + 1, final_state[index2], row2 + 1, col2 + 1);
                 log(s);
             }
@@ -1378,6 +1375,7 @@ fn play(mut rnglcg: PortableLCG) {
         if change_made
         {
             //#region Print the board as it looks after one change was made to it
+            // convert this to use state instead of board
             print_board(&board);
             /*string code =
                 string.Join(string.Empty, board.Select(s => new string(s)).ToArray())
@@ -1407,6 +1405,19 @@ fn play(mut rnglcg: PortableLCG) {
             //#endregion
     }//while change_made// 27
     log("BOARD SOLVED.".to_string())
+}
+
+use std::sync::OnceLock;
+static SINGLE_BIT_TO_INDEX: OnceLock<HashMap<usize, usize> > = OnceLock::new();
+
+fn get_single_bit_to_index() -> &'static HashMap<usize, usize> {
+    SINGLE_BIT_TO_INDEX.get_or_init(|| {
+    let mut single_bit_to_indexx: HashMap<usize, usize> = HashMap::new();
+    for i in 0..9
+    {
+        single_bit_to_indexx.insert(1 << i, i);
+    }
+        single_bit_to_indexx})
 }
 
 // Convert mask to list of digits they represent. Returns list of digits.
