@@ -41,6 +41,44 @@ pub struct CellWithMask<'a> {
     pub cleanable_cells_count: u32,
 }
 
+struct CellCandidate {
+    index: i32,
+}
+impl CellCandidate {
+    pub fn new(idx: i32) -> CellCandidate {
+        CellCandidate {
+            index: idx,
+        }
+    }
+    pub fn newrc(row: i32, col: i32) -> CellCandidate {
+        println!("row: {} col: {}", row, col);
+        CellCandidate {
+            index: row * 9 + col,
+        }
+    }
+    // Getter method
+    fn get_index(&self) -> i32 {
+        self.index
+    }
+    // Setter method
+    fn set_index(&mut self, value: i32) {
+        self.index = value;
+    }
+    fn get_row(&self) -> i32 {
+        self.index / 9
+    }
+    fn get_col(&self) -> i32 {
+        self.index % 9
+    }
+    fn get_blockrow(&self) -> i32 {
+        self.get_row() / 3
+    }
+    fn get_blockcol(&self) -> i32 {
+        self.get_col() /3
+    }
+}
+
+
 #[derive(Debug, PartialEq)]
 enum Commands {
     Expand,
@@ -91,13 +129,14 @@ fn play(mut rnglcg: PortableLCG) {
     // 2. Construct board to be solved
     // 3. Top element is current state of the board
     //Stack<int[]> state_stack = new Stack<int[]>();
-    let mut state_stack: Vec<[i32; 9 * 9]> = Vec::new(); // Explicitly typed for clarity
+    let mut state_stack: Vec<[i32; 9 * 9]> = Vec::new();
 
     // 4. Top elements are (row, col) of cell which has been modified compared to previous state
     //Stack<int> rowIndexStack = new Stack<int>();
     //Stack<int> colIndexStack = new Stack<int>();
-    let mut row_index_stack: Vec<usize> = Vec::new(); // Explicitly typed for clarity
-    let mut col_index_stack: Vec<usize> = Vec::new(); // Explicitly typed for clarity
+    let mut row_index_stack: Vec<usize> = Vec::new();
+    let mut col_index_stack: Vec<usize> = Vec::new();
+    let mut cell_candidate_stack: Vec<CellCandidate> = Vec::new();
 
     // 5. Top element indicates candidate digits (those with False) for (row, col)
     //Stack<bool[]> usedDigitsStack = new Stack<bool[]>();
@@ -177,6 +216,7 @@ fn play(mut rnglcg: PortableLCG) {
                 state_stack.push(current_state);          // current state came from state_stack?
                 row_index_stack.push(best_row as usize);  // save cell (as row, column)
                 col_index_stack.push(best_col as usize);
+                cell_candidate_stack.push(CellCandidate::newrc(best_row, best_col));
                 //println!("16. best_used_digits: {:?}", best_used_digits);
                 used_digits_stack.push(best_used_digits);
                 last_digit_stack.push(0); // No digit was tried at this position
@@ -193,6 +233,7 @@ fn play(mut rnglcg: PortableLCG) {
             state_stack.pop();
             row_index_stack.pop();
             col_index_stack.pop();
+            cell_candidate_stack.pop();
             used_digits_stack.pop();
             last_digit_stack.pop();
 
@@ -210,14 +251,10 @@ fn play(mut rnglcg: PortableLCG) {
             {
                 //log("row_index_stack.len()= == 0 !!!".to_string());
             }
-            let ris_last = row_index_stack.last();
-            if ris_last.is_none() {
-                //log("ris_last.is_none() !!!".to_string());
-            }
-            let ris_unwrap = ris_last.unwrap().clone();
 
-            let row_to_move = ris_unwrap;// row_index_stack.last().unwrap();  // panic if empty which it should never be
+            let row_to_move = row_index_stack.last().unwrap();  // panic if empty which it should never be
             let col_to_move = col_index_stack.last().unwrap();
+            let cell_to_move = cell_candidate_stack.last().unwrap();
             //println!("19a. last_digit_stack: {:?}", last_digit_stack);
             let digit_to_move: i32 = last_digit_stack.pop().unwrap();
 
@@ -632,24 +669,24 @@ fn play(mut rnglcg: PortableLCG) {
                         // 40.
                         for index_in_group in 0..9
                         {
-                            let row_state_index = 9 * cell_group + index_in_group;
-                            let col_state_index = 9 * index_in_group + cell_group;
-                            let block_row_index = (cell_group / 3) * 3 + index_in_group / 3;
-                            let block_col_index = (cell_group % 3) * 3 + index_in_group % 3;
-                            let block_state_index = block_row_index * 9 + block_col_index;
                             // 41.
+                            let row_state_index = 9 * cell_group + index_in_group;
                             if (candidate_masks[row_state_index] & mask) != 0
                             {
                                 row_number_count += 1;
                                 index_in_row = index_in_group;
                             }
                             // 42.
+                            let col_state_index = 9 * index_in_group + cell_group;
                             if (candidate_masks[col_state_index] & mask) != 0
                             {
                                 col_number_count += 1;
                                 index_in_col = index_in_group;
                             }
                             // 43.
+                            let block_row_index = (cell_group / 3) * 3 + index_in_group / 3;
+                            let block_col_index = (cell_group % 3) * 3 + index_in_group % 3;
+                            let block_state_index = block_row_index * 9 + block_col_index;
                             if (candidate_masks[block_state_index] & mask) != 0
                             {
                                 block_number_count += 1;
@@ -832,9 +869,8 @@ fn play(mut rnglcg: PortableLCG) {
                             if !cells.is_empty()
                             {
                                 // "Values {lower} and {upper} in {} are in cells ({mask_cells[0].row+1}, {mask_cells[0].col+1}) and ({mask_cells[1].row+1}, {mask_cells[1].col+1}).",
-                                let temp = group.mask;  // bits represent digits
-// what the hell does this do? Find the upper two bits. upper & lower represent digits
-                                let (lower, upper) = top_two_digits(temp);
+                                // Find the upper two bits. upper & lower represent digits
+                                let (lower, upper) = top_two_digits(group.mask); // bits represent digits
 
                                 let s = format!(
                                     "Values {} and {} in {} are in cells ({}, {}) and ({}, {}).",
@@ -851,18 +887,8 @@ fn play(mut rnglcg: PortableLCG) {
                                 // 52.
                                 for cell in &cells
                                 {
-                                    let mut mask_to_remove = candidate_masks[cell.index] & group.mask;
-                                    let mut values_to_remove: Vec<i32> = Vec::new();
-                                    let mut cur_value: i32 = 1;
-                                    while mask_to_remove > 0
-                                    {
-                                        if (mask_to_remove & 1) > 0
-                                        {
-                                            values_to_remove.push(cur_value);
-                                        }
-                                        mask_to_remove = mask_to_remove >> 1;
-                                        cur_value += 1;
-                                    }
+                                    let mask_to_remove = candidate_masks[cell.index] & group.mask;
+                                    let values_to_remove = mask_to_digits(mask_to_remove);
 
                                     //string valuesReport = string.Join(", ", values_to_remove.ToArray());
                                     let string_values_to_remove: Vec<String> = values_to_remove
@@ -962,6 +988,7 @@ fn play(mut rnglcg: PortableLCG) {
                         let mut separator = "";
                         let mut temp = mask;
                         let mut cur_value = 1;
+                        // convert mask to digits
                         while temp > 0
                         {
                             if (temp & 1) > 0
@@ -1005,6 +1032,7 @@ fn play(mut rnglcg: PortableLCG) {
                         let mut message: String = "".to_string();
 
                         // 58.
+                        // convert mask to digits
                         while mask_to_clear > 0
                         {
                             if mask_to_clear & 1 > 0
@@ -1053,9 +1081,7 @@ fn play(mut rnglcg: PortableLCG) {
                     let row = i / 9;
                     let col = i % 9;
                     let block_index = 3 * (row / 3) + col / 3;
-
-                    let temp = candidate_masks[i];
-                    let (lower, upper) = top_two_digits(temp);
+                    let (lower, upper) = top_two_digits(candidate_masks[i]);
 
                     // 63.
                     for j in i + 1..candidate_masks.len()
@@ -1298,6 +1324,7 @@ fn play(mut rnglcg: PortableLCG) {
                 // 77.
                 if command == Commands::Complete
                 {   // Board was solved successfully even with two digits swapped
+                    // sync state_index with value
                     state_index1.push(index1);
                     state_index2.push(index2);
                     value1.push(digit1);
@@ -1392,6 +1419,23 @@ fn play(mut rnglcg: PortableLCG) {
             //#endregion
     }//while change_made// 27
     log("BOARD SOLVED.".to_string())
+}
+
+// Convert mask to list of digits they represent. Returns list of digits.
+fn mask_to_digits(input_mask: u32) -> Vec<i32> {
+    let mut mask_to_remove = input_mask;
+    let mut values_to_remove: Vec<i32> = Vec::new();
+    let mut cur_value: i32 = 1;
+    while mask_to_remove > 0
+    {
+        if (mask_to_remove & 1) > 0
+        {
+            values_to_remove.push(cur_value);
+        }
+        mask_to_remove = mask_to_remove >> 1;
+        cur_value += 1;
+    }
+    values_to_remove
 }
 
 fn top_two_digits(value: u32) -> (i32, i32) {
