@@ -442,20 +442,15 @@ fn play(mut rnglcg: PortableLCG) {
         // Group by rows
         // 30.
         // Group elements by row
-        let mut temp_list_row = Vec::<Cell>::new();
 
         // Create the projected items using a for loop instead of Select
-        for index in 0..state.len() {
-            let _cell_value = &state[index]; // Note: cellValue is not used in the original code
-            let cell = Cell {
-                discriminator: index / 9,
-                description: format!("row #{}", index / 9 + 1),
-                index,
-                row: index / 9,
-                column: index % 9,
-            };
-            temp_list_row.push(cell);
-        }
+        let temp_list_row: Vec<Cell> = (0..81).map(|index| Cell {
+            discriminator: index / 9,
+            description: format!("row #{}", index / 9 + 1),
+            index,
+            row: index / 9,
+            column: index % 9,
+        }).collect();
 
         // Group manually using for loops instead of GroupBy
         // Create list of all 81 cells, grouped by row. Discriminator is row, varies from 0 to 8
@@ -465,21 +460,15 @@ fn play(mut rnglcg: PortableLCG) {
         // 31.
         // Group by columns
         // Create list of all 81 cells, grouped by COLUMN. Discriminator is COLUMN, varies from 9 - 17 (subtract 9 to get column)
-        let mut temp_list_col = Vec::<Cell>::new();
 
         // Create the projected items using a for loop instead of Select
-        for index in 0..state.len() {
-            let _cell_value = &state[index]; // Note: cellValue is not used in the original code
-            let cell = Cell {
-                discriminator: 9 + index % 9,
-                description: format!("column #{}", index % 9 + 1),
-                index,
-                row: index / 9,
-                column: index % 9,
-            };
-            temp_list_col.push(cell);
-        }
-
+        let temp_list_col: Vec<Cell> = (0..81).map(|index| Cell {
+            discriminator: 9 + index % 9,
+            description: format!("column #{}", index % 9 + 1),
+            index,
+            row: index / 9,
+            column: index % 9,
+        }).collect();
         // Group manually using for loops instead of GroupBy
         let column_indices = get_indicies(temp_list_col);
 
@@ -487,23 +476,20 @@ fn play(mut rnglcg: PortableLCG) {
         // Group by blocks
         // Create list of all 81 cells, grouped by BLOCK. Discriminator is BLOCK, varies from 18-26 (subtract 18 to get BLOCK)
         // 32.
-        let mut temp_list_block = Vec::<Cell>::new();
 
         // Create the projected items using a for loop instead of Select
-        for index in 0..state.len() {
-            let _cell_value = &state[index]; // Note: cellValue is not used in the original code
+        let temp_list_block: Vec<Cell> = (0..81).map(|index|
+        {
             let block_row = index / 9;
             let block_column = index % 9;
-
-            let cell = Cell {
+            Cell {
                 discriminator: 18 + 3 * (block_row / 3) + block_column / 3,
                 description: format!("block ({}, {})", block_row / 3 + 1, block_column / 3 + 1),
                 index,
                 row: index / 9,
                 column: index % 9,
-            };
-            temp_list_block.push(cell);
-        }
+            }
+        }).collect();
 
         // Group BY DISCRIMINATOR
         let block_indices = get_indicies(temp_list_block);
