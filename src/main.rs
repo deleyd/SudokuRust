@@ -113,21 +113,18 @@ fn play(mut rnglcg: PortableLCG) {
     // - collapse - pops current state from stack as it did not yield a solution
     let mut command = Commands::Expand;
 
+    // we add to the stack each time we add a number to a cell
     while state_stack.len() <= 81  // 8.
     {
         //log("Top of while 8".to_string());
         if command == Commands::Expand
         {
-            let mut current_state: [i32; 81] = [0; 81];
-            if state_stack.len() > 0  // 9.
+            let current_state: [i32; 81] = if state_stack.len() > 0  // 9.
             {
-                // source array is state_stack.last(), destination is current_state, length is 81
-                //Array.Copy(state_stack.last(), current_state, current_state.len());
-                let opt_owned = state_stack.last().cloned();
-                current_state = opt_owned.unwrap();
-                //println!("8. state_stack={:?}", state_stack);
-                //println!("8. current_state={:?}", current_state);
-            }
+                state_stack.last().cloned().unwrap()
+            } else {
+                [0; 81]
+            };
 
             let mut best_row: i32 = -1;
             let mut best_col: i32 = -1;
@@ -382,6 +379,9 @@ fn play(mut rnglcg: PortableLCG) {
 
     // 26.
     //Dictionary < int, int > single_bit_to_index = new
+    // single bit to digit might be a better name.
+    // 0x00100 = 4 is bit 2? If we start counting from bit 0?
+    // converts mask to bit number?
     let mut single_bit_to_index: HashMap<usize, usize> = HashMap::new();
     for i in 0..9
     {
@@ -572,6 +572,7 @@ fn play(mut rnglcg: PortableLCG) {
         cell_groups.extend(block_indices);
         //#endregion
 
+        // cell_groups has 3x 81 cells. 81 for rows, 81 for columns, 81 for blocks
         // 34.
         let mut step_change_made: bool = true;
         while step_change_made  // 35.
@@ -579,6 +580,8 @@ fn play(mut rnglcg: PortableLCG) {
             step_change_made = false;
 
             //#region Pick cells with only one candidate left
+            // note mask_to_ones_count. Each bit represents a digit available for this cell.
+            // We want to know how many digits to choose from we have. If only one digit, then use that digit.
             // 36.
             let single_candidate_indices: Vec<usize> = candidate_masks
                 .iter()
@@ -594,12 +597,18 @@ fn play(mut rnglcg: PortableLCG) {
                 .collect();
 
             // 37.
+            // if we have any cells with only one option digit we can put there, then put it there.
+            // if we have more than one cell which only one candidate digit, then RANDOMLY select a cell
+            // (cells are identified by their index number)
             if single_candidate_indices.len() > 0
             {
                 let pick_single_candidate_index : usize = rnglcg.next_range(single_candidate_indices.len() as i32).try_into().unwrap();
+                // single_candidate_index identifies the cell we are talking about
                 let single_candidate_index = single_candidate_indices[pick_single_candidate_index];
-                let candidate_mask = candidate_masks[single_candidate_index];
-                let candidate = single_bit_to_index[&(candidate_mask as usize)];
+                // candidate_mask is the one candidate digit we can use in this cell
+                let candidate_mask = candidate_masks[single_candidate_index];  // candidate_mask has 1 bit set in range 0-8 indicating which digit we can put in this cell
+                // candidate is the one digit we can use in this cell 0-8 (add one to get digit)
+                let candidate = single_bit_to_index[&(candidate_mask as usize)]; // candidate is 0-8
 
                 let row = single_candidate_index / 9;
                 let col = single_candidate_index % 9;
@@ -607,12 +616,12 @@ fn play(mut rnglcg: PortableLCG) {
                 let row_to_write = row + row / 3 + 1;
                 let col_to_write = col + col / 3 + 1;
 
-                state[single_candidate_index] = candidate as i32 + 1;
+                state[single_candidate_index] = candidate as i32 + 1;  // Here's the +1 to convert to a digit 1-9
                 let c = char::from_u32(b'1' as u32 + candidate as u32).expect("REASON");
-                board[row_to_write][col_to_write] = c;
-                candidate_masks[single_candidate_index] = 0;
-                change_made = true;
-
+                board[row_to_write][col_to_write] = c;  // board parallels state but stores strings for printing
+                candidate_masks[single_candidate_index] = 0; // clear candidates for this cell now that we've set cell to a digit
+                change_made = true;  // we made a change to the state and board
+                // message to user we set a particular cell to the only digit it could be
                 let s = format!("({0}, {1}) can only contain {2}.", row + 1, col + 1, candidate + 1);
                 log(s);
             }
@@ -621,6 +630,7 @@ fn play(mut rnglcg: PortableLCG) {
 
             //#region Try to find a number which can only appear in one place in a row/column/block
             // 38.
+            // if there were no cells which could only be set to a single digit
             if !change_made
             {
                 let mut group_descriptions: Vec<String> = Vec::new();
@@ -628,6 +638,7 @@ fn play(mut rnglcg: PortableLCG) {
                 let mut candidate_col_indices: Vec<usize> = Vec::new();
                 let mut candidates: Vec<i32> = Vec::new();
                 // 39.
+                // candidate_masks is input
                 for digit in 1..=9
                 {
                     let mask = 1 << (digit - 1);
@@ -710,7 +721,7 @@ fn play(mut rnglcg: PortableLCG) {
                     let col_to_write = col + col / 3 + 1;
 
                     let state_index = 9 * row + col;
-                    state[state_index] = *digit;
+                    state[state_index] = *digit;      // we can try digit in this cell
                     candidate_masks[state_index] = 0;
                     let c = char::from_u32((b'0' as i32 + digit) as u32).expect("REASON");
                     //println!("47. c={}",c);
@@ -729,11 +740,13 @@ fn play(mut rnglcg: PortableLCG) {
             if !change_made
             {
                 //let two_digit_masks = candidate_masks.Where(mask => mask_to_ones_count[mask] == 2).Distinct().ToList();
+                // look for cells which have only 2 options for digits
                 let two_digit_masks1: Vec<u32> = candidate_masks
                     .into_iter()
                     .filter(|&mask| mask_to_ones_count[&mask] == 2)
                     .collect();
                 let two_digit_masks: Vec<u32>  = two_digit_masks1.into_iter().unique().collect();
+                // note every number here when expressed in biary uses only 2 bits
                 log(format!("two_digit_masks={:?}", two_digit_masks));
 
                 // 49.
@@ -741,6 +754,7 @@ fn play(mut rnglcg: PortableLCG) {
                 let mut groups = Vec::new();
 
                 // Outer loop equivalent to SelectMany over twoDigitMasks
+                // for every
                 for mask in &two_digit_masks
                 {
                     // Inner processing equivalent to the SelectMany lambda
@@ -750,15 +764,16 @@ fn play(mut rnglcg: PortableLCG) {
                         let mut matching_count = 0;
                         let cell_list = tuple_kvp.1;
                         for cell in cell_list {
-                            if candidate_masks[cell.index] == *mask {
+                            if candidate_masks[cell.index] == *mask {  // mask represents the two digits (unknown which cell)
                                 matching_count += 1;
                             }
                         }
-
+                        // we are hoping to find only 2 cells which can have these two digits
                         if matching_count != 2 {
                             continue;
                         }
 
+                        // only 2 cells confirmed for 2 digits in mask
                         // Second Where condition: group.Any(tuple => candidateMasks[tuple.Index] != mask && (candidateMasks[tuple.Index] & mask) > 0)
                         let mut has_overlapping_non_matching = false;
                         for cell in cell_list {
@@ -839,10 +854,11 @@ fn play(mut rnglcg: PortableLCG) {
                             // 51.
                             if !cells.is_empty()
                             {
+                                // "Values {lower} and {upper} in {} are in cells ({mask_cells[0].row+1}, {mask_cells[0].col+1}) and ({mask_cells[1].row+1}, {mask_cells[1].col+1}).",
                                 let mut upper = 0;
                                 let mut lower = 0;
-                                let mut temp = group.mask;
-
+                                let mut temp = group.mask;  // bits represent digits
+// what the hell does this do? Find the upper two bits. upper & lower represent digits
                                 let mut value = 1;
                                 while temp > 0
                                 {
@@ -851,8 +867,8 @@ fn play(mut rnglcg: PortableLCG) {
                                         lower = upper;
                                         upper = value;
                                     }
-                                    temp = temp >> 1;
-                                    value += 1;
+                                    temp = temp >> 1;  // shift to test next bit in temp
+                                    value += 1;  // counts number of bits we've tested
                                 }
 
                                 let s = format!(
