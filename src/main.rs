@@ -442,58 +442,67 @@ fn play(mut rnglcg: PortableLCG) {
         // Group by rows
         // 30.
         // Group elements by row
-
         // Create the projected items using a for loop instead of Select
-        let temp_list_row: Vec<Cell> = (0..81).map(|index| Cell {
-            discriminator: index / 9,
-            description: format!("row #{}", index / 9 + 1),
-            index,
-            row: index / 9,
-            column: index % 9,
-        }).collect();
-
-        // Group manually using for loops instead of GroupBy
-        // Create list of all 81 cells, grouped by row. Discriminator is row, varies from 0 to 8
-        let rows_indices = get_indicies(temp_list_row);
+        let rows_indices = {
+            let mut temp_map = BTreeMap::<usize, Vec<Cell>>::new();
+            for index in 0..81 {
+                let discriminator = index / 9;
+                let cell = Cell {
+                    discriminator,
+                    description: format!("row #{}", discriminator + 1),
+                    index,
+                    row: index / 9,
+                    column: index % 9,
+                };
+                temp_map.entry(discriminator).or_insert_with(Vec::new).push(cell);
+            }
+            temp_map
+        };
 
 
         // 31.
         // Group by columns
         // Create list of all 81 cells, grouped by COLUMN. Discriminator is COLUMN, varies from 9 - 17 (subtract 9 to get column)
-
         // Create the projected items using a for loop instead of Select
-        let temp_list_col: Vec<Cell> = (0..81).map(|index| Cell {
-            discriminator: 9 + index % 9,
-            description: format!("column #{}", index % 9 + 1),
-            index,
-            row: index / 9,
-            column: index % 9,
-        }).collect();
-        // Group manually using for loops instead of GroupBy
-        let column_indices = get_indicies(temp_list_col);
+        let column_indices = {
+            let mut temp_map = BTreeMap::<usize, Vec<Cell>>::new();
+            for index in 0..81 {
+                let discriminator = 9 + index % 9;
+                let cell = Cell {
+                    discriminator,
+                    description: format!("column #{}", index % 9 + 1),
+                    index,
+                    row:  index / 9,
+                    column: index % 9,
+                };
+                temp_map.entry(discriminator).or_insert_with(Vec::new).push(cell);
+            }
+            temp_map
+        };
 
 
+        //}
         // Group by blocks
         // Create list of all 81 cells, grouped by BLOCK. Discriminator is BLOCK, varies from 18-26 (subtract 18 to get BLOCK)
         // 32.
-
         // Create the projected items using a for loop instead of Select
-        let temp_list_block: Vec<Cell> = (0..81).map(|index|
-        {
-            let block_row = index / 9;
-            let block_column = index % 9;
-            Cell {
-                discriminator: 18 + 3 * (block_row / 3) + block_column / 3,
-                description: format!("block ({}, {})", block_row / 3 + 1, block_column / 3 + 1),
-                index,
-                row: index / 9,
-                column: index % 9,
+        let block_indices = {
+            let mut temp_map = BTreeMap::<usize, Vec<Cell>>::new();
+            for index in 0..81 {
+                let block_row = index / 9;
+                let block_column = index % 9;
+                let discriminator = 18 + 3 * (block_row / 3) + block_column / 3;
+                let cell = Cell {
+                    discriminator,
+                    description: format!("block ({}, {})", block_row / 3 + 1, block_column / 3 + 1),
+                    index,
+                    row:  index / 9,
+                    column: index % 9,
+                };
+                temp_map.entry(discriminator).or_insert_with(Vec::new).push(cell);
             }
-        }).collect();
-
-        // Group BY DISCRIMINATOR
-        let block_indices = get_indicies(temp_list_block);
-
+            temp_map
+        };
 
         // Combine all groups
         // 33.
@@ -1345,9 +1354,9 @@ fn play(mut rnglcg: PortableLCG) {
     log("BOARD SOLVED.".to_string())
 }
 
-fn get_indicies(temp_list_row: Vec<Cell>) -> HashMap<usize, Vec<Cell>> {
+fn get_indicies(temp_list_row: Vec<Cell>) -> BTreeMap<usize, Vec<Cell>> {
     let indices = {
-        let mut temp_map = HashMap::<usize, Vec<Cell>>::new();
+        let mut temp_map = BTreeMap::<usize, Vec<Cell>>::new();
         for cell in temp_list_row {
             let discriminator = cell.discriminator;
 
