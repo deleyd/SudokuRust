@@ -77,28 +77,10 @@ enum Commands {
     Fail,
 }
 
-/*fn print_board(board : &[[char; 13]; 13])
-{
-    for row in board {
-        let mut s: String = "".to_owned();
-        for &ch in row {
-            s.push(ch); // Print each character without a newline
-        }
-        log(s); // Print a newline after each row
-    }
-}*/
-
 fn print_board(state : &[i32; 81])
 {
-    //let mut board: [[char; 13]; 13] = [['X'; 13]; 13];
-    let line: &str = "+---+---+---+";
-    //let middle: &str = "|...|...|...|";
-
-    // Accessing and modifying elements
-    //let line_chars: Vec<char> = line.chars().collect();
-    //let middle_chars: Vec<char> = middle.chars().collect();
-    //board[0] = line.chars().collect::<Vec<char>>().try_into().expect("REASON");
-    log(line.to_string());
+    let line : String = "+---+---+---+".to_string();
+    log(&line);
     for j in 0..3 {
         for i in 0..3 {
             let k = (3*j + i) * 9;
@@ -108,35 +90,11 @@ fn print_board(state : &[i32; 81])
                             state[k + 6], state[k + 7], state[k + 8]);
             let t = s.replace('0', ".");
 
-            log(t); // Print a newline after each row
+            log(&t); // Print a newline after each row
         }
-        log(line.to_string());
+        log(&line);
     }
 }
-/*
-//board[0] = line_chars.clone().try_into().expect("REASON");
-    board[1] = middle_chars.clone().try_into().expect("REASON");
-    board[2] = middle_chars.clone().try_into().expect("REASON");
-    board[3] = middle_chars.clone().try_into().expect("REASON");
-    board[4] = line_chars.clone().try_into().expect("REASON");
-    board[5] = middle_chars.clone().try_into().expect("REASON");
-    board[6] = middle_chars.clone().try_into().expect("REASON");
-    board[7] = middle_chars.clone().try_into().expect("REASON");
-    board[8] = line_chars.clone().try_into().expect("REASON");
-    board[9] = middle_chars.clone().try_into().expect("REASON");
-    board[10] = middle_chars.clone().try_into().expect("REASON");
-    board[11] = middle_chars.clone().try_into().expect("REASON");
-    board[12] = line_chars.clone().try_into().expect("REASON");
-
-    for row in board {
-        let mut s: String = "".to_owned();
-        for ch in row {
-            s.push(ch); // Print each character without a newline
-        }
-        log(s); // Print a newline after each row
-    }
-}
-*/
 
 fn play(mut rnglcg: PortableLCG) {
     // 2. Construct board to be solved
@@ -236,7 +194,7 @@ fn play(mut rnglcg: PortableLCG) {
         else if command == Commands::Move  // 19.
         {
             let rtm = cell_candidate_stack.last().unwrap().get_row();
-            log(format!("rowIndexStack Count={} rowToMove={}", cell_candidate_stack.len(), rtm));
+            log(&format!("rowIndexStack Count={} rowToMove={}", cell_candidate_stack.len(), rtm));
 
             let cell_to_move = cell_candidate_stack.last().unwrap();
             let current_state_index : usize = cell_to_move.get_index();
@@ -254,7 +212,7 @@ fn play(mut rnglcg: PortableLCG) {
             let col_to_move = cell_to_move.get_col();  // col_index_stack.last().unwrap();
             let row_to_write : usize = (row_to_move + row_to_move / 3 + 1) as usize;
             let col_to_write : usize = (col_to_move + col_to_move / 3 + 1) as usize;
-            log(format!("digitToMove:{0} movedToDigit:{1} rowToMove:{2} colToMove:{3} rowToWrite:{4} colToWrite:{5} currentStateIndex:{6}", digit_to_move, moved_to_digit, row_to_move, col_to_move, row_to_write, col_to_write, current_state_index));
+            log(&format!("digitToMove:{0} movedToDigit:{1} rowToMove:{2} colToMove:{3} rowToWrite:{4} colToWrite:{5} currentStateIndex:{6}", digit_to_move, moved_to_digit, row_to_move, col_to_move, row_to_write, col_to_write, current_state_index));
 
             if digit_to_move > 0
             {
@@ -265,7 +223,7 @@ fn play(mut rnglcg: PortableLCG) {
 
             if moved_to_digit <= 9
             {
-                log(format!("19d. moved_to_digit: {:?}", moved_to_digit));
+                log(&format!("19d. moved_to_digit: {:?}", moved_to_digit));
                 last_digit_stack.push(moved_to_digit);
                 used_digits[moved_to_digit as usize - 1] = true;  // DWD This needs to modify the value in *used_digits_stack.last()[moved_to_digit as usize - 1]
                 let current_state = state_stack.last_mut().unwrap();
@@ -278,14 +236,14 @@ fn play(mut rnglcg: PortableLCG) {
                 // No viable candidate was found at current position - pop it in the next iteration
                 last_digit_stack.push(0);
                 command = Commands::Collapse;
-                log(format!("collapse. last_digit_stack.last():{}", last_digit_stack.last().unwrap().clone()));
+                log(&format!("collapse. last_digit_stack.last():{}", last_digit_stack.last().unwrap().clone()));
             }
         } // if (command == Commands::Move)
     }
 
     // 20.
-    log("".to_string());
-    log("Final look of the solved board:".to_string());
+    log(&"".to_string());
+    log(&"Final look of the solved board:".to_string());
     print_board(&state_stack.last().cloned().unwrap());
     //#endregion
 
@@ -331,17 +289,17 @@ fn play(mut rnglcg: PortableLCG) {
     }
 
     // 23
-    log("".to_string());
-    log("Starting look of the board to solve:".to_string());
+    log(&"".to_string());
+    log(&"Starting look of the board to solve:".to_string());
     print_board(&state);
     //#endregion
 
     // 24.
     //#region Prepare lookup structures that will be used in further execution
-    log("".to_string());
+    log(&"".to_string());
     let s = "=".repeat(80);
-    log(s);
-    log("".to_string());
+    log(&s);
+    log(&"".to_string());
 
     // 25.
     //Dictionary<int, int> maskToOnesCount = new Dictionary<int, int>();
@@ -421,7 +379,7 @@ fn play(mut rnglcg: PortableLCG) {
 
         // Create the projected items using a for loop instead of Select
         let row_indices = {
-            let mut temp_map = HashMap::<usize, Vec<Cell>>::new();
+            let mut temp_map = BTreeMap::<usize, Vec<Cell>>::new();
             for index in 0..81 {
                 let discriminator = index / 9;
                 let cell = Cell {
@@ -439,7 +397,7 @@ fn play(mut rnglcg: PortableLCG) {
         // Create list of all 81 cells, grouped by COLUMN. Discriminator is COLUMN, varies from 9 - 17 (subtract 9 to get column)
         // Create the projected items using a for loop instead of Select
         let column_indices = {
-            let mut temp_map = HashMap::<usize, Vec<Cell>>::new();
+            let mut temp_map = BTreeMap::<usize, Vec<Cell>>::new();
             for index in 0..81 {
                 let discriminator = 9 + index % 9;
                 let cell = Cell {
@@ -458,7 +416,7 @@ fn play(mut rnglcg: PortableLCG) {
         // 32.
         // Create the projected items using a for loop instead of Select
         let block_indices = {
-            let mut temp_map = HashMap::<usize, Vec<Cell>>::new();
+            let mut temp_map = BTreeMap::<usize, Vec<Cell>>::new();
             for index in 0..81 {
                 let block_row = index / 9;
                 let block_column = index % 9;
@@ -528,7 +486,7 @@ fn play(mut rnglcg: PortableLCG) {
                 let row = single_candidate_index / 9;
                 let col = single_candidate_index % 9;
                 let s = format!("({0}, {1}) can only contain {2}.", row + 1, col + 1, candidate + 1);
-                log(s);
+                log(&s);
             }
             //#endregion*
 
@@ -626,7 +584,7 @@ fn play(mut rnglcg: PortableLCG) {
                     change_made = true;
 
                     let message = format!("{} can contain {} only at ({}, {}).", description, digit, row + 1, col + 1);
-                    log(message);
+                    log(&message);
                 }
             }
             //#endregion
@@ -643,7 +601,7 @@ fn play(mut rnglcg: PortableLCG) {
                     .collect();
                 let two_digit_masks: Vec<u32>  = two_digit_masks1.into_iter().unique().collect();
                 // note every number here when expressed in biary uses only 2 bits
-                log(format!("two_digit_masks={:?}", two_digit_masks));
+                log(&format!("two_digit_masks={:?}", two_digit_masks));
 
                 // 49.
 
@@ -764,7 +722,7 @@ fn play(mut rnglcg: PortableLCG) {
                                     mask_cells[1].get_row() + 1,
                                     mask_cells[1].get_column() + 1
                                 );
-                                log(s);
+                                log(&s);
 
                                 // 52.
                                 for cell in &cells
@@ -784,7 +742,7 @@ fn play(mut rnglcg: PortableLCG) {
                                     {
                                         println!("Found cannot appear in (7, 4).")
                                     }
-                                    log(s);
+                                    log(&s);
                                     candidate_masks[cell.index] &= !group.mask;
                                     step_change_made = true;
                                 }
@@ -861,7 +819,6 @@ fn play(mut rnglcg: PortableLCG) {
                     })
                     {
                         let mut message = format!("In {} values ", group_with_n_masks.description);
-
                         let mut separator = "";
                         let mut temp = mask;
                         let mut cur_value = 1;
@@ -888,7 +845,7 @@ fn play(mut rnglcg: PortableLCG) {
                         // 56.
                         message.push_str(&" and other values cannot appear in those cells.".to_string());
 
-                        log(message);
+                        log(&message);
                     }
 
                     // 57.
@@ -923,7 +880,7 @@ fn play(mut rnglcg: PortableLCG) {
 
                         // 59.
                         message.push_str(&format!(" cannot appear in cell ({}, {}).", cell.get_row() + 1, cell.get_column() + 1));
-                        log(message);
+                        log(&message);
                     }
                 }
             }
@@ -1140,7 +1097,6 @@ fn play(mut rnglcg: PortableLCG) {
                             command = Commands::Collapse;
                         }
                     } // if (command == Commands::Move)
-
                 } // while (command != Commands::Complete && command != Commands::Fail)
 
                 // 77.
@@ -1186,7 +1142,7 @@ fn play(mut rnglcg: PortableLCG) {
                     description = format!("block ({}, {})", row1 / 3 + 1, col1 / 3 + 1);
                 }
                 let s = format!("Guessing that {} and {} are arbitrary in {} (multiple solutions): Pick {}->({}, {}), {}->({}, {}).", digit1, digit2, description, final_state[index1], row1 + 1, col1 + 1, final_state[index2], row2 + 1, col2 + 1);
-                log(s);
+                log(&s);
             }
         }
         //#endregion
@@ -1200,12 +1156,12 @@ fn play(mut rnglcg: PortableLCG) {
             let code: String = state.iter()
                 .map(|&x| if x == 0 { ".".to_string() } else { x.to_string() })
                 .collect();
-            log(format!("Code: {0}", code));
-            log("".to_string());
+            log(&format!("Code: {0}", code));
+            log(&"".to_string());
         }
             //#endregion
     }//while change_made// 27
-    log("BOARD SOLVED.".to_string())
+    log(&"BOARD SOLVED.".to_string())
 }
 
 
@@ -1341,10 +1297,10 @@ fn write_from_function(content: &str) -> io::Result<()> {
     Ok(())
 }
 
-fn log(s : String)
+fn log(s : &String)
 {
     println!("{}", s);
-    write_from_function(&*s).expect("TODO: panic message");
+    write_from_function(s).expect("TODO: panic message");
     write_from_function("\n").expect("TODO: panic message");
 }
 
@@ -1366,7 +1322,6 @@ fn compare_files_line_by_line(file1_path: &str, file2_path: &str) -> io::Result<
     let mut lines2 = reader2.lines();
 
     loop {
-
         let line1_opt = lines1.next();
         let line2_opt = lines2.next();
         line1_num += 1;
@@ -1444,11 +1399,11 @@ fn main()
     for seed in 1..25
     {
         let my_rng = PortableLCG::new(seed);
-        log(format!("RUN {}", seed));
+        log(&format!("RUN {}", seed));
         play(my_rng);
     }
 
-    log("THE END!".to_string());
+    log(&"THE END!".to_string());
     // Close file by setting the global file to None (this drops the file handle)
     *GLOBAL_FILE.lock().unwrap() = None;
 
