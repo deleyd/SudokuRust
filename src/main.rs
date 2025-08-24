@@ -19,8 +19,6 @@ struct Cell {
     //discriminator: usize,
     description: String,
     index: usize,
-    row: usize,
-    column: usize,
 }
 impl Cell {
     fn get_row(&self) -> usize {
@@ -456,7 +454,7 @@ fn play(mut rnglcg: PortableLCG) {
         let column_indices = {
             let mut temp_map = HashMap::<usize, Vec<Cell>>::new();
             for index in 0..81 {
-                let discriminator = 9 + index / 9;
+                let discriminator = 9 + index % 9;
                 let cell = Cell {
                     description: format!("column #{}", index % 9 + 1),
                     index,
