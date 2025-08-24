@@ -1096,26 +1096,7 @@ fn play(mut rnglcg: PortableLCG) {
                                 let mut is_digit_used: [bool; 9] = [false; 9];
 
                                 // 68.
-                                for i in 0..9
-                                {
-                                    let row_digit = current_state[9 * i + col];
-                                    if row_digit > 0
-                                    {
-                                        is_digit_used[row_digit as usize - 1] = true;
-                                    }
-
-                                    let col_digit = current_state[9 * row + i];
-                                    if col_digit > 0
-                                    {
-                                        is_digit_used[col_digit as usize - 1] = true;
-                                    }
-
-                                    let block_digit = current_state[(block_row * 3 + i / 3) * 9 + (block_col * 3 + i % 3)];
-                                    if block_digit > 0
-                                    {
-                                        is_digit_used[block_digit as usize - 1] = true;
-                                    }
-                                } // for (i = 0..8)
+                                gather_digits(current_state, row, col, block_row, block_col, &mut is_digit_used);
 
                                 // candidates_count = is_digit_used.Where(used => !used).Count();
                                 let candidates_count = is_digit_used
@@ -1150,8 +1131,6 @@ fn play(mut rnglcg: PortableLCG) {
                         if !contains_unsolvable_cells
                         {
                             state_stack.push(current_state);
-                            // row_index_stack.push(best_row);
-                            // col_index_stack.push(best_col);
                             cell_candidate_stack.push(CellCandidate::new(best_index));
                             used_digits_stack.push(best_used_digits);
                             last_digit_stack.push(0); // No digit was tried at this position
@@ -1164,8 +1143,6 @@ fn play(mut rnglcg: PortableLCG) {
                     else if command == Commands::Collapse
                     {
                         state_stack.pop();
-                        // row_index_stack.pop();
-                        // col_index_stack.pop();
                         cell_candidate_stack.pop();
                         used_digits_stack.pop();
                         last_digit_stack.pop();
@@ -1181,16 +1158,16 @@ fn play(mut rnglcg: PortableLCG) {
                     else if command == Commands::Move
                     {
                         let cell_to_move: &CellCandidate = cell_candidate_stack.last().unwrap();
-                        let row_to_move = cell_to_move.get_row() as usize;    // row_index_stack.last().unwrap();
-                        let col_to_move = cell_to_move.get_col() as usize;    //col_index_stack.last().unwrap();
                         let digit_to_move = last_digit_stack.pop().unwrap();
 
+                        let row_to_move = cell_to_move.get_row() as usize;    // row_index_stack.last().unwrap();
+                        let col_to_move = cell_to_move.get_col() as usize;    //col_index_stack.last().unwrap();
                         let row_to_write: usize = row_to_move + row_to_move / 3 + 1;
                         let col_to_write: usize = col_to_move + col_to_move / 3 + 1;
 
                         let mut used_digits = used_digits_stack.last().unwrap().clone();
                         let current_state = state_stack.last_mut().unwrap();
-                        let current_state_index: usize = 9 * row_to_move + col_to_move;
+                        let current_state_index: usize = cell_to_move.get_index();
 
                         let mut moved_to_digit = digit_to_move + 1;
                         while moved_to_digit <= 9 && used_digits[moved_to_digit as usize - 1]
@@ -1203,6 +1180,7 @@ fn play(mut rnglcg: PortableLCG) {
                         {
                             used_digits[digit_to_move as usize - 1] = false;
                             current_state[current_state_index] = 0;
+
                             board[row_to_write][col_to_write] = '.';
                         }
 
@@ -1215,10 +1193,6 @@ fn play(mut rnglcg: PortableLCG) {
                             current_state[current_state_index] = moved_to_digit; // Array access is similar
                             board[row_to_write][col_to_write] = char::from_u32((b'0' as i32 + moved_to_digit) as u32).expect("REASON"); // Converting integer to char
 
-                            /*if (current_state.Any(digit => digit == 0))
-                            command = "expand";
-                            else
-                            command = "complete";*/
                             command = if current_state.iter().any(|&digit| digit == 0) {
                                 Commands::Expand
                             } else {
@@ -1259,15 +1233,14 @@ fn play(mut rnglcg: PortableLCG) {
                 change_made = true;
 
                 // 79.
-                for i in 0..state.len()
+                for i in 0..81
                 {
                     let temp_row = i / 9;
                     let temp_col = i % 9;
                     let row_to_write = temp_row + temp_row / 3 + 1;
                     let col_to_write = temp_col + temp_col / 3 + 1;
-
                     board[row_to_write][col_to_write] = '.';
-                    if state[i] > 0
+                    if state[i] > 0  // if board has a digit set, then update board with new digit
                     {
                         let c : char = char::from_u32((b'0' as i32 + state[i]) as u32).expect("REASON");
                         //println!("79. c={:?}", c);
@@ -1304,12 +1277,6 @@ fn play(mut rnglcg: PortableLCG) {
             //#region Print the board as it looks after one change was made to it
             // convert this to use state instead of board
             print_board(&board);
-            /*string code =
-                string.Join(string.Empty, board.Select(s => new string(s)).ToArray())
-                    .Replace("-", string.Empty)
-                    .Replace("+", string.Empty)
-                    .Replace("|", string.Empty)
-                    .Replace(".", "0");*/
             let code: String = board
                 .iter()
                 .flat_map(|s| s.iter().copied().collect::<Vec<_>>()) // Flatten the characters from each string in 'board'
@@ -1320,14 +1287,6 @@ fn play(mut rnglcg: PortableLCG) {
                 //.replace('.', "0");
             log(format!("Code: {0}", code));
             log("".to_string());
-            let s1 = "..54...2...352.84.462378915349652178271834659658...4325.6.4..81..72635949.4185.6.";
-            //             ..54...2...352.84.462378915349652178271834659658...4325.6.4...1..7...5.49.4185.6.
-            let s2 = code.as_str();
-            if s2 == s1
-            {
-                let _y = 1;
-                println!("FOUND MATCHING CODE");
-            }
         }
             //#endregion
     }//while change_made// 27
@@ -1335,7 +1294,7 @@ fn play(mut rnglcg: PortableLCG) {
 }
 
 
-
+// lazy calculate single_bit_to_index
 use std::sync::OnceLock;
 static SINGLE_BIT_TO_INDEX: OnceLock<HashMap<usize, usize> > = OnceLock::new();
 
@@ -1392,12 +1351,15 @@ fn get_row_col_block_used_digits(current_state: [i32; 81], index: usize) -> [boo
 
     let mut is_digit_used: [bool; 9] = [false; 9];
 
-    //println!("11. current_state={:?}", current_state);
     // gather all digits used in cell's row, column, and block. output is_digit_used. input: current_state, row, col, block_row, block_col
+    // for (i = 0..8)
+    gather_digits(current_state, row, col, block_row, block_col, &mut is_digit_used);
+    is_digit_used
+}
+
+fn gather_digits(current_state: [i32; 81], row: usize, col: usize, block_row: usize, block_col: usize, is_digit_used: &mut [bool; 9]) {
     for i in 0..9  // 12.
     {
-        //println!("current_state: {:?} i={}", current_state, i);
-
         let row_digit = current_state[9 * i + col];
         if row_digit > 0
         {
@@ -1416,7 +1378,6 @@ fn get_row_col_block_used_digits(current_state: [i32; 81], index: usize) -> [boo
             is_digit_used[block_digit as usize - 1] = true;
         }
     } // for (i = 0..8)
-    is_digit_used
 }
 
 #[derive(Clone, Copy)]
