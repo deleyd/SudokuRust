@@ -28,6 +28,7 @@ impl Cell {
         self.index % 9
     }
 }
+
 #[derive(Debug, Clone)]
 pub struct CellGroup {
     pub mask: u32,
@@ -76,7 +77,7 @@ enum Commands {
     Fail,
 }
 
-fn print_board(board : &[[char; 13]; 13])
+/*fn print_board(board : &[[char; 13]; 13])
 {
     for row in board {
         let mut s: String = "".to_owned();
@@ -85,8 +86,57 @@ fn print_board(board : &[[char; 13]; 13])
         }
         log(s); // Print a newline after each row
     }
-}
+}*/
 
+fn print_board(state : &[i32; 81])
+{
+    //let mut board: [[char; 13]; 13] = [['X'; 13]; 13];
+    let line: &str = "+---+---+---+";
+    //let middle: &str = "|...|...|...|";
+
+    // Accessing and modifying elements
+    //let line_chars: Vec<char> = line.chars().collect();
+    //let middle_chars: Vec<char> = middle.chars().collect();
+    //board[0] = line.chars().collect::<Vec<char>>().try_into().expect("REASON");
+    log(line.to_string());
+    for j in 0..3 {
+        for i in 0..3 {
+            let k = (3*j + i) * 9;
+            let s = format!("|{}{}{}|{}{}{}|{}{}{}|",
+                            state[k + 0], state[k + 1], state[k + 2],
+                            state[k + 3], state[k + 4], state[k + 5],
+                            state[k + 6], state[k + 7], state[k + 8]);
+            let t = s.replace('0', ".");
+
+            log(t); // Print a newline after each row
+        }
+        log(line.to_string());
+    }
+}
+/*
+//board[0] = line_chars.clone().try_into().expect("REASON");
+    board[1] = middle_chars.clone().try_into().expect("REASON");
+    board[2] = middle_chars.clone().try_into().expect("REASON");
+    board[3] = middle_chars.clone().try_into().expect("REASON");
+    board[4] = line_chars.clone().try_into().expect("REASON");
+    board[5] = middle_chars.clone().try_into().expect("REASON");
+    board[6] = middle_chars.clone().try_into().expect("REASON");
+    board[7] = middle_chars.clone().try_into().expect("REASON");
+    board[8] = line_chars.clone().try_into().expect("REASON");
+    board[9] = middle_chars.clone().try_into().expect("REASON");
+    board[10] = middle_chars.clone().try_into().expect("REASON");
+    board[11] = middle_chars.clone().try_into().expect("REASON");
+    board[12] = line_chars.clone().try_into().expect("REASON");
+
+    for row in board {
+        let mut s: String = "".to_owned();
+        for ch in row {
+            s.push(ch); // Print each character without a newline
+        }
+        log(s); // Print a newline after each row
+    }
+}
+*/
 
 fn play(mut rnglcg: PortableLCG) {
     // 1. Prepare empty board
@@ -284,7 +334,7 @@ fn play(mut rnglcg: PortableLCG) {
     // 20.
     log("".to_string());
     log("Final look of the solved board:".to_string());
-    print_board(&board);
+    print_board(&state_stack.last().cloned().unwrap());
     //#endregion
 
     //#region Generate initial board from the completely solved one
@@ -337,7 +387,7 @@ fn play(mut rnglcg: PortableLCG) {
     // 23
     log("".to_string());
     log("Starting look of the board to solve:".to_string());
-    print_board(&board);
+    print_board(&state);
     //#endregion
 
     // 24.
@@ -1265,7 +1315,8 @@ fn play(mut rnglcg: PortableLCG) {
         {
             //#region Print the board as it looks after one change was made to it
             // convert this to use state instead of board
-            print_board(&board);
+            //let current_state = state_stack.last_mut().unwrap().clone();
+            print_board(&state);
             let code: String = board
                 .iter()
                 .flat_map(|s| s.iter().copied().collect::<Vec<_>>()) // Flatten the characters from each string in 'board'
@@ -1479,7 +1530,6 @@ fn compare_files_line_by_line(file1_path: &str, file2_path: &str) -> io::Result<
             },
         }
     }
-
 
     if !differences_found {
         println!("Files are identical.");
