@@ -1076,8 +1076,6 @@ fn play(mut rnglcg: PortableLCG) {
                         }
 
                         let mut best_index: usize = 9999;
-                        // let mut best_row = 9999;
-                        // let mut best_col = 9999;
                         let mut best_used_digits: Vec<bool> = Vec::new();
                         let mut best_candidates_count : i32 = -1;
                         let mut best_random_value : i32 = -1;
@@ -1088,15 +1086,8 @@ fn play(mut rnglcg: PortableLCG) {
                         {
                             if current_state[index] == 0
                             {
-                                let row = index / 9;
-                                let col = index % 9;
-                                let block_row = row / 3;
-                                let block_col = col / 3;
-
-                                let mut is_digit_used: [bool; 9] = [false; 9];
-
                                 // 68.
-                                gather_digits(current_state, row, col, block_row, block_col, &mut is_digit_used);
+                                let is_digit_used = gather_digits(current_state, index);
 
                                 // candidates_count = is_digit_used.Where(used => !used).Count();
                                 let candidates_count = is_digit_used
@@ -1118,8 +1109,6 @@ fn play(mut rnglcg: PortableLCG) {
                                     (candidates_count == best_candidates_count as usize && random_value < best_random_value)
                                 {
                                     best_index = index;
-                                    // best_row = row;
-                                    // best_col = col;
                                     best_used_digits = is_digit_used.to_vec();
                                     best_candidates_count = candidates_count as i32;
                                     best_random_value = random_value;
@@ -1344,20 +1333,21 @@ fn top_two_digits(value: u32) -> (i32, i32) {
 }
 
 fn get_row_col_block_used_digits(current_state: [i32; 81], index: usize) -> [bool; 9] {
-    let row: usize = index / 9;
-    let col: usize = index % 9;
-    let block_row: usize = row / 3;
-    let block_col: usize = col / 3;
-
-    let mut is_digit_used: [bool; 9] = [false; 9];
 
     // gather all digits used in cell's row, column, and block. output is_digit_used. input: current_state, row, col, block_row, block_col
     // for (i = 0..8)
-    gather_digits(current_state, row, col, block_row, block_col, &mut is_digit_used);
+    //let mut is_digit_used: [bool; 9] = [false; 9];
+    let is_digit_used = gather_digits(current_state, index);
     is_digit_used
 }
 
-fn gather_digits(current_state: [i32; 81], row: usize, col: usize, block_row: usize, block_col: usize, is_digit_used: &mut [bool; 9]) {
+fn gather_digits(current_state: [i32; 81], index: usize) -> [bool; 9]  {
+    let row = index / 9;
+    let col = index % 9;
+    let block_row = row / 3;
+    let block_col = col / 3;
+    let mut is_digit_used: [bool; 9] = [false; 9];
+
     for i in 0..9  // 12.
     {
         let row_digit = current_state[9 * i + col];
@@ -1378,6 +1368,7 @@ fn gather_digits(current_state: [i32; 81], row: usize, col: usize, block_row: us
             is_digit_used[block_digit as usize - 1] = true;
         }
     } // for (i = 0..8)
+    is_digit_used
 }
 
 #[derive(Clone, Copy)]
