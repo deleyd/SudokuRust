@@ -19,6 +19,8 @@ struct Cell {
     //discriminator: usize,
     description: String,
     index: usize,
+    row: usize,
+    column: usize,
 }
 impl Cell {
     fn get_row(&self) -> usize {
@@ -363,6 +365,13 @@ fn play(mut rnglcg: PortableLCG) {
     //println!("mask_to_ones_count: {:?}", mask_to_ones_count);
 
     // 26.
+    //Dictionary < int, int > single_bit_to_index = new
+    // single bit to digit might be a better name.
+    // 0x00100 = 4 is bit 2? If we start counting from bit 0?
+    // converts mask to bit number?
+    // let single_bit_to_index = get_single_bit_to_index();
+    //println!("single_bit_to_index: {:?}", single_bit_to_index);
+
     //#endregion
 
     let mut change_made: bool = true;
@@ -551,10 +560,7 @@ fn play(mut rnglcg: PortableLCG) {
             {
                 // sync these 4
                 let mut group_descriptions: Vec<String> = Vec::new();
-                // DWD combine candidate_row_indices & candidate_col_indices => candidate_index_indicies
-                //let mut candidate_indices: Vec<usize> = Vec::new();
-                let mut candidate_row_indices: Vec<usize> = Vec::new();
-                let mut candidate_col_indices: Vec<usize> = Vec::new();
+                let mut candidate_indices: Vec<usize> = Vec::new();
                 let mut digit_candidates: Vec<i32> = Vec::new();
                 // 39.
                 // candidate_masks is input
@@ -602,22 +608,14 @@ fn play(mut rnglcg: PortableLCG) {
                         if row_number_count == 1
                         {
                             group_descriptions.push(format!("Row #{}", cell_group + 1));
-                            // row = index / 9
-                            // col = index % 9
-                            // index from row, col = index from (index/9) and (index%9)
-                            // index = row*9 + col
-                            //candidate_indices.push(cell_group*9 + index_in_row);
-                            candidate_row_indices.push(cell_group);
-                            candidate_col_indices.push(index_in_row);
+                            candidate_indices.push(cell_group*9 + index_in_row);
                             digit_candidates.push(digit);
                         }
                         // 45.
                         if col_number_count == 1
                         {
                             group_descriptions.push(format!("Column #{}", cell_group + 1));
-                            //candidate_indices.push(index_in_col*9 + cell_group);
-                            candidate_row_indices.push(index_in_col);
-                            candidate_col_indices.push(cell_group);
+                            candidate_indices.push(index_in_col*9 + cell_group);
                             digit_candidates.push(digit);
                         }
                         // 46.
@@ -627,9 +625,7 @@ fn play(mut rnglcg: PortableLCG) {
                             let block_col = cell_group % 3;
 
                             group_descriptions.push(format!("Block ({}, {})", block_row + 1, block_col + 1));
-                            //candidate_indices.push((block_row * 3 + index_in_block / 3)*9 + (block_col * 3 + index_in_block % 3));
-                            candidate_row_indices.push(block_row * 3 + index_in_block / 3);
-                            candidate_col_indices.push(block_col * 3 + index_in_block % 3);
+                            candidate_indices.push((block_row * 3 + index_in_block / 3)*9 + (block_col * 3 + index_in_block % 3));
                             digit_candidates.push(digit);
                         }
                     } // for (cell_group = 0..8)
@@ -640,17 +636,12 @@ fn play(mut rnglcg: PortableLCG) {
                 {
                     let index = rnglcg.next_range(digit_candidates.len() as i32) as usize;
                     let description = group_descriptions.get(index).unwrap();
-                    //let idx = candidate_indices.get(index).unwrap();
-                    //let rowx = idx / 9;
-                    //let colx = idx % 9;
-                    let row = candidate_row_indices.get(index).unwrap();
-                    let col = candidate_col_indices.get(index).unwrap();
-                    //assert_eq!(rowx,*row);
-                    //assert_eq!(colx,*col);
+                    let idx = candidate_indices.get(index).unwrap();
+                    let row = idx/9;
+                    let col = idx%9;
                     let digit = digit_candidates.get(index).unwrap();
 
-                    let state_index = 9 * row + col;
-                    //assert_eq!(state_index, *idx);
+                    let state_index = *idx;
                     state[state_index] = *digit;      // we can try digit in this cell
                     candidate_masks[state_index] = 0; // clear for this cell since we just set cell to a number
                     let c = char::from_u32((b'0' as i32 + digit) as u32).expect("REASON");
