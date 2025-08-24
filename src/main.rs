@@ -16,7 +16,7 @@ static GLOBAL_FILE: Mutex<Option<File>> = Mutex::new(None);
 
 #[derive(Debug, Clone)]
 struct Cell {
-    discriminator: usize,
+    //discriminator: usize,
     description: String,
     index: usize,
     row: usize,
@@ -50,32 +50,24 @@ impl CellCandidate {
             index: idx,
         }
     }
-    pub fn newrc(row: i32, col: i32) -> CellCandidate {
-        println!("row: {} col: {}", row, col);
-        CellCandidate {
-            index: (row * 9 + col) as usize,
-        }
-    }
+
     // Getter method
     fn get_index(&self) -> usize {
         self.index
     }
-    // Setter method
-    fn set_index(&mut self, value: usize) {
-        self.index = value;
-    }
+
     fn get_row(&self) -> usize {
         self.index / 9
     }
     fn get_col(&self) -> usize {
         self.index % 9
     }
-    fn get_blockrow(&self) -> usize {
+    /*fn get_blockrow(&self) -> usize {
         self.get_row() / 3
     }
     fn get_blockcol(&self) -> usize {
         self.get_col() /3
-    }
+    }*/
 }
 
 
@@ -448,7 +440,7 @@ fn play(mut rnglcg: PortableLCG) {
             for index in 0..81 {
                 let discriminator = index / 9;
                 let cell = Cell {
-                    discriminator,
+                    //discriminator,
                     description: format!("row #{}", discriminator + 1),
                     index,
                     row: index / 9,
@@ -469,7 +461,7 @@ fn play(mut rnglcg: PortableLCG) {
             for index in 0..81 {
                 let discriminator = 9 + index % 9;
                 let cell = Cell {
-                    discriminator,
+                    //discriminator,
                     description: format!("column #{}", index % 9 + 1),
                     index,
                     row:  index / 9,
@@ -493,7 +485,7 @@ fn play(mut rnglcg: PortableLCG) {
                 let block_column = index % 9;
                 let discriminator = 18 + 3 * (block_row / 3) + block_column / 3;
                 let cell = Cell {
-                    discriminator,
+                    //discriminator,
                     description: format!("block ({}, {})", block_row / 3 + 1, block_column / 3 + 1),
                     index,
                     row:  index / 9,
@@ -512,6 +504,7 @@ fn play(mut rnglcg: PortableLCG) {
             .chain(block_indices)
             .collect();
         //#endregion
+
 
         // cell_groups has 3x 81 cells. 81 for rows, 81 for columns, 81 for blocks
         // 34.
@@ -565,7 +558,6 @@ fn play(mut rnglcg: PortableLCG) {
                 let s = format!("({0}, {1}) can only contain {2}.", row + 1, col + 1, candidate + 1);
                 log(s);
             }
-
             //#endregion*
 
             //#region Try to find a number which can only appear in one place in a row/column/block
@@ -575,8 +567,7 @@ fn play(mut rnglcg: PortableLCG) {
             {
                 // sync these 4
                 let mut group_descriptions: Vec<String> = Vec::new();
-                let mut candidate_row_indices: Vec<usize> = Vec::new();
-                let mut candidate_col_indices: Vec<usize> = Vec::new();
+                let mut candidate_indices: Vec<usize> = Vec::new();
                 let mut digit_candidates: Vec<i32> = Vec::new();
                 // 39.
                 // candidate_masks is input
@@ -624,16 +615,14 @@ fn play(mut rnglcg: PortableLCG) {
                         if row_number_count == 1
                         {
                             group_descriptions.push(format!("Row #{}", cell_group + 1));
-                            candidate_row_indices.push(cell_group);
-                            candidate_col_indices.push(index_in_row);
+                            candidate_indices.push(cell_group*9 + index_in_row);
                             digit_candidates.push(digit);
                         }
                         // 45.
                         if col_number_count == 1
                         {
                             group_descriptions.push(format!("Column #{}", cell_group + 1));
-                            candidate_row_indices.push(index_in_col);
-                            candidate_col_indices.push(cell_group);
+                            candidate_indices.push(index_in_col*9 + cell_group);
                             digit_candidates.push(digit);
                         }
                         // 46.
@@ -643,8 +632,7 @@ fn play(mut rnglcg: PortableLCG) {
                             let block_col = cell_group % 3;
 
                             group_descriptions.push(format!("Block ({}, {})", block_row + 1, block_col + 1));
-                            candidate_row_indices.push(block_row * 3 + index_in_block / 3);
-                            candidate_col_indices.push(block_col * 3 + index_in_block % 3);
+                            candidate_indices.push((block_row * 3 + index_in_block / 3)*9 + (block_col * 3 + index_in_block % 3));
                             digit_candidates.push(digit);
                         }
                     } // for (cell_group = 0..8)
@@ -655,11 +643,12 @@ fn play(mut rnglcg: PortableLCG) {
                 {
                     let index = rnglcg.next_range(digit_candidates.len() as i32) as usize;
                     let description = group_descriptions.get(index).unwrap();
-                    let row = candidate_row_indices.get(index).unwrap();
-                    let col = candidate_col_indices.get(index).unwrap();
+                    let idx = candidate_indices.get(index).unwrap();
+                    let row = idx/9;
+                    let col = idx%9;
                     let digit = digit_candidates.get(index).unwrap();
 
-                    let state_index = 9 * row + col;
+                    let state_index = *idx;
                     state[state_index] = *digit;      // we can try digit in this cell
                     candidate_masks[state_index] = 0; // clear for this cell since we just set cell to a number
                     let c = char::from_u32((b'0' as i32 + digit) as u32).expect("REASON");
@@ -1352,22 +1341,6 @@ fn play(mut rnglcg: PortableLCG) {
             //#endregion
     }//while change_made// 27
     log("BOARD SOLVED.".to_string())
-}
-
-fn get_indicies(temp_list_row: Vec<Cell>) -> BTreeMap<usize, Vec<Cell>> {
-    let indices = {
-        let mut temp_map = BTreeMap::<usize, Vec<Cell>>::new();
-        for cell in temp_list_row {
-            let discriminator = cell.discriminator;
-
-            if !temp_map.contains_key(&discriminator) {
-                temp_map.insert(discriminator, Vec::<Cell>::new());
-            }
-            temp_map.get_mut(&discriminator).unwrap().push(cell);
-        }
-        temp_map
-    };
-    indices
 }
 
 use std::sync::OnceLock;
