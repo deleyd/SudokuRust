@@ -7,6 +7,7 @@ use std::sync::Mutex;
 use std::fs;
 use std::io::ErrorKind;
 use std::path::Path;
+use std::sync::OnceLock;
 
 // Declare a global static variable to hold the file.
 // Mutex is used for thread-safe access to the file.
@@ -302,8 +303,6 @@ fn play(mut rnglcg: PortableLCG) {
     log(&"".to_string());
 
     // 25.
-    let mask_to_ones_count = generate_mask_to_ones_count();
-
     // 26.
     //#endregion
 
@@ -311,7 +310,7 @@ fn play(mut rnglcg: PortableLCG) {
     while change_made// 27
     {
         change_made = false;
-        let candidate_masks: [u32; 81] =  calculate_candidates(state);
+        let mut candidate_masks: [u32; 81] =  calculate_candidates(state);
         //#endregion
         //#region Build a collection (named cellGroups) which maps cell indices into distinct groups (rows/columns/blocks)
         // 29.
@@ -338,18 +337,7 @@ fn play(mut rnglcg: PortableLCG) {
             // note mask_to_ones_count. Each bit represents a digit available for this cell.
             // We want to know how many digits to choose from we have. If only one digit, then use that digit.
             // 36.
-            let single_candidate_indices: Vec<usize> = candidate_masks
-                .iter()
-                .enumerate()
-                .filter_map(|(index, &mask)| {
-                    let candidates_count = mask_to_ones_count.get(&mask).copied().unwrap_or(0);
-                    if candidates_count == 1 {
-                        Some(index)
-                    } else {
-                        None
-                    }
-                })
-                .collect();
+            let single_candidate_indices = get_single_candidate_indices(&mut candidate_masks);
 
             // 37.
             // if we have any cells with only one option digit we can put there, then put it there.
@@ -482,12 +470,13 @@ fn play(mut rnglcg: PortableLCG) {
             {
                 //let two_digit_masks = candidate_masks.Where(mask => mask_to_ones_count[mask] == 2).Distinct().ToList();
                 // look for cells which have only 2 options for digits
-                let two_digit_masks1: Vec<u32> = candidate_masks
+                let two_digit_masks: Vec<u32> = candidate_masks
                     .into_iter()
-                    .filter(|&mask| mask_to_ones_count[&mask] == 2)
+                    .filter(|&mask| mask_to_ones_count()[&mask] == 2)
+                    .unique()
                     .collect();
-                let two_digit_masks: Vec<u32>  = two_digit_masks1.into_iter().unique().collect();
-                // note every number here when expressed in biary uses only 2 bits
+
+                // note every number here when expressed in biary uses only 2 bits, indicating there are two candidates for which? cells
                 log(&format!("two_digit_masks={:?}", two_digit_masks));
 
                 // 49.
@@ -646,12 +635,15 @@ fn play(mut rnglcg: PortableLCG) {
             // 53.
             if !change_made && !step_change_made
             {
+                let masks: Vec<u32> = mask_to_ones_count().iter().filter(|&(_, count)| *count > 1).map(|(mask, _)| *mask).collect();
+/*
+                let mask_to_ones_count = get_mask_to_ones_count();
                 let masks: Vec<u32> = mask_to_ones_count
                     .iter()
                     .filter(|&(_, count)| *count > 1)
                     .map(|(mask, _)| *mask)
                     .collect();
-
+*/
                 let groups_with_n_masks : Vec<CellWithMask> = masks
                     .iter()
                     .flat_map(|mask| {
@@ -692,7 +684,7 @@ fn play(mut rnglcg: PortableLCG) {
                                 }
                             })
                     })
-                    .filter(|group| group.cells_with_mask.len() == *mask_to_ones_count.get(&group.mask).unwrap())
+                    .filter(|group| group.cells_with_mask.len() == *mask_to_ones_count().get(&group.mask).unwrap())
                     .collect();
 
                 // 54.
@@ -792,7 +784,7 @@ fn play(mut rnglcg: PortableLCG) {
             for i in 0..candidate_masks.len() - 1
             {
                 // 62.
-                if mask_to_ones_count[&(candidate_masks[i])] == 2
+                if mask_to_ones_count()[&(candidate_masks[i])] == 2
                 {
                     let row = i / 9;
                     let col = i % 9;
@@ -1051,6 +1043,23 @@ fn play(mut rnglcg: PortableLCG) {
     log(&"BOARD SOLVED.".to_string())
 }
 
+
+fn get_single_candidate_indices(candidate_masks: &mut [u32; 81]) -> Vec<usize> {
+    let single_candidate_indices: Vec<usize> = candidate_masks
+        .iter()
+        .enumerate()
+        .filter_map(|(index, &mask)| {
+            let candidates_count = mask_to_ones_count().get(&mask).copied().unwrap_or(0);
+            if candidates_count == 1 {
+                Some(index)
+            } else {
+                None
+            }
+        })
+        .collect();
+    single_candidate_indices
+}
+
 fn get_indices() -> BTreeMap<usize, Vec<Cell>> {
     // Create the projected items using a for loop instead of Select
     let row_indices = {
@@ -1163,16 +1172,18 @@ fn calculate_candidates(state: &mut [i32; 81]) -> [u32; 81] {
     candidate_masks
 }
 
-fn generate_mask_to_ones_count() -> BTreeMap<u32, usize> {
-    //Dictionary<int, int> maskToOnesCount = new Dictionary<int, int>();
-    // Key is 0-511, value is number of binary bits in binary representation of key
-    // algorithm is, as we build the table temp_map[], consider 8 bit byte i, for any i,
-    // we first determine how many bits are set for byte bits 1-7, excluding the lowest bit.
-    // We shift i >> 1, which gives us i/2. We now look up the result for i/2 in table temp_map.
-    // Now we just need to add in the lowest bit, bit 0, to get the total number of bit set.
-    // smaller is i/2 (i >> 1), increment is lowest bit 0 (either 0 or 1)
-    // Number of bits set in value i is number of bits set in i/2 + lowest bit of i.
-    let mask_to_ones_count: BTreeMap<u32, usize> = {
+// lazy calculate
+//Dictionary<int, int> maskToOnesCount = new Dictionary<int, int>();
+// Key is 0-511, value is number of binary bits in binary representation of key
+// algorithm is, as we build the table temp_map[], consider 8 bit byte i, for any i,
+// we first determine how many bits are set for byte bits 1-7, excluding the lowest bit.
+// We shift i >> 1, which gives us i/2. We now look up the result for i/2 in table temp_map.
+// Now we just need to add in the lowest bit, bit 0, to get the total number of bit set.
+// smaller is i/2 (i >> 1), increment is lowest bit 0 (either 0 or 1)
+// Number of bits set in value i is number of bits set in i/2 + lowest bit of i.
+static MASK_TO_ONES_COUNT: OnceLock<BTreeMap<u32, usize>> = OnceLock::new();
+fn mask_to_ones_count() -> &'static BTreeMap<u32, usize> {
+    MASK_TO_ONES_COUNT.get_or_init(|| {
         let mut temp_map = BTreeMap::new();
         temp_map.insert(0, 0);
         for i in 1..(1 << 9) {            // 1 << 9 = 512. Thus goes from 1 to 511
@@ -1182,22 +1193,21 @@ fn generate_mask_to_ones_count() -> BTreeMap<u32, usize> {
             temp_map.insert(i, usize_value);                   // store the value. i, usize_value=number of bits set in i
         }
         temp_map
-    };
-    mask_to_ones_count
+    })
 }
 
 // lazy calculate single_bit_to_index
-use std::sync::OnceLock;
 static SINGLE_BIT_TO_INDEX: OnceLock<HashMap<usize, usize> > = OnceLock::new();
 
 fn get_single_bit_to_index() -> &'static HashMap<usize, usize> {
     SINGLE_BIT_TO_INDEX.get_or_init(|| {
-    let mut single_bit_to_indexx: HashMap<usize, usize> = HashMap::new();
+    let mut single_bit_to_index: HashMap<usize, usize> = HashMap::new();
     for i in 0..9
     {
-        single_bit_to_indexx.insert(1 << i, i);
+        single_bit_to_index.insert(1 << i, i);
     }
-        single_bit_to_indexx})
+        single_bit_to_index
+    })
 }
 
 // Convert mask to list of digits they represent. Returns list of digits.
