@@ -15,6 +15,7 @@ use std::sync::OnceLock;
 static GLOBAL_FILE: Mutex<Option<File>> = Mutex::new(None);
 
 
+// Cell should have a value
 #[derive(Debug, Clone)]
 struct Cell {
     //discriminator: usize,
@@ -814,6 +815,7 @@ fn play(mut rnglcg: PortableLCG) {
 
             // At this point we have the lists with pairs of cells that might pick one of two digits each
             // Now we have to check whether that is really true - does the board have two solutions?
+            // possibly replace with cellList1,2. holding cells and values set for cell.
             let mut state_index1: Vec<usize> = Vec::new();
             let mut state_index2: Vec<usize> = Vec::new();
             let mut value1: Vec<i32> = Vec::new();
@@ -982,6 +984,7 @@ fn play(mut rnglcg: PortableLCG) {
                 if command == Commands::Complete
                 {   // Board was solved successfully even with two digits swapped
                     // sync state_index with value
+                    // state_index : an array of indexes (indexes are cells, cells have values). value : array of values corresponding to array of indexes.
                     state_index1.push(index1);
                     state_index2.push(index2);
                     value1.push(digit1);
@@ -1008,18 +1011,19 @@ fn play(mut rnglcg: PortableLCG) {
                 let col1 = index1 % 9;
                 let row2 = index2 / 9;
                 let col2 = index2 % 9;
-                let digit1 = value1[pos];
-                let digit2 = value2[pos];
                 let description: String;
+
                 if row1 == row2
                 {
-                    description = format!("row #{}", index1 / 9 + 1);
-                } else if index1 % 9 == index2 % 9
+                    description = format!("row #{}", row1 + 1);
+                } else if col1 == col2
                 {
-                    description = format!("column #{}", index1 % 9 + 1);
+                    description = format!("column #{}", col1 + 1);
                 } else {
                     description = format!("block ({}, {})", row1 / 3 + 1, col1 / 3 + 1);
                 }
+                let digit1 = value1[pos];
+                let digit2 = value2[pos];
                 let s = format!("Guessing that {} and {} are arbitrary in {} (multiple solutions): Pick {}->({}, {}), {}->({}, {}).", digit1, digit2, description, final_state[index1], row1 + 1, col1 + 1, final_state[index2], row2 + 1, col2 + 1);
                 log(&s);
             }
@@ -1027,7 +1031,7 @@ fn play(mut rnglcg: PortableLCG) {
         //#endregion
 
         // 80.
-        if change_made
+        if change_made  // print board and Code if we made a change
         {
             //#region Print the board as it looks after one change was made to it
             // convert this to use state instead of board
@@ -1043,14 +1047,14 @@ fn play(mut rnglcg: PortableLCG) {
     log(&"BOARD SOLVED.".to_string())
 }
 
-
+// candidate_masks : list of 81, for each cell, the digits which are candidates (encoded as a bit mask)
 fn get_single_candidate_indices(candidate_masks: &mut [u32; 81]) -> Vec<usize> {
     let single_candidate_indices: Vec<usize> = candidate_masks
         .iter()
         .enumerate()
         .filter_map(|(index, &mask)| {
             let candidates_count = mask_to_ones_count().get(&mask).copied().unwrap_or(0);
-            if candidates_count == 1 {
+            if candidates_count == 1 {  // when there's only one digit that will work for this cell
                 Some(index)
             } else {
                 None
