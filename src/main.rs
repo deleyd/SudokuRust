@@ -6,14 +6,15 @@ use std::io::{self, Write, BufReader, BufRead};
 use std::sync::Mutex;
 use std::fs;
 use std::io::ErrorKind;
+use std::ops::{Index, IndexMut};
 use std::path::Path;
 use std::sync::OnceLock;
+use std::fmt;
 
 // Declare a global static variable to hold the file.
 // Mutex is used for thread-safe access to the file.
 // Option is used because the file might not be initialized yet.
 static GLOBAL_FILE: Mutex<Option<File>> = Mutex::new(None);
-
 
 // Cell should have a value
 #[derive(Debug, Clone)]
@@ -21,13 +22,55 @@ struct Cell {
     //discriminator: usize,
     description: String,
     index: usize,
+    value: i32,
 }
 impl Cell {
+    pub fn new(i:usize, v:i32) -> Cell {
+        Cell {
+            description: "".to_string(),
+            index: i,
+            value : v,
+        }
+    }
     fn get_row(&self) -> usize {
         self.index / 9
     }
     fn get_column(&self) -> usize {
         self.index % 9
+    }
+}
+impl fmt::Display for Cell {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.value)
+    }
+}
+
+#[derive(Debug, Clone)]
+struct Board {
+    cells: Vec<Cell>,
+}
+impl Board {
+    pub fn new() -> Board {
+        let mut cells = Vec::new();
+        for i in 0..81
+        {
+            let cell = Cell::new(i,0);
+            cells.push(cell);
+        }
+        Board {
+            cells,
+        }
+    }
+}
+impl Index<usize> for Board {
+    type Output = Cell;
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.cells[index]
+    }
+}
+impl IndexMut<usize> for Board {
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+        &mut self.cells[index]
     }
 }
 
@@ -79,7 +122,7 @@ enum Commands {
     Fail,
 }
 
-fn print_board(state : &[i32; 81])
+fn print_board(state : &Board)
 {
     let line : String = "+---+---+---+".to_string();
     log(&line);
@@ -102,7 +145,7 @@ fn play(mut rnglcg: PortableLCG) {
     // 2. Construct board to be solved
     // 3. Top element is current state of the board
     //Stack<int[]> state_stack = new Stack<int[]>();
-    let mut state_stack: Vec<[i32; 9 * 9]> = Vec::new();
+    let mut board_stack: Vec<Board> = Vec::new();
 
     // 4. Top elements are (row, col) of cell which has been modified compared to previous state
     let mut cell_candidate_stack: Vec<CellCandidate> = Vec::new();
@@ -120,15 +163,15 @@ fn play(mut rnglcg: PortableLCG) {
     let mut command = Commands::Expand;
 
     // we add to the stack each time we add a number to a cell
-    while state_stack.len() <= 81  // 8.
+    while board_stack.len() <= 81  // 8.
     {
         if command == Commands::Expand
         {
-            let current_state: [i32; 81] = if state_stack.len() > 0  // 9.
+            let current_state: Board = if board_stack.len() > 0  // 9.
             {
-                state_stack.last().cloned().unwrap()
+                board_stack.last().cloned().unwrap()
             } else {
-                [0; 81]
+                Board::new()
             };
 
             // input: current_state. output: contains_unsolvable_cells, best_row, best_col,
@@ -140,9 +183,9 @@ fn play(mut rnglcg: PortableLCG) {
             // loop through all cells looking for empty ones
             for index in 0..81  // 10.
             {
-                if current_state[index] == 0  // 11.  if cell unused, then let's see what we can do with it
+                if current_state[index].value == 0  // 11.  if cell unused, then let's see what we can do with it
                 {
-                    let is_digit_used: [bool; 9] = get_row_col_block_used_digits(current_state, index); // returns an array of 9 true/false values
+                    let is_digit_used: [bool; 9] = get_row_col_block_used_digits(&current_state, index); // returns an array of 9 true/false values
 
                     // 13.
                     //let candidates_count = is_digit_used.Where(used => !used).Count();
@@ -174,7 +217,7 @@ fn play(mut rnglcg: PortableLCG) {
 
             if !contains_unsolvable_cells  // 16.
             {
-                state_stack.push(current_state);          // current state came from state_stack?
+                board_stack.push(current_state);          // current state came from state_stack?
                 cell_candidate_stack.push(CellCandidate::new(best_index));
                 used_digits_stack.push(best_used_digits);
                 last_digit_stack.push(0); // No digit was tried at this position
@@ -186,7 +229,7 @@ fn play(mut rnglcg: PortableLCG) {
         } // if (command == Commands::Expand)
         else if command == Commands::Collapse  // 18.
         {
-            state_stack.pop();
+            board_stack.pop();
             cell_candidate_stack.pop();
             used_digits_stack.pop();
             last_digit_stack.pop();
@@ -219,8 +262,8 @@ fn play(mut rnglcg: PortableLCG) {
             if digit_to_move > 0
             {
                 used_digits[digit_to_move as usize - 1] = false;
-                let current_state = state_stack.last_mut().unwrap();
-                current_state[current_state_index] = 0; // does this change last element of state_stack?
+                let current_board = board_stack.last_mut().unwrap();
+                current_board[current_state_index].value = 0; // does this change last element of state_stack?
             }
 
             if moved_to_digit <= 9
@@ -228,8 +271,8 @@ fn play(mut rnglcg: PortableLCG) {
                 log(&format!("19d. moved_to_digit: {:?}", moved_to_digit));
                 last_digit_stack.push(moved_to_digit);
                 used_digits[moved_to_digit as usize - 1] = true;  // DWD This needs to modify the value in *used_digits_stack.last()[moved_to_digit as usize - 1]
-                let current_state = state_stack.last_mut().unwrap();
-                current_state[current_state_index] = moved_to_digit;
+                let current_state = board_stack.last_mut().unwrap();
+                current_state[current_state_index].value = moved_to_digit;
 
                 // Next possible digit was found at current position
                 // Next step will be to expand the state
@@ -246,7 +289,7 @@ fn play(mut rnglcg: PortableLCG) {
     // 20.
     log(&"".to_string());
     log(&"Final look of the solved board:".to_string());
-    print_board(&state_stack.last().cloned().unwrap());
+    print_board(&board_stack.last().cloned().unwrap());
     //#endregion
 
     //#region Generate initial board from the completely solved one
@@ -256,9 +299,9 @@ fn play(mut rnglcg: PortableLCG) {
     let max_removed_per_block = 6;
     let mut removed_per_block: [[i32; 3]; 3] = [[0; 3]; 3];
     let mut positions: [usize; 9 * 9] = std::array::from_fn(|i| i);
-    let state = state_stack.last_mut().unwrap();
+    let board = board_stack.last_mut().unwrap();
 
-    let final_state = state.clone(); // new int[state.len()]; Array.Copy(state, final_state, final_state.len());
+    let final_state = board.clone(); // new int[state.len()]; Array.Copy(state, final_state, final_state.len());
 
     let mut removed_pos : usize = 0;
     while removed_pos < 9 * 9 - remaining_digits  // 21.
@@ -281,7 +324,7 @@ fn play(mut rnglcg: PortableLCG) {
         removed_per_block[block_row_to_remove][block_col_to_remove] += 1;
         // 21.
         let state_index: usize = 9 * row + col;
-        state[state_index] = 0;
+        board[state_index].value = 0;
 
         // swap [removed_pos] with [index_to_pick]
         let temp = positions[removed_pos];
@@ -293,7 +336,7 @@ fn play(mut rnglcg: PortableLCG) {
     // 23
     log(&"".to_string());
     log(&"Starting look of the board to solve:".to_string());
-    print_board(&state);
+    print_board(&board);
     //#endregion
 
     // 24.
@@ -311,7 +354,7 @@ fn play(mut rnglcg: PortableLCG) {
     while change_made// 27
     {
         change_made = false;
-        let mut candidate_masks: [u32; 81] =  calculate_candidates(state);
+        let mut candidate_masks: [u32; 81] =  calculate_candidates(board);
         //#endregion
         //#region Build a collection (named cellGroups) which maps cell indices into distinct groups (rows/columns/blocks)
         // 29.
@@ -354,7 +397,7 @@ fn play(mut rnglcg: PortableLCG) {
                 // candidate is the one digit we can use in this cell 0-8 (add one to get digit)
                 let candidate_mask = candidate_masks[single_candidate_index];  // candidate_mask has 1 bit set in range 0-8 indicating which digit we can put in this cell
                 let candidate = get_single_bit_to_index()[&(candidate_mask as usize)]; // candidate is 0-8
-                state[single_candidate_index] = candidate as i32 + 1;  // Set cell to the one digit it can be. Here's the +1 to convert to a digit 1-9
+                board[single_candidate_index].value = candidate as i32 + 1;  // Set cell to the one digit it can be. Here's the +1 to convert to a digit 1-9
 
                 candidate_masks[single_candidate_index] = 0; // clear candidates for this cell now that we've set cell to a digit
                 change_made = true;  // we made a change to the state and board
@@ -454,9 +497,9 @@ fn play(mut rnglcg: PortableLCG) {
                     let col = idx%9;
                     let digit = digit_candidates.get(index).unwrap();
 
-                    let state_index = *idx;
-                    state[state_index] = *digit;      // we can try digit in this cell
-                    candidate_masks[state_index] = 0; // clear for this cell since we just set cell to a number
+                    let board_index = *idx;
+                    board[board_index].value = *digit;      // we can try digit in this cell
+                    candidate_masks[board_index] = 0; // clear for this cell since we just set cell to a number
                     change_made = true;
 
                     let message = format!("{} can contain {} only at ({}, {}).", description, digit, row + 1, col + 1);
@@ -652,15 +695,15 @@ fn play(mut rnglcg: PortableLCG) {
                             .iter()
                             .filter(|cell_group1| {
                                 cell_group1.1.iter().all(|cell| {
-                                    state[cell.index] == 0
-                                        || (mask.clone() & (1 << (state[cell.index] - 1))) == 0
+                                    board[cell.index].value == 0
+                                        || (mask.clone() & (1 << (board[cell.index].value - 1))) == 0
                                 })
                             })
                             .map(|cell_group2| {
                                 let cells_with_mask: Vec<Cell> = cell_group2.1
                                     .iter()
                                     .filter(|cell| {
-                                        state[cell.index] == 0  // cell unused
+                                        board[cell.index].value == 0  // cell unused
                                             && (candidate_masks[cell.index] & mask.clone()) != 0  // candidate_mask overlaps mask
                                     })
                                     //.map(|&x| x)
@@ -670,7 +713,7 @@ fn play(mut rnglcg: PortableLCG) {
                                 let cleanable_cells_count : u32 = cell_group2.1
                                     .iter()
                                     .filter(|cell| {
-                                        state[cell.index] == 0
+                                        board[cell.index].value == 0
                                             && (candidate_masks[cell.index] & mask.clone()) != 0   // overlaps
                                             && (candidate_masks[cell.index] & !mask.clone()) != 0  // but is not equal to
                                     })
@@ -829,22 +872,22 @@ fn play(mut rnglcg: PortableLCG) {
                 let digit1 = candidate_digit1.pop_front().unwrap();
                 let digit2 = candidate_digit2.pop_front().unwrap();
 
-                let mut alternate_state = state.clone();
+                let mut alternate_board : Board = board.clone();
 
-                if final_state[index1] == digit1
+                if final_state[index1].value == digit1
                 {
-                    alternate_state[index1] = digit2;
-                    alternate_state[index2] = digit1;
+                    alternate_board[index1].value = digit2;
+                    alternate_board[index2].value = digit1;
                 } else {
-                    alternate_state[index1] = digit1;
-                    alternate_state[index2] = digit2;
+                    alternate_board[index1].value = digit1;
+                    alternate_board[index2].value = digit2;
                 }
 
                 // 65.
                 // What follows below is a complete copy-paste of the solver which appears at the beginning of this method
                 // However, the algorithm couldn't be applied directly, and it had to be modified.
                 // Implementation below assumes that the board might not have a solution.
-                let mut state_stack: Vec<[i32; 81]> = Vec::new();
+                let mut board_stack: Vec<Board> = Vec::new();
                 let mut cell_candidate_stack: Vec<CellCandidate> = Vec::new();
                 let mut used_digits_stack: Vec<Vec<bool>> = Vec::new();
                 let mut last_digit_stack: Vec<i32> = Vec::new();
@@ -855,14 +898,14 @@ fn play(mut rnglcg: PortableLCG) {
                 {
                     if command == Commands::Expand
                     {
-                        let current_state;
+                        let current_board: Board;
 
-                        if !state_stack.is_empty()
+                        if !board_stack.is_empty()
                         {
-                            current_state = state_stack.last().unwrap().clone();
+                            current_board = board_stack.last().unwrap().clone();
                             //Array.Copy(state_stack.Peek(), current_state, current_state.Length);
                         } else {
-                            current_state = alternate_state.clone();
+                            current_board = alternate_board.clone();
                             //Array.Copy(alternate_state, current_state, current_state.Length);
                         }
 
@@ -873,12 +916,12 @@ fn play(mut rnglcg: PortableLCG) {
                         let mut contains_unsolvable_cells: bool = false;
 
                         // 67.
-                        for index in 0..current_state.len()
+                        for index in 0..81
                         {
-                            if current_state[index] == 0
+                            if current_board[index].value == 0
                             {
                                 // 68.
-                                let is_digit_used = gather_digits(current_state, index);
+                                let is_digit_used = gather_digits(&current_board, index);
 
                                 // candidates_count = is_digit_used.Where(used => !used).Count();
                                 let candidates_count = is_digit_used
@@ -910,7 +953,7 @@ fn play(mut rnglcg: PortableLCG) {
                         // 71.
                         if !contains_unsolvable_cells
                         {
-                            state_stack.push(current_state);
+                            board_stack.push(current_board);
                             cell_candidate_stack.push(CellCandidate::new(best_index));
                             used_digits_stack.push(best_used_digits);
                             last_digit_stack.push(0); // No digit was tried at this position
@@ -922,12 +965,12 @@ fn play(mut rnglcg: PortableLCG) {
                     // 72.
                     else if command == Commands::Collapse
                     {
-                        state_stack.pop();
+                        board_stack.pop();
                         cell_candidate_stack.pop();
                         used_digits_stack.pop();
                         last_digit_stack.pop();
 
-                        if !state_stack.is_empty()
+                        if !board_stack.is_empty()
                         {
                             command = Commands::Move; // Always try to move after collapse
                         } else {
@@ -941,7 +984,7 @@ fn play(mut rnglcg: PortableLCG) {
                         let digit_to_move = last_digit_stack.pop().unwrap();
 
                         let mut used_digits = used_digits_stack.last().unwrap().clone();
-                        let current_state = state_stack.last_mut().unwrap();
+                        let current_board = board_stack.last_mut().unwrap();
                         let current_state_index: usize = cell_to_move.get_index();
 
                         let mut moved_to_digit = digit_to_move + 1;
@@ -954,7 +997,7 @@ fn play(mut rnglcg: PortableLCG) {
                         if digit_to_move > 0
                         {
                             used_digits[digit_to_move as usize - 1] = false;
-                            current_state[current_state_index] = 0;
+                            current_board[current_state_index].value = 0;  // set cell to unused
                         }
 
                         // 75.
@@ -963,10 +1006,10 @@ fn play(mut rnglcg: PortableLCG) {
                             last_digit_stack.push(moved_to_digit); // Equivalent of C# Push()
                             used_digits[moved_to_digit as usize - 1] = true; // DWD Problem here. Does not change stack
                             //println!("75. used_digits={:?}", used_digits);
-                            current_state[current_state_index] = moved_to_digit; // Array access is similar
+                            current_board[current_state_index].value = moved_to_digit; // Array access is similar
                             //board[row_to_write][col_to_write] = char::from_u32((b'0' as i32 + moved_to_digit) as u32).expect("REASON"); // Converting integer to char
 
-                            command = if current_state.iter().any(|&digit| digit == 0) {
+                            command = if current_board.cells.iter().any(|cell| cell.value == 0) {
                                 Commands::Expand
                             } else {
                                 Commands::Complete
@@ -999,8 +1042,8 @@ fn play(mut rnglcg: PortableLCG) {
                 let index1 = state_index1[pos];
                 let index2 = state_index2[pos];
 
-                state[index1] = final_state[index1];
-                state[index2] = final_state[index2];
+                board[index1].value = final_state[index1].value;
+                board[index2].value = final_state[index2].value;
                 candidate_masks[index1] = 0;
                 candidate_masks[index2] = 0;
                 change_made = true;
@@ -1035,9 +1078,9 @@ fn play(mut rnglcg: PortableLCG) {
         {
             //#region Print the board as it looks after one change was made to it
             // convert this to use state instead of board
-            print_board(&state);
-            let code: String = state.iter()
-                .map(|&x| if x == 0 { ".".to_string() } else { x.to_string() })
+            print_board(&board);
+            let code: String = board.cells.iter()
+                .map(|cell| if cell.value == 0 { ".".to_string() } else { cell.value.to_string() })
                 .collect();
             log(&format!("Code: {0}", code));
             log(&"".to_string());
@@ -1073,6 +1116,7 @@ fn get_indices() -> BTreeMap<usize, Vec<Cell>> {
             let cell = Cell {
                 description: format!("row #{}", discriminator + 1),
                 index,
+                value: 0,
             };
             temp_map.entry(discriminator).or_insert_with(Vec::new).push(cell);
         }
@@ -1091,6 +1135,7 @@ fn get_indices() -> BTreeMap<usize, Vec<Cell>> {
             let cell = Cell {
                 description: format!("column #{}", index % 9 + 1),
                 index,
+                value: 0,
             };
             temp_map.entry(discriminator).or_insert_with(Vec::new).push(cell);
         }
@@ -1111,6 +1156,7 @@ fn get_indices() -> BTreeMap<usize, Vec<Cell>> {
             let cell = Cell {
                 description: format!("block ({}, {})", block_row / 3 + 1, block_column / 3 + 1),
                 index,
+                value: 0,
             };
             temp_map.entry(discriminator).or_insert_with(Vec::new).push(cell);
         }
@@ -1128,20 +1174,20 @@ fn get_indices() -> BTreeMap<usize, Vec<Cell>> {
     cell_groups
 }
 
-fn calculate_candidates(state: &mut [i32; 81]) -> [u32; 81] {
+fn calculate_candidates(cell_state: &mut Board) -> [u32; 81] {
     //#region Calculate candidates for current state of the board
     let mut candidate_masks: [u32; 81] = [0; 81];
 
     // go through every cell of board, calculcate candicate numbers for each cell that does not already have a number in it.
     // candidate numbers are any digit 1-9 not already in that cell's row, column, and block
     // candidate numbers are stored as a bitmask where bits 0-8 represent digits 1-9
-    for i in 0..state.len()  // 28.
+    for i in 0..cell_state.cells.len()  // 28.
     {
         // if this cell doesn't already have a number in it,
         // then calculate all the numbers which can go in this cell
         // candidate_mask is bits 0-8 representing numbers 1-9
         // Array candidate_masks[81] is all candidate numbers for each cell of board
-        if state[i] == 0
+        if cell_state[i].value == 0
         {
             let row = i / 9;
             let col = i % 9;
@@ -1155,9 +1201,9 @@ fn calculate_candidates(state: &mut [i32; 81]) -> [u32; 81] {
                 let col_sibling_index = 9 * j + col;
                 let block_sibling_index = 9 * (block_row * 3 + j / 3) + block_col * 3 + j % 3;
                 // state[81] holds numbers for each cell (or 0 if no number set yet).
-                let row_shift_amount = if state[row_sibling_index] == 0 { 31 } else { state[row_sibling_index] - 1 };
-                let col_shift_amount = if state[col_sibling_index] == 0 { 31 } else { state[col_sibling_index] - 1 };
-                let block_shift_amount = if state[block_sibling_index] == 0 { 31 } else { state[block_sibling_index] - 1 };
+                let row_shift_amount = if cell_state[row_sibling_index].value == 0 { 31 } else { cell_state[row_sibling_index].value - 1 };
+                let col_shift_amount = if cell_state[col_sibling_index].value == 0 { 31 } else { cell_state[col_sibling_index].value - 1 };
+                let block_shift_amount = if cell_state[block_sibling_index].value == 0 { 31 } else { cell_state[block_sibling_index].value - 1 };
                 // mask has one bit set indicating the digit in state cell. bit 0 = 1, bit 1 = 2,... bit8 = 9. Only bits 0-8 are used.
                 let row_sibling_mask: u32 = 1 << row_shift_amount;
                 let col_sibling_mask: u32 = 1 << col_shift_amount;
@@ -1249,13 +1295,13 @@ fn top_two_digits(value: u32) -> (i32, i32) {
     (lower, upper)
 }
 
-fn get_row_col_block_used_digits(current_state: [i32; 81], index: usize) -> [bool; 9] {
+fn get_row_col_block_used_digits(current_state: &Board, index: usize) -> [bool; 9] {
     // gather all digits used in cell's row, column, and block. output is_digit_used. input: current_state, row, col, block_row, block_col
-    let is_digit_used = gather_digits(current_state, index);
+    let is_digit_used = gather_digits(&current_state, index);
     is_digit_used
 }
 
-fn gather_digits(current_state: [i32; 81], index: usize) -> [bool; 9]  {
+fn gather_digits(current_state: &Board, index: usize) -> [bool; 9]  {
     let row = index / 9;
     let col = index % 9;
     let block_row = row / 3;
@@ -1264,19 +1310,22 @@ fn gather_digits(current_state: [i32; 81], index: usize) -> [bool; 9]  {
 
     for i in 0..9  // 12.
     {
-        let row_digit = current_state[9 * i + col];
+        let cell = current_state[9 * i + col].clone();
+        let row_digit = cell.value;
         if row_digit > 0
         {
             is_digit_used[row_digit as usize - 1] = true;
         }
 
-        let col_digit = current_state[9 * row + i];
+        let cell = current_state[9 * row + i].clone();
+        let col_digit = cell.value;
         if col_digit > 0
         {
             is_digit_used[col_digit as usize - 1] = true;
         }
 
-        let block_digit = current_state[(block_row * 3 + i / 3) * 9 + (block_col * 3 + i % 3)];
+        let cell = current_state[(block_row * 3 + i / 3) * 9 + (block_col * 3 + i % 3)].clone();
+        let block_digit = cell.value;
         if block_digit > 0
         {
             is_digit_used[block_digit as usize - 1] = true;
