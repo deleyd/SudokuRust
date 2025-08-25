@@ -95,15 +95,15 @@ pub struct CellWithMask<'a> {
 // a CellCandidate is identified by an index. The index identifies the cell
 struct CellCandidate {
     index: usize,
-    used_digits: [bool; 9],
-    last_digit: i32,
+    //used_digits: [bool; 9],
+    //last_digit: i32,
 }
 impl CellCandidate {
-    pub fn new(idx: usize, ud: [bool; 9], ld: i32) -> CellCandidate {
+    pub fn new(idx: usize) -> CellCandidate {
         CellCandidate {
             index: idx,
-            used_digits: ud,
-            last_digit: ld,
+            //used_digits: ud,
+            //last_digit: ld,
         }
     }
     fn get_index(&self) -> usize {
@@ -223,7 +223,7 @@ fn play(mut rnglcg: PortableLCG) {
             if !contains_unsolvable_cells  // 16.
             {
                 board_stack.push(current_state);          // current state came from state_stack?
-                cell_candidate_stack.push(CellCandidate::new(best_index, best_used_digits, 0));
+                cell_candidate_stack.push(CellCandidate::new(best_index));
                 used_digits_stack.push(best_used_digits);
                 last_digit_stack.push(0); // No digit was tried at this position
             }
@@ -956,7 +956,7 @@ fn play(mut rnglcg: PortableLCG) {
                         if !contains_unsolvable_cells
                         {
                             board_stack.push(current_board);
-                            cell_candidate_stack.push(CellCandidate::new(best_index, best_used_digits, 0));  // CellCandidate is index of cell on Board
+                            cell_candidate_stack.push(CellCandidate::new(best_index));  // CellCandidate is index of cell on Board
                             used_digits_stack.push(best_used_digits);                   // corresponding digits already used for cell's row,col,block
                             last_digit_stack.push(0); // No digit was tried at this position. Last digit tried for this cell
                         }
