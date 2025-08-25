@@ -92,13 +92,18 @@ pub struct CellWithMask<'a> {
     pub cleanable_cells_count: u32,
 }
 
+// a CellCandidate is identified by an index. The index identifies the cell
 struct CellCandidate {
     index: usize,
+    used_digits: [bool; 9],
+    last_digit: i32,
 }
 impl CellCandidate {
-    pub fn new(idx: usize) -> CellCandidate {
+    pub fn new(idx: usize, ud: [bool; 9], ld: i32) -> CellCandidate {
         CellCandidate {
             index: idx,
+            used_digits: ud,
+            last_digit: ld,
         }
     }
     fn get_index(&self) -> usize {
@@ -218,7 +223,7 @@ fn play(mut rnglcg: PortableLCG) {
             if !contains_unsolvable_cells  // 16.
             {
                 board_stack.push(current_state);          // current state came from state_stack?
-                cell_candidate_stack.push(CellCandidate::new(best_index));
+                cell_candidate_stack.push(CellCandidate::new(best_index, best_used_digits, 0));
                 used_digits_stack.push(best_used_digits);
                 last_digit_stack.push(0); // No digit was tried at this position
             }
@@ -301,7 +306,7 @@ fn play(mut rnglcg: PortableLCG) {
     let mut positions: [usize; 9 * 9] = std::array::from_fn(|i| i);
     let board = board_stack.last_mut().unwrap();
 
-    let final_state = board.clone(); // new int[state.len()]; Array.Copy(state, final_state, final_state.len());
+    let final_board = board.clone(); // new int[state.len()]; Array.Copy(state, final_state, final_state.len());
 
     let mut removed_pos : usize = 0;
     while removed_pos < 9 * 9 - remaining_digits  // 21.
@@ -825,22 +830,23 @@ fn play(mut rnglcg: PortableLCG) {
             let mut candidate_digit2: VecDeque<i32> = VecDeque::new();
 
             // 61.
-            for i in 0..candidate_masks.len() - 1
+            // index i goes from 0 to 80, index j goes from i+1 to 81. Gives us two cells, i & j, to compare candidate digits
+            for i in 0..80  // stop at 80 because j looks at i+1 cell
             {
                 // 62.
                 if mask_to_ones_count()[&(candidate_masks[i])] == 2
                 {
-                    let row = i / 9;
+                    let row = i / 9;  // get row,col,block of cell[i]
                     let col = i % 9;
                     let block_index = 3 * (row / 3) + col / 3;
-                    let (lower, upper) = top_two_digits(candidate_masks[i]);
+                    let (lower_digit, upper_digit) = top_two_digits(candidate_masks[i]);
 
                     // 63.
-                    for j in i + 1..candidate_masks.len()
+                    for j in i + 1..81
                     {
-                        if candidate_masks[j] == candidate_masks[i]
+                        if candidate_masks[j] == candidate_masks[i]    // if candidate digits for cells[i] & cells[j] are identical set,
                         {
-                            let row1 = j / 9;
+                            let row1 = j / 9;  // get row,col,block of cell[j]
                             let col1 = j % 9;
                             let block_index1 = 3 * (row1 / 3) + col1 / 3;
 
@@ -848,8 +854,8 @@ fn play(mut rnglcg: PortableLCG) {
                             {
                                 candidate_index1.push_back(i as i32);
                                 candidate_index2.push_back(j as i32);
-                                candidate_digit1.push_back(lower);
-                                candidate_digit2.push_back(upper);
+                                candidate_digit1.push_back(lower_digit);
+                                candidate_digit2.push_back(upper_digit);
                             }
                         }
                     }
@@ -859,8 +865,8 @@ fn play(mut rnglcg: PortableLCG) {
             // At this point we have the lists with pairs of cells that might pick one of two digits each
             // Now we have to check whether that is really true - does the board have two solutions?
             // possibly replace with cellList1,2. holding cells and values set for cell.
-            let mut state_index1: Vec<usize> = Vec::new();
-            let mut state_index2: Vec<usize> = Vec::new();
+            let mut board_index_stack1: Vec<usize> = Vec::new();
+            let mut board_index_stack2: Vec<usize> = Vec::new();
             let mut value1: Vec<i32> = Vec::new();
             let mut value2: Vec<i32> = Vec::new();
 
@@ -874,7 +880,8 @@ fn play(mut rnglcg: PortableLCG) {
 
                 let mut alternate_board : Board = board.clone();
 
-                if final_state[index1].value == digit1
+                // assign digit1, digit2, in the order opposite of final_board
+                if final_board[index1].value == digit1
                 {
                     alternate_board[index1].value = digit2;
                     alternate_board[index2].value = digit1;
@@ -889,7 +896,7 @@ fn play(mut rnglcg: PortableLCG) {
                 // Implementation below assumes that the board might not have a solution.
                 let mut board_stack: Vec<Board> = Vec::new();
                 let mut cell_candidate_stack: Vec<CellCandidate> = Vec::new();
-                let mut used_digits_stack: Vec<Vec<bool>> = Vec::new();
+                let mut used_digits_stack: Vec<[bool; 9]> = Vec::new();
                 let mut last_digit_stack: Vec<i32> = Vec::new();
 
                 // 66.
@@ -898,20 +905,15 @@ fn play(mut rnglcg: PortableLCG) {
                 {
                     if command == Commands::Expand
                     {
-                        let current_board: Board;
-
-                        if !board_stack.is_empty()
-                        {
-                            current_board = board_stack.last().unwrap().clone();
-                            //Array.Copy(state_stack.Peek(), current_state, current_state.Length);
+                        let current_board : Board = if !board_stack.is_empty() {
+                            board_stack.last().unwrap().clone()
                         } else {
-                            current_board = alternate_board.clone();
-                            //Array.Copy(alternate_state, current_state, current_state.Length);
-                        }
+                            alternate_board.clone()
+                        };
 
-                        let mut best_index: usize = 9999;
-                        let mut best_used_digits: Vec<bool> = Vec::new();
-                        let mut best_candidates_count : i32 = -1;
+                        let mut best_index: usize = 9999;                  // best will be cell with lowest number of candidate digits
+                        let mut best_used_digits: [bool; 9] = [false; 9];  // corresponding candidate digits for best cell
+                        let mut best_candidates_count : i32 = -1;          // number of candidate digits for best cell
                         let mut best_random_value : i32 = -1;
                         let mut contains_unsolvable_cells: bool = false;
 
@@ -942,9 +944,9 @@ fn play(mut rnglcg: PortableLCG) {
                                     candidates_count < best_candidates_count as usize ||
                                     (candidates_count == best_candidates_count as usize && random_value < best_random_value)
                                 {
-                                    best_index = index;
-                                    best_used_digits = is_digit_used.to_vec();
-                                    best_candidates_count = candidates_count as i32;
+                                    best_index = index;                               // corresponding cell with lowest number of candidate digits
+                                    best_used_digits = is_digit_used;                 // the candidate digits for this cell
+                                    best_candidates_count = candidates_count as i32;  // best is lowest number of candidate digits for a cell
                                     best_random_value = random_value;
                                 }
                             }
@@ -954,9 +956,9 @@ fn play(mut rnglcg: PortableLCG) {
                         if !contains_unsolvable_cells
                         {
                             board_stack.push(current_board);
-                            cell_candidate_stack.push(CellCandidate::new(best_index));
-                            used_digits_stack.push(best_used_digits);
-                            last_digit_stack.push(0); // No digit was tried at this position
+                            cell_candidate_stack.push(CellCandidate::new(best_index, best_used_digits, 0));  // CellCandidate is index of cell on Board
+                            used_digits_stack.push(best_used_digits);                   // corresponding digits already used for cell's row,col,block
+                            last_digit_stack.push(0); // No digit was tried at this position. Last digit tried for this cell
                         }
 
                         // Always try to move after expand
@@ -970,22 +972,21 @@ fn play(mut rnglcg: PortableLCG) {
                         used_digits_stack.pop();
                         last_digit_stack.pop();
 
-                        if !board_stack.is_empty()
-                        {
-                            command = Commands::Move; // Always try to move after collapse
+                        command = if !board_stack.is_empty() {
+                            Commands::Move // Always try to move after collapse
                         } else {
-                            command = Commands::Fail;
+                            Commands::Fail
                         }
                     }
                     // 73.
                     else if command == Commands::Move
                     {
-                        let cell_to_move: &CellCandidate = cell_candidate_stack.last().unwrap();
+                        let cell_to_move: &CellCandidate = cell_candidate_stack.last().unwrap();  // cell to move is identified by an index
                         let digit_to_move = last_digit_stack.pop().unwrap();
+                        let mut used_digits : [bool; 9] = used_digits_stack.last().unwrap().clone();
 
-                        let mut used_digits = used_digits_stack.last().unwrap().clone();
                         let current_board = board_stack.last_mut().unwrap();
-                        let current_state_index: usize = cell_to_move.get_index();
+                        let current_cell_index: usize = cell_to_move.get_index();
 
                         let mut moved_to_digit = digit_to_move + 1;
                         while moved_to_digit <= 9 && used_digits[moved_to_digit as usize - 1]
@@ -997,7 +998,7 @@ fn play(mut rnglcg: PortableLCG) {
                         if digit_to_move > 0
                         {
                             used_digits[digit_to_move as usize - 1] = false;
-                            current_board[current_state_index].value = 0;  // set cell to unused
+                            current_board[current_cell_index].value = 0;  // set cell to unused
                         }
 
                         // 75.
@@ -1005,9 +1006,7 @@ fn play(mut rnglcg: PortableLCG) {
                         {
                             last_digit_stack.push(moved_to_digit); // Equivalent of C# Push()
                             used_digits[moved_to_digit as usize - 1] = true; // DWD Problem here. Does not change stack
-                            //println!("75. used_digits={:?}", used_digits);
-                            current_board[current_state_index].value = moved_to_digit; // Array access is similar
-                            //board[row_to_write][col_to_write] = char::from_u32((b'0' as i32 + moved_to_digit) as u32).expect("REASON"); // Converting integer to char
+                            current_board[current_cell_index].value = moved_to_digit; // Array access is similar
 
                             command = if current_board.cells.iter().any(|cell| cell.value == 0) {
                                 Commands::Expand
@@ -1028,22 +1027,22 @@ fn play(mut rnglcg: PortableLCG) {
                 {   // Board was solved successfully even with two digits swapped
                     // sync state_index with value
                     // state_index : an array of indexes (indexes are cells, cells have values). value : array of values corresponding to array of indexes.
-                    state_index1.push(index1);
-                    state_index2.push(index2);
+                    board_index_stack1.push(index1);
+                    board_index_stack2.push(index2);
                     value1.push(digit1);
                     value2.push(digit2);
                 }
             } // while (candidate_index1.Any())
 
             // 78.
-            if !state_index1.is_empty()
+            if !board_index_stack1.is_empty()
             {
-                let pos = rnglcg.next_range(state_index1.len() as i32) as usize;
-                let index1 = state_index1[pos];
-                let index2 = state_index2[pos];
+                let pos = rnglcg.next_range(board_index_stack1.len() as i32) as usize;
+                let index1 = board_index_stack1[pos];
+                let index2 = board_index_stack2[pos];
 
-                board[index1].value = final_state[index1].value;
-                board[index2].value = final_state[index2].value;
+                board[index1].value = final_board[index1].value;
+                board[index2].value = final_board[index2].value;
                 candidate_masks[index1] = 0;
                 candidate_masks[index2] = 0;
                 change_made = true;
@@ -1067,7 +1066,7 @@ fn play(mut rnglcg: PortableLCG) {
                 }
                 let digit1 = value1[pos];
                 let digit2 = value2[pos];
-                let s = format!("Guessing that {} and {} are arbitrary in {} (multiple solutions): Pick {}->({}, {}), {}->({}, {}).", digit1, digit2, description, final_state[index1], row1 + 1, col1 + 1, final_state[index2], row2 + 1, col2 + 1);
+                let s = format!("Guessing that {} and {} are arbitrary in {} (multiple solutions): Pick {}->({}, {}), {}->({}, {}).", digit1, digit2, description, final_board[index1], row1 + 1, col1 + 1, final_board[index2], row2 + 1, col2 + 1);
                 log(&s);
             }
         }
@@ -1080,7 +1079,7 @@ fn play(mut rnglcg: PortableLCG) {
             // convert this to use state instead of board
             print_board(&board);
             let code: String = board.cells.iter()
-                .map(|cell| if cell.value == 0 { ".".to_string() } else { cell.value.to_string() })
+                .map(|cell| if cell.value == 0 { ".".to_string() } else { cell.value.to_string() })// convert all 0 to .
                 .collect();
             log(&format!("Code: {0}", code));
             log(&"".to_string());
