@@ -302,18 +302,7 @@ fn play(mut rnglcg: PortableLCG) {
     log(&"".to_string());
 
     // 25.
-    //Dictionary<int, int> maskToOnesCount = new Dictionary<int, int>();
-    let mask_to_ones_count: BTreeMap<u32, usize> = {
-        let mut temp_map = BTreeMap::new();
-        temp_map.insert(0, 0);
-        for i in 1..(1 << 9) {
-            let smaller: u32 = i >> 1;
-            let increment: usize = (i & 1) as usize;
-            let usize_value = temp_map[&smaller] + increment;
-            temp_map.insert(i, usize_value);
-        }
-        temp_map
-    };
+    let mask_to_ones_count = generate_mask_to_ones_count();
 
     // 26.
     //#endregion
@@ -780,8 +769,8 @@ fn play(mut rnglcg: PortableLCG) {
                                 let cells_with_mask: Vec<Cell> = cell_group2.1
                                     .iter()
                                     .filter(|cell| {
-                                        state[cell.index] == 0
-                                            && (candidate_masks[cell.index] & mask.clone()) != 0
+                                        state[cell.index] == 0  // cell unused
+                                            && (candidate_masks[cell.index] & mask.clone()) != 0  // candidate_mask overlaps mask
                                     })
                                     //.map(|&x| x)
                                     .cloned()
@@ -791,8 +780,8 @@ fn play(mut rnglcg: PortableLCG) {
                                     .iter()
                                     .filter(|cell| {
                                         state[cell.index] == 0
-                                            && (candidate_masks[cell.index] & mask.clone()) != 0
-                                            && (candidate_masks[cell.index] & !mask.clone()) != 0
+                                            && (candidate_masks[cell.index] & mask.clone()) != 0   // overlaps
+                                            && (candidate_masks[cell.index] & !mask.clone()) != 0  // but is not equal to
                                     })
                                     .count() as u32;
 
@@ -1164,6 +1153,28 @@ fn play(mut rnglcg: PortableLCG) {
     log(&"BOARD SOLVED.".to_string())
 }
 
+fn generate_mask_to_ones_count() -> BTreeMap<u32, usize> {
+    //Dictionary<int, int> maskToOnesCount = new Dictionary<int, int>();
+    // Key is 0-511, value is number of binary bits in binary representation of key
+    // algorithm is, as we build the table temp_map[], consider 8 bit byte i, for any i,
+    // we first determine how many bits are set for byte bits 1-7, excluding the lowest bit.
+    // We shift i >> 1, which gives us i/2. We now look up the result for i/2 in table temp_map.
+    // Now we just need to add in the lowest bit, bit 0, to get the total number of bit set.
+    // smaller is i/2 (i >> 1), increment is lowest bit 0 (either 0 or 1)
+    // Number of bits set in value i is number of bits set in i/2 + lowest bit of i.
+    let mask_to_ones_count: BTreeMap<u32, usize> = {
+        let mut temp_map = BTreeMap::new();
+        temp_map.insert(0, 0);
+        for i in 1..(1 << 9) {            // 1 << 9 = 512. Thus goes from 1 to 511
+            let smaller: u32 = i >> 1;                               // smaller = i >> 1 (i/2)
+            let increment: usize = (i & 1) as usize;                 // increment is lowest bit of i. Either 0 or 1
+            let usize_value = temp_map[&smaller] + increment;  // bits set in i is bits set in i >> 1 (temp_map[smaller]) + lowest bit of i (increment)
+            temp_map.insert(i, usize_value);                   // store the value. i, usize_value=number of bits set in i
+        }
+        temp_map
+    };
+    mask_to_ones_count
+}
 
 // lazy calculate single_bit_to_index
 use std::sync::OnceLock;
@@ -1396,6 +1407,7 @@ fn main()
     // Lock the mutex and store the file.
     *GLOBAL_FILE.lock().unwrap() = Some(file.expect("REASON"));
 
+    // MAIN LOOP
     for seed in 1..25
     {
         let my_rng = PortableLCG::new(seed);
