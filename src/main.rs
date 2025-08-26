@@ -108,31 +108,6 @@ impl CandidateCell {
 }
 
 
-
-// a CellCandidate is identified by an index. The index identifies the cell
-struct CellCandidate {
-    index: usize,
-}
-impl CellCandidate {
-    pub fn new(idx: usize) -> CellCandidate {
-        CellCandidate {
-            index: idx,
-            //used_digits: ud,
-            //last_digit: ld,
-        }
-    }
-    fn get_index(&self) -> usize {
-        self.index
-    }
-    fn get_row(&self) -> usize {
-        self.index / 9
-    }
-    fn get_col(&self) -> usize {
-        self.index % 9
-    }
-}
-
-
 #[derive(Debug, PartialEq)]
 enum Commands {
     Expand,
@@ -168,7 +143,7 @@ fn play(mut rnglcg: PortableLCG) {
     let mut board_stack: Vec<Board> = Vec::new();
 
     // 4. Top elements are (row, col) of cell which has been modified compared to previous state
-    let mut cell_candidate_stack: Vec<CellCandidate> = Vec::new();
+    let mut cell_candidate_stack: Vec<usize> = Vec::new();
 
     // 5. Top element indicates candidate digits (those with False) for (row, col)
     let mut used_digits_stack: Vec<[bool; 9]> = Vec::new();
@@ -238,7 +213,7 @@ fn play(mut rnglcg: PortableLCG) {
             if !contains_unsolvable_cells  // 16.
             {
                 board_stack.push(current_state);          // current state came from state_stack?
-                cell_candidate_stack.push(CellCandidate::new(best_index));
+                cell_candidate_stack.push(best_index);
                 used_digits_stack.push(best_used_digits);
                 last_digit_stack.push(0); // No digit was tried at this position
             }
@@ -258,11 +233,11 @@ fn play(mut rnglcg: PortableLCG) {
         }
         else if command == Commands::Move  // 19.
         {
-            let rtm = cell_candidate_stack.last().unwrap().get_row();
+            let rtm = cell_candidate_stack.last().unwrap() / 9;
             log(&format!("rowIndexStack Count={} rowToMove={}", cell_candidate_stack.len(), rtm));
 
             let cell_to_move = cell_candidate_stack.last().unwrap();
-            let current_state_index : usize = cell_to_move.get_index();
+            let current_state_index : usize = *cell_to_move;
 
             let digit_to_move: i32 = last_digit_stack.pop().unwrap();
             let mut moved_to_digit = digit_to_move + 1;
@@ -273,8 +248,8 @@ fn play(mut rnglcg: PortableLCG) {
                 moved_to_digit += 1;
             }
 
-            let row_to_move = cell_to_move.get_row(); // row_index_stack.last().unwrap();  // panic if empty which it should never be
-            let col_to_move = cell_to_move.get_col();  // col_index_stack.last().unwrap();
+            let row_to_move = cell_to_move / 9; // row_index_stack.last().unwrap();  // panic if empty which it should never be
+            let col_to_move = cell_to_move % 9;  // col_index_stack.last().unwrap();
             let row_to_write : usize = (row_to_move + row_to_move / 3 + 1) as usize;
             let col_to_write : usize = (col_to_move + col_to_move / 3 + 1) as usize;
             log(&format!("digitToMove:{0} movedToDigit:{1} rowToMove:{2} colToMove:{3} rowToWrite:{4} colToWrite:{5} currentStateIndex:{6}", digit_to_move, moved_to_digit, row_to_move, col_to_move, row_to_write, col_to_write, current_state_index));
@@ -876,7 +851,7 @@ fn play(mut rnglcg: PortableLCG) {
                 // However, the algorithm couldn't be applied directly, and it had to be modified.
                 // Implementation below assumes that the board might not have a solution.
                 let mut board_stack: Vec<Board> = Vec::new();
-                let mut cell_candidate_stack: Vec<CellCandidate> = Vec::new();
+                let mut cell_candidate_stack: Vec<usize> = Vec::new();
                 let mut used_digits_stack: Vec<[bool; 9]> = Vec::new();
                 let mut last_digit_stack: Vec<i32> = Vec::new();
 
@@ -937,7 +912,7 @@ fn play(mut rnglcg: PortableLCG) {
                         if !contains_unsolvable_cells
                         {
                             board_stack.push(current_board);
-                            cell_candidate_stack.push(CellCandidate::new(best_index));  // CellCandidate is index of cell on Board
+                            cell_candidate_stack.push(best_index);  // CellCandidate is index of cell on Board
                             used_digits_stack.push(best_used_digits);                   // corresponding digits already used for cell's row,col,block
                             last_digit_stack.push(0); // No digit was tried at this position. Last digit tried for this cell
                         }
@@ -962,12 +937,12 @@ fn play(mut rnglcg: PortableLCG) {
                     // 73.
                     else if command == Commands::Move
                     {
-                        let cell_to_move: &CellCandidate = cell_candidate_stack.last().unwrap();  // cell to move is identified by an index
+                        let cell_to_move: &usize = cell_candidate_stack.last().unwrap();  // cell to move is identified by an index
                         let digit_to_move = last_digit_stack.pop().unwrap();
                         let mut used_digits : [bool; 9] = used_digits_stack.last().unwrap().clone();
 
                         let current_board = board_stack.last_mut().unwrap();
-                        let current_cell_index: usize = cell_to_move.get_index();
+                        let current_cell_index: usize = *cell_to_move;
 
                         let mut moved_to_digit = digit_to_move + 1;
                         while moved_to_digit <= 9 && used_digits[moved_to_digit as usize - 1]
