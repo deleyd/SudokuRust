@@ -359,7 +359,7 @@ fn play(mut rnglcg: PortableLCG) {
     while change_made// 27
     {
         change_made = false;
-        let mut candidate_masks: [u32; 81] =  calculate_candidates(board);
+        let mut board_candidate_masks: [u32; 81] =  calculate_candidates(board);
         //#endregion
         //#region Build a collection (named cellGroups) which maps cell indices into distinct groups (rows/columns/blocks)
         // 29.
@@ -386,30 +386,26 @@ fn play(mut rnglcg: PortableLCG) {
             // note mask_to_ones_count. Each bit represents a digit available for this cell.
             // We want to know how many digits to choose from we have. If only one digit, then use that digit.
             // 36.
-            let single_candidate_indices = get_single_candidate_indices(&mut candidate_masks);
+            let single_candidate_indices = get_single_candidate_indices(&mut board_candidate_masks);
 
             // 37.
             // if we have any cells with only one option digit we can put there, then put it there.
             // if we have more than one cell which only one candidate digit, then RANDOMLY select a cell
             // (cells are identified by their index number)
-            if single_candidate_indices.len() > 0
+            let number_of_single_candidate_indices = single_candidate_indices.len();
+            if number_of_single_candidate_indices > 0
             {
                 // randomly pick a cell which has only one digit possibility
-                let pick_single_candidate_index : usize = rnglcg.next_range(single_candidate_indices.len() as i32).try_into().unwrap();
-                // single_candidate_index identifies the cell we are talking about
-                let single_candidate_index = single_candidate_indices[pick_single_candidate_index];
-                // candidate_mask is the one candidate digit we can use in this cell
-                // candidate is the one digit we can use in this cell 0-8 (add one to get digit)
-                let candidate_mask = candidate_masks[single_candidate_index];  // candidate_mask has 1 bit set in range 0-8 indicating which digit we can put in this cell
-                let candidate = get_single_bit_to_index()[&(candidate_mask as usize)]; // candidate is 0-8
-                board[single_candidate_index].value = candidate as i32 + 1;  // Set cell to the one digit it can be. Here's the +1 to convert to a digit 1-9
+                // candidate is 0-8, representing digits 1-9
+                let (board_single_candidate_index, digit) =  get_random_single_candidate_cell(&mut rnglcg, &board_candidate_masks, single_candidate_indices);
+                board[board_single_candidate_index].value = digit;  // Set cell to the one digit it can be. Here's the +1 to convert to a digit 1-9
 
-                candidate_masks[single_candidate_index] = 0; // clear candidates for this cell now that we've set cell to a digit
+                board_candidate_masks[board_single_candidate_index] = 0; // clear candidates for this cell now that we've set cell to a digit
                 change_made = true;  // we made a change to the state and board
                 // message to user we set a particular cell to the only digit it could be
-                let row = single_candidate_index / 9;
-                let col = single_candidate_index % 9;
-                let s = format!("({0}, {1}) can only contain {2}.", row + 1, col + 1, candidate + 1);
+                let row = board_single_candidate_index / 9;
+                let col = board_single_candidate_index % 9;
+                let s = format!("({0}, {1}) can only contain {2}.", row + 1, col + 1, digit);
                 log(&s);
             }
             //#endregion*
@@ -443,14 +439,14 @@ fn play(mut rnglcg: PortableLCG) {
                         {
                             // 41.
                             let row_state_index = 9 * cell_group + index_in_group;
-                            if (candidate_masks[row_state_index] & mask) != 0
+                            if (board_candidate_masks[row_state_index] & mask) != 0
                             {
                                 row_number_count += 1;
                                 index_in_row = index_in_group;
                             }
                             // 42.
                             let col_state_index = 9 * index_in_group + cell_group;
-                            if (candidate_masks[col_state_index] & mask) != 0
+                            if (board_candidate_masks[col_state_index] & mask) != 0
                             {
                                 col_number_count += 1;
                                 index_in_col = index_in_group;
@@ -459,7 +455,7 @@ fn play(mut rnglcg: PortableLCG) {
                             let block_row_index = (cell_group / 3) * 3 + index_in_group / 3;
                             let block_col_index = (cell_group % 3) * 3 + index_in_group % 3;
                             let block_state_index = block_row_index * 9 + block_col_index;
-                            if (candidate_masks[block_state_index] & mask) != 0
+                            if (board_candidate_masks[block_state_index] & mask) != 0
                             {
                                 block_number_count += 1;
                                 index_in_block = index_in_group;
@@ -504,7 +500,7 @@ fn play(mut rnglcg: PortableLCG) {
 
                     let board_index = *idx;
                     board[board_index].value = *digit;      // we can try digit in this cell
-                    candidate_masks[board_index] = 0; // clear for this cell since we just set cell to a number
+                    board_candidate_masks[board_index] = 0; // clear for this cell since we just set cell to a number
                     change_made = true;
 
                     let message = format!("{} can contain {} only at ({}, {}).", description, digit, row + 1, col + 1);
@@ -519,7 +515,7 @@ fn play(mut rnglcg: PortableLCG) {
             {
                 //let two_digit_masks = candidate_masks.Where(mask => mask_to_ones_count[mask] == 2).Distinct().ToList();
                 // look for cells which have only 2 options for digits
-                let two_digit_masks: Vec<u32> = candidate_masks
+                let two_digit_masks: Vec<u32> = board_candidate_masks
                     .into_iter()
                     .filter(|&mask| mask_to_ones_count()[&mask] == 2)
                     .unique()
@@ -543,7 +539,7 @@ fn play(mut rnglcg: PortableLCG) {
                         let mut matching_count = 0;
                         let cell_list = tuple_kvp.1;
                         for cell in cell_list {
-                            if candidate_masks[cell.index] == *mask {  // mask represents the two digits (unknown which cell)
+                            if board_candidate_masks[cell.index] == *mask {  // mask represents the two digits (unknown which cell)
                                 matching_count += 1;
                             }
                         }
@@ -556,7 +552,7 @@ fn play(mut rnglcg: PortableLCG) {
                         // Second Where condition: group.Any(tuple => candidateMasks[tuple.Index] != mask && (candidateMasks[tuple.Index] & mask) > 0)
                         let mut has_overlapping_non_matching = false;
                         for cell in cell_list {
-                            if candidate_masks[cell.index] != *mask && (candidate_masks[cell.index] & mask) > 0 {
+                            if board_candidate_masks[cell.index] != *mask && (board_candidate_masks[cell.index] & mask) > 0 {
                                 has_overlapping_non_matching = true;
                                 break;
                             }
@@ -595,38 +591,38 @@ fn play(mut rnglcg: PortableLCG) {
                             let mut cells: Vec<Cell> = Vec::new();
 
                             for cell in &group.cells {
-                                if candidate_masks[cell.index] != group.mask &&
-                                    (candidate_masks[cell.index] & group.mask) > 0 {
+                                if board_candidate_masks[cell.index] != group.mask &&
+                                    (board_candidate_masks[cell.index] & group.mask) > 0 {
                                     cells.push(cell.clone());
                                 }
                             }
                             let mut cells: Vec<_> = group.cells
                                 .iter()
                                 .filter(|cell| {
-                                    candidate_masks[cell.index] != group.mask &&
-                                        (candidate_masks[cell.index] & group.mask) > 0
+                                    board_candidate_masks[cell.index] != group.mask &&
+                                        (board_candidate_masks[cell.index] & group.mask) > 0
                                 })
                                 .sorted_by_key(|cell| cell.index)
                                 .collect::<Vec<_>>();
 
                             for cell in &group.cells {
-                                if candidate_masks[cell.index] != group.mask &&
-                                    (candidate_masks[cell.index] & group.mask) > 0 {
+                                if board_candidate_masks[cell.index] != group.mask &&
+                                    (board_candidate_masks[cell.index] & group.mask) > 0 {
                                     cells.push(cell);
                                 }
                             }
                             let cells: Vec<Cell> = group.cells.clone()
                                 .iter()
                                 .filter(|cell| {
-                                    candidate_masks[cell.index] != group.mask &&
-                                        (candidate_masks[cell.index] & group.mask) > 0
+                                    board_candidate_masks[cell.index] != group.mask &&
+                                        (board_candidate_masks[cell.index] & group.mask) > 0
                                 })
                                 .cloned() // or .copied() depending on the type of cell and if you need to clone or copy it
                                 .collect();
 
                             let mask_cells: Vec<Cell> = group.cells.clone()
                                 .into_iter()
-                                .filter(|cell| candidate_masks[cell.index] == group.mask)
+                                .filter(|cell| board_candidate_masks[cell.index] == group.mask)
                                 .map(|x| x)
                                 .collect();
 
@@ -652,7 +648,7 @@ fn play(mut rnglcg: PortableLCG) {
                                 // 52.
                                 for cell in &cells
                                 {
-                                    let mask_to_remove = candidate_masks[cell.index] & group.mask;
+                                    let mask_to_remove = board_candidate_masks[cell.index] & group.mask;
                                     let values_to_remove = mask_to_digits(mask_to_remove);
 
                                     //string valuesReport = string.Join(", ", values_to_remove.ToArray());
@@ -668,7 +664,7 @@ fn play(mut rnglcg: PortableLCG) {
                                         println!("Found cannot appear in (7, 4).")
                                     }
                                     log(&s);
-                                    candidate_masks[cell.index] &= !group.mask;
+                                    board_candidate_masks[cell.index] &= !group.mask;
                                     step_change_made = true;
                                 }
                             }
@@ -709,7 +705,7 @@ fn play(mut rnglcg: PortableLCG) {
                                     .iter()
                                     .filter(|cell| {
                                         board[cell.index].value == 0  // cell unused
-                                            && (candidate_masks[cell.index] & mask.clone()) != 0  // candidate_mask overlaps mask
+                                            && (board_candidate_masks[cell.index] & mask.clone()) != 0  // candidate_mask overlaps mask
                                     })
                                     //.map(|&x| x)
                                     .cloned()
@@ -719,8 +715,8 @@ fn play(mut rnglcg: PortableLCG) {
                                     .iter()
                                     .filter(|cell| {
                                         board[cell.index].value == 0
-                                            && (candidate_masks[cell.index] & mask.clone()) != 0   // overlaps
-                                            && (candidate_masks[cell.index] & !mask.clone()) != 0  // but is not equal to
+                                            && (board_candidate_masks[cell.index] & mask.clone()) != 0   // overlaps
+                                            && (board_candidate_masks[cell.index] & !mask.clone()) != 0  // but is not equal to
                                     })
                                     .count() as u32;
 
@@ -742,7 +738,7 @@ fn play(mut rnglcg: PortableLCG) {
                     let mask = group_with_n_masks.mask;
 
                     if group_with_n_masks.cell_group.1.iter().any(|cell| {
-                        let candidate_mask_for_cell = candidate_masks[cell.index];
+                        let candidate_mask_for_cell = board_candidate_masks[cell.index];
                         (candidate_mask_for_cell & mask) != 0 && (candidate_mask_for_cell & !mask) != 0
                     })
                     {
@@ -779,13 +775,13 @@ fn play(mut rnglcg: PortableLCG) {
                     // 57.
                     for cell in group_with_n_masks.cells_with_mask
                     {
-                        let mut mask_to_clear = candidate_masks[cell.index] & !group_with_n_masks.mask;
+                        let mut mask_to_clear = board_candidate_masks[cell.index] & !group_with_n_masks.mask;
                         if mask_to_clear == 0
                         {
                             continue;
                         }
 
-                        candidate_masks[cell.index] &= group_with_n_masks.mask;
+                        board_candidate_masks[cell.index] &= group_with_n_masks.mask;
                         step_change_made = true;
 
                         let mut value_to_clear = 1;
@@ -834,17 +830,17 @@ fn play(mut rnglcg: PortableLCG) {
             for i in 0..80  // stop at 80 because j looks at i+1 cell
             {
                 // 62.
-                if mask_to_ones_count()[&(candidate_masks[i])] == 2
+                if mask_to_ones_count()[&(board_candidate_masks[i])] == 2
                 {
                     let row = i / 9;  // get row,col,block of cell[i]
                     let col = i % 9;
                     let block_index = 3 * (row / 3) + col / 3;
-                    let (lower_digit, upper_digit) = top_two_digits(candidate_masks[i]);
+                    let (lower_digit, upper_digit) = top_two_digits(board_candidate_masks[i]);
 
                     // 63.
                     for j in i + 1..81
                     {
-                        if candidate_masks[j] == candidate_masks[i]    // if candidate digits for cells[i] & cells[j] are identical set,
+                        if board_candidate_masks[j] == board_candidate_masks[i]    // if candidate digits for cells[i] & cells[j] are identical set,
                         {
                             let row1 = j / 9;  // get row,col,block of cell[j]
                             let col1 = j % 9;
@@ -1043,8 +1039,8 @@ fn play(mut rnglcg: PortableLCG) {
 
                 board[index1].value = final_board[index1].value;
                 board[index2].value = final_board[index2].value;
-                candidate_masks[index1] = 0;
-                candidate_masks[index2] = 0;
+                board_candidate_masks[index1] = 0;
+                board_candidate_masks[index2] = 0;
                 change_made = true;
 
                 // 79.
@@ -1087,6 +1083,19 @@ fn play(mut rnglcg: PortableLCG) {
             //#endregion
     }//while change_made// 27
     log(&"BOARD SOLVED.".to_string())
+}
+
+// return a cell which can be set to only one number
+fn get_random_single_candidate_cell(rnglcg: &mut PortableLCG, board_candidate_masks: &[u32; 81], single_candidate_cells: Vec<usize>) -> (usize, i32) {
+    // randomly select one of the cells in single_candidate_cells list
+    let random_single_candidate_index: usize = rnglcg.next_range(single_candidate_cells.len() as i32).try_into().unwrap();
+    // single_candidate_index identifies the cell we are talking about
+    let board_random_single_candidate_cell = single_candidate_cells[random_single_candidate_index];
+    // candidate_mask is the one candidate digit we can use in this cell
+    // candidate is the one digit we can use in this cell 0-8 (add one to get digit)
+    let single_candidate_mask = board_candidate_masks[board_random_single_candidate_cell];  // candidate_mask has 1 bit set in range 0-8 indicating which digit 1-9 we can put in this cell
+    let digit = get_single_bitmask_to_digit()[&(single_candidate_mask as usize)]; // digit 1-9
+    (board_random_single_candidate_cell, digit)
 }
 
 // candidate_masks : list of 81, for each cell, the digits which are candidates (encoded as a bit mask)
@@ -1233,28 +1242,37 @@ fn calculate_candidates(cell_state: &mut Board) -> [u32; 81] {
 static MASK_TO_ONES_COUNT: OnceLock<BTreeMap<u32, usize>> = OnceLock::new();
 fn mask_to_ones_count() -> &'static BTreeMap<u32, usize> {
     MASK_TO_ONES_COUNT.get_or_init(|| {
-        let mut temp_map = BTreeMap::new();
-        temp_map.insert(0, 0);
-        for i in 1..(1 << 9) {            // 1 << 9 = 512. Thus goes from 1 to 511
-            let smaller: u32 = i >> 1;                               // smaller = i >> 1 (i/2)
-            let increment: usize = (i & 1) as usize;                 // increment is lowest bit of i. Either 0 or 1
-            let usize_value = temp_map[&smaller] + increment;  // bits set in i is bits set in i >> 1 (temp_map[smaller]) + lowest bit of i (increment)
-            temp_map.insert(i, usize_value);                   // store the value. i, usize_value=number of bits set in i
+        let mut answers = BTreeMap::new();
+        answers.insert(0, 0);
+        for i in 1..(1 << 9) {                              // 1 << 9 = 512. Thus goes from 1 to 511
+            let half: u32 = i >> 1;                                 // half = i >> 1 (i/2). Shift to a number we have already solved and stored in answers
+            let lowbit: usize = (i & 1) as usize;                   // lowbit is lowest bit of i. Either 0 or 1
+            let new_result = answers[&half] + lowbit;        // bits set in i is bits set in i >> 1 (answers[half]) + lowest bit of i (lowbit)
+            answers.insert(i, new_result);                   // store the value. i, new_result=number of bits set in i
         }
-        temp_map
+        answers
     })
 }
 
 // lazy calculate single_bit_to_index
-static SINGLE_BIT_TO_INDEX: OnceLock<HashMap<usize, usize> > = OnceLock::new();
+// key: 1  value: 0
+// key: 2  value: 1
+// key: 4  value: 2
+// key: 8  value: 3
+// key: 16  value: 4
+// key: 32  value: 5
+// key: 64  value: 6
+// key: 128  value: 7
+// key: 256  value: 8
 
-fn get_single_bit_to_index() -> &'static HashMap<usize, usize> {
+static SINGLE_BIT_TO_INDEX: OnceLock<HashMap<usize, i32> > = OnceLock::new();
+fn get_single_bitmask_to_digit() -> &'static HashMap<usize, i32> {
     SINGLE_BIT_TO_INDEX.get_or_init(|| {
-    let mut single_bit_to_index: HashMap<usize, usize> = HashMap::new();
-    for i in 0..9
-    {
-        single_bit_to_index.insert(1 << i, i);
-    }
+        let mut single_bit_to_index: HashMap<usize, i32> = HashMap::new();
+        for i in 0..9
+        {
+            single_bit_to_index.insert(1 << i, i+1);
+        }
         single_bit_to_index
     })
 }
