@@ -92,11 +92,26 @@ pub struct CellWithMask<'a> {
     pub cleanable_cells_count: u32,
 }
 
+struct CandidateCell {
+    index: usize,
+    digit: i32,
+    description: String,
+}
+impl CandidateCell {
+    pub fn new(&index: &usize, &digit: &i32, description: &String) -> CandidateCell {
+        CandidateCell {
+            index,
+            digit,
+            description: description.clone(),
+        }
+    }
+}
+
+
+
 // a CellCandidate is identified by an index. The index identifies the cell
 struct CellCandidate {
     index: usize,
-    //used_digits: [bool; 9],
-    //last_digit: i32,
 }
 impl CellCandidate {
     pub fn new(idx: usize) -> CellCandidate {
@@ -383,31 +398,8 @@ fn play(mut rnglcg: PortableLCG) {
             step_change_made = false;
 
             //#region Pick cells with only one candidate left
-            // note mask_to_ones_count. Each bit represents a digit available for this cell.
-            // We want to know how many digits to choose from we have. If only one digit, then use that digit.
-            // 36.
-            let single_candidate_indices = get_single_candidate_indices(&mut board_candidate_masks);
 
-            // 37.
-            // if we have any cells with only one option digit we can put there, then put it there.
-            // if we have more than one cell which only one candidate digit, then RANDOMLY select a cell
-            // (cells are identified by their index number)
-            let number_of_single_candidate_indices = single_candidate_indices.len();
-            if number_of_single_candidate_indices > 0
-            {
-                // randomly pick a cell which has only one digit possibility
-                // candidate is 0-8, representing digits 1-9
-                let (board_single_candidate_index, digit) =  get_random_single_candidate_cell(&mut rnglcg, &board_candidate_masks, single_candidate_indices);
-                board[board_single_candidate_index].value = digit;  // Set cell to the one digit it can be. Here's the +1 to convert to a digit 1-9
-
-                board_candidate_masks[board_single_candidate_index] = 0; // clear candidates for this cell now that we've set cell to a digit
-                change_made = true;  // we made a change to the state and board
-                // message to user we set a particular cell to the only digit it could be
-                let row = board_single_candidate_index / 9;
-                let col = board_single_candidate_index % 9;
-                let s = format!("({0}, {1}) can only contain {2}.", row + 1, col + 1, digit);
-                log(&s);
-            }
+            change_made = change_made || set_cell_with_only_one_candidate(&mut rnglcg, board, &mut board_candidate_masks);
             //#endregion*
 
             //#region Try to find a number which can only appear in one place in a row/column/block
@@ -415,15 +407,15 @@ fn play(mut rnglcg: PortableLCG) {
             // if there were no cells which could only be set to a single digit
             if !change_made
             {
-                // sync these 4
-                let mut group_descriptions: Vec<String> = Vec::new();
-                let mut candidate_indices: Vec<usize> = Vec::new();
-                let mut digit_candidates: Vec<i32> = Vec::new();
+                // sync these 3
+                let mut candidate_cells: Vec<CandidateCell> = Vec::new();
                 // 39.
                 // candidate_masks is input
+                // test each digit
                 for digit in 1..=9
                 {
-                    let mask = 1 << (digit - 1);
+                    let mask = 1 << (digit - 1);  // mask representing digit
+                    // test every cell in the board
                     for cell_group in 0..9
                     {
                         let mut row_number_count = 0;
@@ -437,69 +429,62 @@ fn play(mut rnglcg: PortableLCG) {
                         // 40.
                         for index_in_group in 0..9
                         {
-                            // 41.
+                            // 41. Check row "cell_group". cell_group covers 0..9 in this case cell_group = row number 0-8
                             let row_state_index = 9 * cell_group + index_in_group;
-                            if (board_candidate_masks[row_state_index] & mask) != 0
+                            if (board_candidate_masks[row_state_index] & mask) != 0  // this cell has digit as a candidate
                             {
-                                row_number_count += 1;
+                                row_number_count += 1;  // We check the row and find cells which can be set to digit. Count the number of cells in this row which can be set to digit.
                                 index_in_row = index_in_group;
                             }
-                            // 42.
+                            // 42. Check column "cell_group". cell_group 0..9 In this case cell_group = column 0-8
                             let col_state_index = 9 * index_in_group + cell_group;
-                            if (board_candidate_masks[col_state_index] & mask) != 0
+                            if (board_candidate_masks[col_state_index] & mask) != 0  // this cell has digit as a candidate
                             {
-                                col_number_count += 1;
+                                col_number_count += 1;  // We check the column and find cells which can be set to digit. Count the number of cells in this column which can be set to digit.
                                 index_in_col = index_in_group;
                             }
-                            // 43.
+                            // 43. Check block "cell_group". cell_group 0..9 In this case cell_group = block number 0-8
                             let block_row_index = (cell_group / 3) * 3 + index_in_group / 3;
                             let block_col_index = (cell_group % 3) * 3 + index_in_group % 3;
                             let block_state_index = block_row_index * 9 + block_col_index;
-                            if (board_candidate_masks[block_state_index] & mask) != 0
+                            if (board_candidate_masks[block_state_index] & mask) != 0  // this cell has digit as a candidate
                             {
-                                block_number_count += 1;
+                                block_number_count += 1;  // We check the block and find cells which can be set to digit. Count the number of cells in this block which can be set to digit.
                                 index_in_block = index_in_group;
                             }
                         }
                         // 44.
-                        if row_number_count == 1
+                        if row_number_count == 1  // If there is only one cell in this row which can be set to digit, push cell on candidate stack.
                         {
-                            group_descriptions.push(format!("Row #{}", cell_group + 1));
-                            candidate_indices.push(cell_group*9 + index_in_row);
-                            digit_candidates.push(digit);
+                            candidate_cells.push(CandidateCell::new(&(cell_group*9 + index_in_row), &digit, &format!("Row #{}", cell_group + 1)))
                         }
                         // 45.
-                        if col_number_count == 1
+                        if col_number_count == 1  // If there is only one cell in this column which can be set to digit, push cell on candidate stack.
                         {
-                            group_descriptions.push(format!("Column #{}", cell_group + 1));
-                            candidate_indices.push(index_in_col*9 + cell_group);
-                            digit_candidates.push(digit);
+                            candidate_cells.push(CandidateCell::new(&(index_in_col*9 + cell_group), &digit, &format!("Column #{}", cell_group + 1)))
                         }
                         // 46.
-                        if block_number_count == 1
+                        if block_number_count == 1  // If there is only one cell in this block which can be set to digit, push cell on candidate stack.
                         {
                             let block_row = cell_group / 3;
                             let block_col = cell_group % 3;
-
-                            group_descriptions.push(format!("Block ({}, {})", block_row + 1, block_col + 1));
-                            candidate_indices.push((block_row * 3 + index_in_block / 3)*9 + (block_col * 3 + index_in_block % 3));
-                            digit_candidates.push(digit);
+                            candidate_cells.push(CandidateCell::new(&((block_row * 3 + index_in_block / 3)*9 + (block_col * 3 + index_in_block % 3)), &digit, &format!("Block ({}, {})", block_row + 1, block_col + 1)));
                         }
                     } // for (cell_group = 0..8)
                 } // for (digit = 1..9)
 
                 // 47
-                if digit_candidates.len() > 0
+                if candidate_cells.len() > 0
                 {
-                    let index = rnglcg.next_range(digit_candidates.len() as i32) as usize;
-                    let description = group_descriptions.get(index).unwrap();
-                    let idx = candidate_indices.get(index).unwrap();
+                    let index = rnglcg.next_range(candidate_cells.len() as i32) as usize;
+                    let description = candidate_cells.get(index).unwrap().description.clone();
+                    let idx = candidate_cells.get(index).unwrap().index;
                     let row = idx/9;
                     let col = idx%9;
-                    let digit = digit_candidates.get(index).unwrap();
+                    let digit = candidate_cells.get(index).unwrap().digit;
 
-                    let board_index = *idx;
-                    board[board_index].value = *digit;      // we can try digit in this cell
+                    let board_index = idx;
+                    board[board_index].value = digit;       // we can try digit in this cell
                     board_candidate_masks[board_index] = 0; // clear for this cell since we just set cell to a number
                     change_made = true;
 
@@ -1085,6 +1070,36 @@ fn play(mut rnglcg: PortableLCG) {
     log(&"BOARD SOLVED.".to_string())
 }
 
+fn set_cell_with_only_one_candidate(mut rnglcg: &mut PortableLCG, board: &mut Board, mut board_candidate_masks: &mut [u32; 81]) -> bool {
+    // note mask_to_ones_count. Each bit represents a digit available for this cell.
+    // We want to know how many digits to choose from we have. If only one digit, then use that digit.
+    // 36.
+    let single_candidate_indices = get_single_candidate_indices(&mut board_candidate_masks);
+
+    // 37.
+    // if we have any cells with only one option digit we can put there, then put it there.
+    // if we have more than one cell which only one candidate digit, then RANDOMLY select a cell
+    // (cells are identified by their index number)
+    let mut change_made = false;
+    let number_of_single_candidate_indices = single_candidate_indices.len();
+    if number_of_single_candidate_indices > 0
+    {
+        // randomly pick a cell which has only one digit possibility
+        // candidate is 0-8, representing digits 1-9
+        let (board_single_candidate_index, digit) = get_random_single_candidate_cell(&mut rnglcg, &board_candidate_masks, single_candidate_indices);
+        board[board_single_candidate_index].value = digit;  // Set cell to the one digit it can be. Here's the +1 to convert to a digit 1-9
+
+        board_candidate_masks[board_single_candidate_index] = 0; // clear candidates for this cell now that we've set cell to a digit
+        change_made = true;  // we made a change to the state and board
+        // message to user we set a particular cell to the only digit it could be
+        let row = board_single_candidate_index / 9;
+        let col = board_single_candidate_index % 9;
+        let s = format!("({0}, {1}) can only contain {2}.", row + 1, col + 1, digit);
+        log(&s);
+    }
+    change_made
+}
+
 // return a cell which can be set to only one number
 fn get_random_single_candidate_cell(rnglcg: &mut PortableLCG, board_candidate_masks: &[u32; 81], single_candidate_cells: Vec<usize>) -> (usize, i32) {
     // randomly select one of the cells in single_candidate_cells list
@@ -1359,6 +1374,9 @@ pub struct PortableLCG {
     m_mask: u64, // Modulus mask (for 48-bit modulus: 2^48 - 1)
 }
 
+
+// Mutable because we update seed at every call
+// From "Numerical Recipies"
 impl PortableLCG {
     pub fn new(seed: u64) -> Self {
         PortableLCG {
@@ -1377,6 +1395,7 @@ impl PortableLCG {
         // Extract the upper 32 bits from the 48-bit state.
         (self.seed >> 17) as i32
     }
+    // r is range 0 to r.
     pub fn next_range(&mut self,r:i32) -> i32 {
         return ((self.next() as f64 / 0x7FFFFFFF as f64) * r as f64) as i32;
     }
