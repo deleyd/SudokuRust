@@ -6,15 +6,8 @@ version = 4
 name = "Sudoku"
 version = "0.1.0"
 dependencies = [
- "digit",
  "itertools",
 ]
-
-[[package]]
-name = "digit"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "84a49f13b5e8b364710f54da3be4c639a43e82d3a43e1c5b68642b57bbe8061e"
 
 [[package]]
 name = "either"
