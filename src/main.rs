@@ -219,10 +219,6 @@ fn play(mut rnglcg: PortableLCG) {
 
             if !contains_unsolvable_cells  // 16.
             {
-                //cell_candidate_stack.push(best_index);
-                //used_digits_stack.push(best_used_digits.clone());
-                //last_digit_stack.push(0); // No digit was tried at this position
-
                 current_state.candidate_cell = best_index;
                 current_state.used_digits = best_used_digits.clone();
                 current_state.last_digit = 0;
@@ -236,24 +232,15 @@ fn play(mut rnglcg: PortableLCG) {
         else if command == Commands::Collapse  // 18.
         {
             board_stack.pop();
-            //cell_candidate_stack.pop();
-            //used_digits_stack.pop();
-            //last_digit_stack.pop();
 
             command = Commands::Move;   // Always try to move after collapse
         }
         else if command == Commands::Move  // 19.
         {
             let stack_len = board_stack.len();
-            //let current_board = board_stack.last_mut().unwrap();
             log(&format!("rowIndexStack Count={} rowToMove={}", stack_len, board_stack.last().unwrap().candidate_cell / 9 ));
-            //let rtm = current_board.candidate_cell;
-
-            //let ctm = cell_candidate_stack.last().unwrap();
-            let cell_to_move : usize = board_stack.last_mut().unwrap().candidate_cell;  // current_board.candidate_cell;
-            //let current_state_index : usize = cell_to_move;
-            //let a = current_board;
-            board_stack.last_mut().unwrap().candidate_cell = cell_to_move;
+            let cell_to_move : usize = board_stack.last_mut().unwrap().candidate_cell;
+            //board_stack.last_mut().unwrap().candidate_cell = board_stack.last_mut().unwrap().candidate_cell;
             let digit_to_move: i32 = board_stack.last_mut().unwrap().last_digit;
             let mut moved_to_digit = digit_to_move + 1;
 
