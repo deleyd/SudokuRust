@@ -64,7 +64,7 @@ impl Board {
             cells,
             candidate_cell: 9999,
             used_digits:  [false; 9],
-            last_digit: 9999,
+            last_digit: -2,
         }
     }
 }
@@ -166,11 +166,17 @@ fn play(mut rnglcg: PortableLCG) {
     // we add to the stack each time we add a number to a cell
     while board_stack.len() <= 81  // 8.
     {
+        println!("board_stack.len: {} last_digit_stack.len: {}", board_stack.len(), last_digit_stack.len());
+        if board_stack.len() > 0 {
+            if *last_digit_stack.last().unwrap() != board_stack.last().unwrap().last_digit {
+                println!("WHILE last_digit_stack.last(): {} current_board.last_digit: {} don't match xyzzy board_stack.len: {} last_digit_stack.len: {}", *last_digit_stack.last().unwrap(), board_stack.last().unwrap().last_digit, board_stack.len(), last_digit_stack.len());
+            }
+        }
         if command == Commands::Expand
         {
             let mut current_state: Board = if board_stack.len() > 0  // 9.
             {
-                board_stack.last().cloned().unwrap()
+                board_stack.last_mut().unwrap().clone()
             } else {
                 Board::new()
             };
@@ -218,13 +224,18 @@ fn play(mut rnglcg: PortableLCG) {
 
             if !contains_unsolvable_cells  // 16.
             {
+                cell_candidate_stack.push(best_index);
+                used_digits_stack.push(best_used_digits.clone());
+                last_digit_stack.push(0); // No digit was tried at this position
+
                 current_state.candidate_cell = best_index;
-                current_state.used_digits = best_used_digits;
+                current_state.used_digits = best_used_digits.clone();
                 current_state.last_digit = 0;
                 board_stack.push(current_state);          // current state came from state_stack?
-                cell_candidate_stack.push(best_index);
-                used_digits_stack.push(best_used_digits);
-                last_digit_stack.push(0); // No digit was tried at this position
+                if *cell_candidate_stack.last().unwrap() != board_stack.last().unwrap().candidate_cell
+                {
+                    println!("xyzzy cell_candidate_stack.last().unwrap(): {} board_stack.last().unwrap().candidate_cell: {}", cell_candidate_stack.last().unwrap(), board_stack.last().unwrap().candidate_cell);
+                }
             }
 
             // Always try to move after expand
@@ -242,24 +253,32 @@ fn play(mut rnglcg: PortableLCG) {
         }
         else if command == Commands::Move  // 19.
         {
-            let rtm = cell_candidate_stack.last().unwrap() / 9;
-            log(&format!("rowIndexStack Count={} rowToMove={}", cell_candidate_stack.len(), rtm));
+            let stack_len = board_stack.len();
+            //let current_board = board_stack.last_mut().unwrap();
+            log(&format!("rowIndexStack Count={} rowToMove={}", stack_len, board_stack.last().unwrap().candidate_cell / 9 ));
+            //let rtm = current_board.candidate_cell;
 
-            let current_board = board_stack.last().unwrap();
-            let ctm : usize = current_board.candidate_cell;
-            let cell_to_move = cell_candidate_stack.last().unwrap();
-            if *cell_to_move != ctm {
-                println!("cell_to_move don't match xyzzy");
+            let ctm = cell_candidate_stack.last().unwrap();
+            let cell_to_move : usize = board_stack.last_mut().unwrap().candidate_cell;  // current_board.candidate_cell;
+            if cell_to_move != *ctm {
+                println!("xyzzy cell_to_move don't match xyzzy");
             }
-            let current_state_index : usize = *cell_to_move;
+            let current_state_index : usize = cell_to_move;
+            //let a = current_board;
+            board_stack.last_mut().unwrap().candidate_cell = cell_to_move;
 
-            let _dtm : i32 = current_board.last_digit;
+            //board_stack.last_mut().unwrap().candidate_cell = cell_to_move;
+
             let digit_to_move: i32 = last_digit_stack.last().unwrap().clone();
+            //let dtm : i32 = current_board.last_digit;
+            if digit_to_move != board_stack.last_mut().unwrap().last_digit {
+                println!("last_digit_stack.last(): {} current_board.last_digit: {} don't match xyzzy  ccsSize: {}", digit_to_move, board_stack.last_mut().unwrap().last_digit, cell_candidate_stack.len());
+            }
             let mut moved_to_digit = digit_to_move + 1;
 
-            let ud = current_board.used_digits;
             let used_digits = used_digits_stack.last_mut().unwrap();
-            if !(used_digits.iter().zip(ud.iter()).all(|(a,b)| a == b)) {
+            //let ud = board_stack.last_mut().unwrap().used_digits;
+            if !(used_digits.iter().zip(board_stack.last_mut().unwrap().used_digits.iter()).all(|(a,b)| a == b)) {
                 println!("used_digits don't match xyzzy");
             }
             while moved_to_digit <= 9 && used_digits[moved_to_digit as usize - 1]
@@ -272,20 +291,50 @@ fn play(mut rnglcg: PortableLCG) {
             let row_to_write : usize = (row_to_move + row_to_move / 3 + 1) as usize;
             let col_to_write : usize = (col_to_move + col_to_move / 3 + 1) as usize;
             log(&format!("digitToMove:{0} movedToDigit:{1} rowToMove:{2} colToMove:{3} rowToWrite:{4} colToWrite:{5} currentStateIndex:{6}", digit_to_move, moved_to_digit, row_to_move, col_to_move, row_to_write, col_to_write, current_state_index));
+            println!("board_stack.len: {} last_digit_stack.len: {}", board_stack.len(), last_digit_stack.len());
+            if board_stack.len() > 0 {
+                if *last_digit_stack.last().unwrap() != board_stack.last().unwrap().last_digit {
+                    println!("LET last_digit_stack.last(): {} current_board.last_digit: {} don't match xyzzy board_stack.len: {} last_digit_stack.len: {}", *last_digit_stack.last().unwrap(), board_stack.last().unwrap().last_digit, board_stack.len(), last_digit_stack.len());
+                }
+            }
 
-            let mut current_board = board_stack.last_mut().unwrap();
             if digit_to_move > 0
             {
                 used_digits[digit_to_move as usize - 1] = false;
-                current_board[current_state_index].value = 0; // does this change last element of state_stack?
+                board_stack.last_mut().unwrap().used_digits[digit_to_move as usize - 1] = false;
+                if !(used_digits.iter().zip(board_stack.last_mut().unwrap().used_digits.iter()).all(|(a,b)| a == b)) {
+                    println!("used_digits don't match xyzzy 2");
+                }
+                board_stack.last_mut().unwrap()[current_state_index].value = 0; // does this change last element of state_stack?
             }
 
             if moved_to_digit <= 9
             {
+                println!("board_stack.len: {} last_digit_stack.len: {}", board_stack.len(), last_digit_stack.len());
+                if board_stack.len() > 0 {
+                    if *last_digit_stack.last().unwrap() != board_stack.last().unwrap().last_digit {
+                        println!("BEGIN if moved_to_digit <= 9 last_digit_stack.last(): {} current_board.last_digit: {} don't match xyzzy board_stack.len: {} last_digit_stack.len: {}", *last_digit_stack.last().unwrap(), board_stack.last().unwrap().last_digit, board_stack.len(), last_digit_stack.len());
+                    }
+                }
+
                 log(&format!("19d. moved_to_digit: {:?}", moved_to_digit));
                 last_digit_stack.pop();
                 last_digit_stack.push(moved_to_digit);
+                board_stack.last_mut().unwrap().last_digit = moved_to_digit;
+
+                println!("board_stack.len: {} last_digit_stack.len: {}", board_stack.len(), last_digit_stack.len());
+                if board_stack.len() > 0 {
+                    if *last_digit_stack.last().unwrap() != board_stack.last().unwrap().last_digit {
+                        println!("#2 if moved_to_digit <= 9 last_digit_stack.last(): {} current_board.last_digit: {} don't match xyzzy board_stack.len: {} last_digit_stack.len: {}", *last_digit_stack.last().unwrap(), board_stack.last().unwrap().last_digit, board_stack.len(), last_digit_stack.len());
+                    }
+                }
+
                 used_digits[moved_to_digit as usize - 1] = true;  // DWD This needs to modify the value in *used_digits_stack.last()[moved_to_digit as usize - 1]
+                board_stack.last_mut().unwrap().used_digits[moved_to_digit as usize - 1] = true;
+                if !(used_digits.iter().zip(board_stack.last_mut().unwrap().used_digits.iter()).all(|(a,b)| a == b)) {
+                    println!("used_digits don't match xyzzy 3");
+                }
+
                 let current_state = board_stack.last_mut().unwrap();
                 current_state[current_state_index].value = moved_to_digit;
                 // current_board.[current_state_index].value = moved_to_digit;
@@ -295,12 +344,19 @@ fn play(mut rnglcg: PortableLCG) {
                 command = Commands::Expand;
             } else {
                 // No viable candidate was found at current position - pop it in the next iteration
-                current_board.last_digit = 0;
+                board_stack.last_mut().unwrap().last_digit = 0;
                 last_digit_stack.pop();
                 last_digit_stack.push(0);
                 command = Commands::Collapse;
                 log(&format!("collapse. last_digit_stack.last():{}", last_digit_stack.last().unwrap().clone()));
             }
+            println!("board_stack.len: {} last_digit_stack.len: {}", board_stack.len(), last_digit_stack.len());
+            if board_stack.len() > 0 {
+                if *last_digit_stack.last().unwrap() != board_stack.last().unwrap().last_digit {
+                    println!("if moved_to_digit <= 9 last_digit_stack.last(): {} current_board.last_digit: {} don't match xyzzy board_stack.len: {} last_digit_stack.len: {}", *last_digit_stack.last().unwrap(), board_stack.last().unwrap().last_digit, board_stack.len(), last_digit_stack.len());
+                }
+            }
+
         } // if (command == Commands::Move)
     }
 
@@ -887,7 +943,7 @@ fn play(mut rnglcg: PortableLCG) {
                         || cell_candidate_stack.len() != board_stack.len() {
 
                         {
-                            println!("stacks have different sizes while");
+                            println!("stacks have different sizes while x`yzzy");
                         }
                     }
                     if command == Commands::Expand
