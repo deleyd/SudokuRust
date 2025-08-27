@@ -251,16 +251,12 @@ fn play(mut rnglcg: PortableLCG) {
 
             //let ctm = cell_candidate_stack.last().unwrap();
             let cell_to_move : usize = board_stack.last_mut().unwrap().candidate_cell;  // current_board.candidate_cell;
-            let current_state_index : usize = cell_to_move;
+            //let current_state_index : usize = cell_to_move;
             //let a = current_board;
             board_stack.last_mut().unwrap().candidate_cell = cell_to_move;
-
-            //board_stack.last_mut().unwrap().candidate_cell = cell_to_move;
-
             let digit_to_move: i32 = board_stack.last_mut().unwrap().last_digit;
             let mut moved_to_digit = digit_to_move + 1;
 
-            //let used_digits = used_digits_stack.last_mut().unwrap();
             while moved_to_digit <= 9 && board_stack.last_mut().unwrap().used_digits[moved_to_digit as usize - 1]
             {
                 moved_to_digit += 1;
@@ -270,14 +266,14 @@ fn play(mut rnglcg: PortableLCG) {
             let col_to_move = cell_to_move % 9;  // col_index_stack.last().unwrap();
             let row_to_write : usize = (row_to_move + row_to_move / 3 + 1) as usize;
             let col_to_write : usize = (col_to_move + col_to_move / 3 + 1) as usize;
-            log(&format!("digitToMove:{0} movedToDigit:{1} rowToMove:{2} colToMove:{3} rowToWrite:{4} colToWrite:{5} currentStateIndex:{6}", digit_to_move, moved_to_digit, row_to_move, col_to_move, row_to_write, col_to_write, current_state_index));
+            log(&format!("digitToMove:{0} movedToDigit:{1} rowToMove:{2} colToMove:{3} rowToWrite:{4} colToWrite:{5} currentStateIndex:{6}", digit_to_move, moved_to_digit, row_to_move, col_to_move, row_to_write, col_to_write, cell_to_move));
             println!("board_stack.len: {} last_digit_stack.len: {}", board_stack.len(), board_stack.len());
 
             if digit_to_move > 0
             {
                 //used_digits[digit_to_move as usize - 1] = false;
                 board_stack.last_mut().unwrap().used_digits[digit_to_move as usize - 1] = false;
-                board_stack.last_mut().unwrap()[current_state_index].value = 0; // does this change last element of state_stack?
+                board_stack.last_mut().unwrap()[cell_to_move].value = 0; // does this change last element of state_stack?
             }
 
             if moved_to_digit <= 9
@@ -296,8 +292,8 @@ fn play(mut rnglcg: PortableLCG) {
                 board_stack.last_mut().unwrap().used_digits[moved_to_digit as usize - 1] = true;
 
                 let current_state = board_stack.last_mut().unwrap();
-                current_state[current_state_index].value = moved_to_digit;
-                // current_board.[current_state_index].value = moved_to_digit;
+                current_state[cell_to_move].value = moved_to_digit;
+                // current_board.[cell_to_move].value = moved_to_digit;
 
                 // Next possible digit was found at current position
                 // Next step will be to expand the state
