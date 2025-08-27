@@ -149,7 +149,7 @@ fn play(mut rnglcg: PortableLCG) {
     let mut board_stack: Vec<Board> = Vec::new();
 
     // 4. Top elements are (row, col) of cell which has been modified compared to previous state
-    let mut cell_candidate_stack: Vec<usize> = Vec::new();
+    //let mut cell_candidate_stack: Vec<usize> = Vec::new();
 
     // 5. Top element indicates candidate digits (those with False) for (row, col)
     let mut used_digits_stack: Vec<[bool; 9]> = Vec::new();
@@ -224,7 +224,7 @@ fn play(mut rnglcg: PortableLCG) {
 
             if !contains_unsolvable_cells  // 16.
             {
-                cell_candidate_stack.push(best_index);
+                //cell_candidate_stack.push(best_index);
                 used_digits_stack.push(best_used_digits.clone());
                 last_digit_stack.push(0); // No digit was tried at this position
 
@@ -232,10 +232,6 @@ fn play(mut rnglcg: PortableLCG) {
                 current_state.used_digits = best_used_digits.clone();
                 current_state.last_digit = 0;
                 board_stack.push(current_state);          // current state came from state_stack?
-                if *cell_candidate_stack.last().unwrap() != board_stack.last().unwrap().candidate_cell
-                {
-                    println!("xyzzy cell_candidate_stack.last().unwrap(): {} board_stack.last().unwrap().candidate_cell: {}", cell_candidate_stack.last().unwrap(), board_stack.last().unwrap().candidate_cell);
-                }
             }
 
             // Always try to move after expand
@@ -245,7 +241,7 @@ fn play(mut rnglcg: PortableLCG) {
         else if command == Commands::Collapse  // 18.
         {
             board_stack.pop();
-            cell_candidate_stack.pop();
+            //cell_candidate_stack.pop();
             used_digits_stack.pop();
             last_digit_stack.pop();
 
@@ -258,11 +254,8 @@ fn play(mut rnglcg: PortableLCG) {
             log(&format!("rowIndexStack Count={} rowToMove={}", stack_len, board_stack.last().unwrap().candidate_cell / 9 ));
             //let rtm = current_board.candidate_cell;
 
-            let ctm = cell_candidate_stack.last().unwrap();
+            //let ctm = cell_candidate_stack.last().unwrap();
             let cell_to_move : usize = board_stack.last_mut().unwrap().candidate_cell;  // current_board.candidate_cell;
-            if cell_to_move != *ctm {
-                println!("xyzzy cell_to_move don't match xyzzy");
-            }
             let current_state_index : usize = cell_to_move;
             //let a = current_board;
             board_stack.last_mut().unwrap().candidate_cell = cell_to_move;
@@ -270,17 +263,9 @@ fn play(mut rnglcg: PortableLCG) {
             //board_stack.last_mut().unwrap().candidate_cell = cell_to_move;
 
             let digit_to_move: i32 = last_digit_stack.last().unwrap().clone();
-            //let dtm : i32 = current_board.last_digit;
-            if digit_to_move != board_stack.last_mut().unwrap().last_digit {
-                println!("last_digit_stack.last(): {} current_board.last_digit: {} don't match xyzzy  ccsSize: {}", digit_to_move, board_stack.last_mut().unwrap().last_digit, cell_candidate_stack.len());
-            }
             let mut moved_to_digit = digit_to_move + 1;
 
             let used_digits = used_digits_stack.last_mut().unwrap();
-            //let ud = board_stack.last_mut().unwrap().used_digits;
-            if !(used_digits.iter().zip(board_stack.last_mut().unwrap().used_digits.iter()).all(|(a,b)| a == b)) {
-                println!("used_digits don't match xyzzy");
-            }
             while moved_to_digit <= 9 && used_digits[moved_to_digit as usize - 1]
             {
                 moved_to_digit += 1;
