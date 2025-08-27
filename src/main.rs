@@ -166,10 +166,9 @@ fn play(mut rnglcg: PortableLCG) {
     // we add to the stack each time we add a number to a cell
     while board_stack.len() <= 81  // 8.
     {
-        println!("board_stack.len: {} last_digit_stack.len: {}", board_stack.len(), board_stack.len());
         if command == Commands::Expand
         {
-            let mut current_state: Board = if board_stack.len() > 0  // 9.
+            let mut current_board: Board = if board_stack.len() > 0  // 9.
             {
                 board_stack.last_mut().unwrap().clone()
             } else {
@@ -185,13 +184,12 @@ fn play(mut rnglcg: PortableLCG) {
             // loop through all cells looking for empty ones
             for index in 0..81  // 10.
             {
-                if current_state[index].value == 0  // 11.  if cell unused, then let's see what we can do with it
+                if current_board[index].value == 0  // 11.  if cell unused, then let's see what we can do with it
                 {
-                    let is_digit_used: [bool; 9] = get_row_col_block_used_digits(&current_state, index); // returns an array of 9 true/false values
+                    let digits_used_array: [bool; 9] = get_row_col_block_used_digits(&current_board, index); // returns an array of 9 true/false values
 
                     // 13.
-                    //let candidates_count = is_digit_used.Where(used => !used).Count();
-                    let candidates_count: i32 = is_digit_used.iter() // Get an iterator over the elements
+                    let candidates_count: i32 = digits_used_array.iter() // Get an iterator over the elements
                         .filter(|&&value| !value) // count the 'false' values (filter out 'true' values)
                         .count() as i32; // Count the remaining elements
 
@@ -210,7 +208,7 @@ fn play(mut rnglcg: PortableLCG) {
                         (candidates_count == best_candidates_count && random_value < best_random_value) // if two cells both have the same number of candidates, randomly select one (this "random" looks not random)
                     {
                         best_index = index; // this cell becomes the best cell (saved as row,col. we could save index instead?)
-                        best_used_digits = is_digit_used;
+                        best_used_digits = digits_used_array;
                         best_candidates_count = candidates_count;  // candidates_count is a function of is_digit_used array
                         best_random_value = random_value;
                     }
@@ -219,10 +217,10 @@ fn play(mut rnglcg: PortableLCG) {
 
             if !contains_unsolvable_cells  // 16.
             {
-                current_state.candidate_cell = best_index;
-                current_state.used_digits = best_used_digits.clone();
-                current_state.last_digit = 0;
-                board_stack.push(current_state);          // current state came from state_stack?
+                current_board.candidate_cell = best_index;
+                current_board.used_digits = best_used_digits;
+                current_board.last_digit = 0;
+                board_stack.push(current_board);          // current state came from state_stack?
             }
 
             // Always try to move after expand
@@ -240,7 +238,6 @@ fn play(mut rnglcg: PortableLCG) {
             let stack_len = board_stack.len();
             log(&format!("rowIndexStack Count={} rowToMove={}", stack_len, board_stack.last().unwrap().candidate_cell / 9 ));
             let cell_to_move : usize = board_stack.last_mut().unwrap().candidate_cell;
-            //board_stack.last_mut().unwrap().candidate_cell = board_stack.last_mut().unwrap().candidate_cell;
             let digit_to_move: i32 = board_stack.last_mut().unwrap().last_digit;
             let mut moved_to_digit = digit_to_move + 1;
 
@@ -254,7 +251,6 @@ fn play(mut rnglcg: PortableLCG) {
             let row_to_write : usize = (row_to_move + row_to_move / 3 + 1) as usize;
             let col_to_write : usize = (col_to_move + col_to_move / 3 + 1) as usize;
             log(&format!("digitToMove:{0} movedToDigit:{1} rowToMove:{2} colToMove:{3} rowToWrite:{4} colToWrite:{5} currentStateIndex:{6}", digit_to_move, moved_to_digit, row_to_move, col_to_move, row_to_write, col_to_write, cell_to_move));
-            println!("board_stack.len: {} last_digit_stack.len: {}", board_stack.len(), board_stack.len());
 
             if digit_to_move > 0
             {
@@ -265,17 +261,8 @@ fn play(mut rnglcg: PortableLCG) {
 
             if moved_to_digit <= 9
             {
-                println!("board_stack.len: {} last_digit_stack.len: {}", board_stack.len(), board_stack.len());
-                //if board_stack.len() > 0 {
-
                 log(&format!("19d. moved_to_digit: {:?}", moved_to_digit));
-                //last_digit_stack.pop();
-                //last_digit_stack.push(moved_to_digit);
                 board_stack.last_mut().unwrap().last_digit = moved_to_digit;
-
-                println!("board_stack.len: {} last_digit_stack.len: {}", board_stack.len(), board_stack.len());
-
-                //used_digits[moved_to_digit as usize - 1] = true;  // DWD This needs to modify the value in *used_digits_stack.last()[moved_to_digit as usize - 1]
                 board_stack.last_mut().unwrap().used_digits[moved_to_digit as usize - 1] = true;
 
                 let current_state = board_stack.last_mut().unwrap();
@@ -293,7 +280,6 @@ fn play(mut rnglcg: PortableLCG) {
                 command = Commands::Collapse;
                 log(&format!("collapse. last_digit_stack.last():{}", board_stack.last_mut().unwrap().last_digit));
             }
-            println!("board_stack.len: {} last_digit_stack.len: {}", board_stack.len(), board_stack.len());
         } // if (command == Commands::Move)
     }
 
@@ -317,7 +303,6 @@ fn play(mut rnglcg: PortableLCG) {
     let mut removed_pos : usize = 0;
     while removed_pos < 9 * 9 - remaining_digits  // 21.
     {
-        //println!("positions {:?}",positions);
         let cur_remaining_digits : i32 = (positions.len() - removed_pos) as i32;
         let index_to_pick = removed_pos + rnglcg.next_range(cur_remaining_digits) as usize;
 
@@ -634,11 +619,6 @@ fn play(mut rnglcg: PortableLCG) {
                                         .collect();
                                     let values_report = string_values_to_remove.join(", ");
                                     let s = format!("{} cannot appear in ({}, {}).", values_report, cell.get_row() + 1, cell.get_column() + 1);
-
-                                    if cell.get_row() + 1 == 7 && cell.get_column() + 1 == 4 //s == "4 cannot appear in (7, 4)"
-                                    {
-                                        println!("Found cannot appear in (7, 4).")
-                                    }
                                     log(&s);
                                     board_candidate_masks[cell.index] &= !group.mask;
                                     step_change_made = true;
@@ -875,14 +855,6 @@ fn play(mut rnglcg: PortableLCG) {
                 command = Commands::Expand;
                 while command != Commands::Complete && command != Commands::Fail
                 {
-                    if cell_candidate_stack.len() != last_digit_stack.len()
-                        || cell_candidate_stack.len() != used_digits_stack.len()
-                        || cell_candidate_stack.len() != board_stack.len() {
-
-                        {
-                            println!("stacks have different sizes while x`yzzy");
-                        }
-                    }
                     if command == Commands::Expand
                     {
                         let current_board : Board = if !board_stack.is_empty() {
@@ -1451,7 +1423,6 @@ fn compare_files_line_by_line(file1_path: &str, file2_path: &str) -> io::Result<
 
         match (line1_opt, line2_opt) {
             (Some(Ok(line1)), Some(Ok(line2))) => {
-                //println!("f2 line: {} trimmed_s={}", line2_num, line2);
                 if *line1 != line2 {
                     println!("Difference at file1 line {}, file2 line {}:", line1_num, line2_num);
                     println!("  File 1: {}", line1);
