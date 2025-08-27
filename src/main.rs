@@ -265,9 +265,7 @@ fn play(mut rnglcg: PortableLCG) {
                 board_stack.last_mut().unwrap().last_digit = moved_to_digit;
                 board_stack.last_mut().unwrap().used_digits[moved_to_digit as usize - 1] = true;
 
-                let current_state = board_stack.last_mut().unwrap();
-                current_state[cell_to_move].value = moved_to_digit;
-                // current_board.[cell_to_move].value = moved_to_digit;
+                board_stack.last_mut().unwrap()[cell_to_move].value = moved_to_digit;
 
                 // Next possible digit was found at current position
                 // Next step will be to expand the state
@@ -275,8 +273,6 @@ fn play(mut rnglcg: PortableLCG) {
             } else {
                 // No viable candidate was found at current position - pop it in the next iteration
                 board_stack.last_mut().unwrap().last_digit = 0;
-                //last_digit_stack.pop();
-                //last_digit_stack.push(0);
                 command = Commands::Collapse;
                 log(&format!("collapse. last_digit_stack.last():{}", board_stack.last_mut().unwrap().last_digit));
             }
@@ -319,8 +315,8 @@ fn play(mut rnglcg: PortableLCG) {
 
         removed_per_block[block_row_to_remove][block_col_to_remove] += 1;
         // 21.
-        let state_index: usize = 9 * row + col;
-        board[state_index].value = 0;
+        let cell_index: usize = 9 * row + col;
+        board[cell_index].value = 0;
 
         // swap [removed_pos] with [index_to_pick]
         let temp = positions[removed_pos];
@@ -637,14 +633,6 @@ fn play(mut rnglcg: PortableLCG) {
             if !change_made && !step_change_made
             {
                 let masks: Vec<u32> = mask_to_ones_count().iter().filter(|&(_, count)| *count > 1).map(|(mask, _)| *mask).collect();
-/*
-                let mask_to_ones_count = get_mask_to_ones_count();
-                let masks: Vec<u32> = mask_to_ones_count
-                    .iter()
-                    .filter(|&(_, count)| *count > 1)
-                    .map(|(mask, _)| *mask)
-                    .collect();
-*/
                 let groups_with_n_masks : Vec<CellWithMask> = masks
                     .iter()
                     .flat_map(|mask| {
@@ -698,34 +686,7 @@ fn play(mut rnglcg: PortableLCG) {
                         (candidate_mask_for_cell & mask) != 0 && (candidate_mask_for_cell & !mask) != 0
                     })
                     {
-                        let mut message = format!("In {} values ", group_with_n_masks.description);
-                        let mut separator = "";
-                        let mut temp = mask;
-                        let mut cur_value = 1;
-                        // convert mask to digits
-                        while temp > 0
-                        {
-                            if (temp & 1) > 0
-                            {
-                                let s = format!("{}{}", separator, cur_value);
-                                message.push_str(&s);
-                                separator = ", ";
-                            }
-                            temp = temp >> 1;
-                            cur_value += 1;
-                        }
-
-                        // 55.
-                        message.push_str(&" appear only in cells".to_string());
-                        for cell in group_with_n_masks.cells_with_mask.clone()
-                        {
-                            message.push_str(&format!(" ({}, {})", cell.get_row() + 1, cell.get_column() + 1));
-                        }
-
-                        // 56.
-                        message.push_str(&" and other values cannot appear in those cells.".to_string());
-
-                        log(&message);
+                        log_a_message(&group_with_n_masks, mask);
                     }
 
                     // 57.
@@ -1042,6 +1003,37 @@ fn play(mut rnglcg: PortableLCG) {
             //#endregion
     }//while change_made// 27
     log(&"BOARD SOLVED.".to_string())
+}
+
+fn log_a_message(group_with_n_masks: &CellWithMask, mask: u32) {
+    let mut message = format!("In {} values ", group_with_n_masks.description);
+    let mut separator = "";
+    let mut temp = mask;
+    let mut cur_value = 1;
+    // convert mask to message
+    while temp > 0
+    {
+        if (temp & 1) > 0
+        {
+            let s = format!("{}{}", separator, cur_value);
+            message.push_str(&s);
+            separator = ", ";
+        }
+        temp = temp >> 1;
+        cur_value += 1;
+    }
+
+    // 55.
+    message.push_str(&" appear only in cells".to_string());
+    for cell in group_with_n_masks.cells_with_mask.clone()
+    {
+        message.push_str(&format!(" ({}, {})", cell.get_row() + 1, cell.get_column() + 1));
+    }
+
+    // 56.
+    message.push_str(&" and other values cannot appear in those cells.".to_string());
+
+    log(&message);
 }
 
 fn set_cell_with_only_one_candidate(mut rnglcg: &mut PortableLCG, board: &mut Board, mut board_candidate_masks: &mut [u32; 81]) -> bool {
