@@ -696,11 +696,10 @@ fn play(mut rnglcg: PortableLCG) {
                             continue;
                         }
 
-                        board_candidate_masks[cell.index] &= group_with_n_masks.mask;
+                        board_candidate_masks[cell.index] &= group_with_n_masks.mask;  // Add more candidate digits to this cell
                         step_change_made = true;
 
                         let mut value_to_clear = 1;
-
                         let mut separator: String = "".to_string();
                         let mut message: String = "".to_string();
 
