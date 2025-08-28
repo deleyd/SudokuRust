@@ -781,22 +781,22 @@ fn play(mut rnglcg: PortableLCG) {
             while !candidate_cells1.is_empty()
             {
                 let candidate_cell1 = candidate_cells1.pop_front().unwrap();
-                let index1 = candidate_cell1.index;
-                let digit1 = candidate_cell1.digit;
+                //let index1 = candidate_cell1.index;
+                //let digit1 = candidate_cell1.digit;
                 let candidate_cell2 = candidate_cells2.pop_front().unwrap();
-                let index2 = candidate_cell2.index;
-                let digit2 = candidate_cell2.digit;
+                //let index2 = candidate_cell2.index;
+                //let digit2 = candidate_cell2.digit;
 
                 let mut alternate_board : Board = board.clone();
 
                 // assign digit1, digit2, in the order opposite of final_board
-                if final_board[index1].value == digit1
+                if final_board[candidate_cell1.index].value == candidate_cell1.digit
                 {
-                    alternate_board[index1].value = digit2;
-                    alternate_board[index2].value = digit1;
+                    alternate_board[candidate_cell1.index].value = candidate_cell2.digit;
+                    alternate_board[candidate_cell2.index].value = candidate_cell1.digit;
                 } else {
-                    alternate_board[index1].value = digit1;
-                    alternate_board[index2].value = digit2;
+                    alternate_board[candidate_cell1.index].value = candidate_cell1.digit;
+                    alternate_board[candidate_cell2.index].value = candidate_cell2.digit;
                 }
 
                 // 65.
@@ -947,10 +947,10 @@ fn play(mut rnglcg: PortableLCG) {
                 {   // Board was solved successfully even with two digits swapped
                     // sync state_index with value
                     // state_index : an array of indexes (indexes are cells, cells have values). value : array of values corresponding to array of indexes.
-                    board_index_stack1.push(index1);
-                    board_index_stack2.push(index2);
-                    value1.push(digit1);
-                    value2.push(digit2);
+                    board_index_stack1.push(candidate_cell1.index);
+                    board_index_stack2.push(candidate_cell2.index);
+                    value1.push(candidate_cell1.digit);
+                    value2.push(candidate_cell2.digit);
                 }
             } // while (candidate_index1.Any())
 
