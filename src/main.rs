@@ -735,10 +735,8 @@ fn play(mut rnglcg: PortableLCG) {
 
             // Try to see if there are pairs of values that can be exchanged arbitrarily
             // This happens when board has more than one valid solution
-            let mut candidate_index1: VecDeque<i32> = VecDeque::new();
-            let mut candidate_index2: VecDeque<i32> = VecDeque::new();
-            let mut candidate_digit1: VecDeque<i32> = VecDeque::new();
-            let mut candidate_digit2: VecDeque<i32> = VecDeque::new();
+            let mut candidate_cells1: VecDeque<CandidateCell> = VecDeque::new();
+            let mut candidate_cells2: VecDeque<CandidateCell> = VecDeque::new();
 
             // 61.
             // index i goes from 0 to 80, index j goes from i+1 to 81. Gives us two cells, i & j, to compare candidate digits
@@ -763,10 +761,8 @@ fn play(mut rnglcg: PortableLCG) {
 
                             if row == row1 || col == col1 || block_index == block_index1
                             {
-                                candidate_index1.push_back(i as i32);
-                                candidate_index2.push_back(j as i32);
-                                candidate_digit1.push_back(lower_digit);
-                                candidate_digit2.push_back(upper_digit);
+                                candidate_cells1.push_back(CandidateCell::new(&i, &lower_digit, &"".to_string()));
+                                candidate_cells2.push_back(CandidateCell::new(&j, &upper_digit, &"".to_string()));
                             }
                         }
                     }
@@ -782,12 +778,14 @@ fn play(mut rnglcg: PortableLCG) {
             let mut value2: Vec<i32> = Vec::new();
 
             // 64.
-            while !candidate_index1.is_empty()
+            while !candidate_cells1.is_empty()
             {
-                let index1 = candidate_index1.pop_front().unwrap() as usize;
-                let index2 = candidate_index2.pop_front().unwrap() as usize;
-                let digit1 = candidate_digit1.pop_front().unwrap();
-                let digit2 = candidate_digit2.pop_front().unwrap();
+                let candidate_cell1 = candidate_cells1.pop_front().unwrap();
+                let index1 = candidate_cell1.index;
+                let digit1 = candidate_cell1.digit;
+                let candidate_cell2 = candidate_cells2.pop_front().unwrap();
+                let index2 = candidate_cell2.index;
+                let digit2 = candidate_cell2.digit;
 
                 let mut alternate_board : Board = board.clone();
 
