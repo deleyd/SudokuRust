@@ -68,6 +68,19 @@ impl Board {
         }
     }
 }
+impl Index<&CandidateCell> for Board {
+    type Output = Cell;
+
+    fn index(&self, candidate_cell: &CandidateCell) -> &Self::Output {
+        &self.cells[candidate_cell.index]
+    }
+}
+impl IndexMut<&CandidateCell> for Board {
+    fn index_mut(&mut self, candidate_cell: &CandidateCell) -> &mut Self::Output {
+        &mut self.cells[candidate_cell.index]
+    }
+}
+
 impl Index<usize> for Board {
     type Output = Cell;
     fn index(&self, index: usize) -> &Self::Output {
@@ -110,6 +123,12 @@ impl CandidateCell {
             digit,
             description: description.clone(),
         }
+    }
+    fn get_row(&self) -> usize {
+        self.index / 9
+    }
+    fn get_column(&self) -> usize {
+        self.index % 9
     }
 }
 
@@ -236,15 +255,15 @@ fn play(mut rnglcg: PortableLCG) {
                 // 47
                 if candidate_cells.len() > 0
                 {
-                    let index = rnglcg.next_range(candidate_cells.len() as i32) as usize;
-                    let description = candidate_cells.get(index).unwrap().description.clone();
-                    let idx = candidate_cells.get(index).unwrap().index;
-                    let row = idx/9;
-                    let col = idx%9;
-                    let digit = candidate_cells.get(index).unwrap().digit;
+                    let random_cell_index = rnglcg.next_range(candidate_cells.len() as i32) as usize;
+                    let candidate_cell = candidate_cells.get(random_cell_index).unwrap();
+                    let description = candidate_cell.description.clone();  //get(random_cell_index).unwrap().description.clone();
+                    let row = candidate_cell.get_row();
+                    let col = candidate_cell.get_column();
+                    let digit = candidate_cell.digit;
 
-                    board[idx].value = digit;       // we can try digit in this cell
-                    board_candidate_masks[idx] = 0; // clear for this cell since we just set cell to a number
+                    board[candidate_cell].value = digit;       // we can try digit in this cell
+                    board_candidate_masks[candidate_cell.index] = 0; // clear for this cell since we just set cell to a number
                     change_made = true;
 
                     let message = format!("{} can contain {} only at ({}, {}).", description, digit, row + 1, col + 1);
