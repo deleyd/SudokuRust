@@ -146,7 +146,6 @@ fn play(mut rnglcg: PortableLCG) {
     // 2. Construct board to be solved
     // 3. Top element is current state of the board
     //Stack<int[]> state_stack = new Stack<int[]>();
-    let mut board_stack: Vec<Board> = Vec::new();
 
     // 4. Top elements are (row, col) of cell which has been modified compared to previous state
     //let mut cell_candidate_stack: Vec<usize> = Vec::new();
@@ -160,29 +159,10 @@ fn play(mut rnglcg: PortableLCG) {
     // - expand - finds next empty cell and puts new state on stacks
     // - move - finds next candidate number at current pos and applies it to current state
     // - collapse - pops current state from stack as it did not yield a solution
-    let mut command = Commands::Expand;
+
 
     // we add to the stack each time we add a number to a cell
-    while board_stack.len() <= 81  // 8.
-    {
-        match command {
-            Commands::Expand => {
-                handle_expand(&mut rnglcg, &mut board_stack);
-                command = Commands::Move;  // 17. // Always try to move after expand
-            }
-            Commands::Collapse => {
-                board_stack.pop();
-                command = Commands::Move;   // Always try to move after collapse
-            }
-            Commands::Move => {
-                command = handle_move(&mut board_stack);
-            }
-            _ => {
-                // should never get here
-                log(&"Fatal Error. command did not match anything.".to_string());
-            }
-        }
-    }
+    let mut board_stack = construct_final_board(&mut rnglcg);
 
     // 20.
     log(&"".to_string());
@@ -714,7 +694,7 @@ fn play(mut rnglcg: PortableLCG) {
                 //let mut last_digit_stack: Vec<i32> = Vec::new();
 
                 // 66.
-                command = Commands::Expand;
+                let mut command = Commands::Expand;
                 while command != Commands::Complete && command != Commands::Fail
                 {
                     if command == Commands::Expand
@@ -912,6 +892,33 @@ fn play(mut rnglcg: PortableLCG) {
             //#endregion
     }//while change_made// 27
     log(&"BOARD SOLVED.".to_string())
+}
+
+fn construct_final_board(mut rnglcg: &mut PortableLCG) -> Vec<Board> {
+    let mut command = Commands::Expand;
+    let mut board_stack: Vec<Board> = Vec::new();
+
+    while board_stack.len() <= 81  // 8.
+    {
+        match command {
+            Commands::Expand => {
+                handle_expand(&mut rnglcg, &mut board_stack);
+                command = Commands::Move;  // 17. // Always try to move after expand
+            }
+            Commands::Collapse => {
+                board_stack.pop();
+                command = Commands::Move;   // Always try to move after collapse
+            }
+            Commands::Move => {
+                command = handle_move(&mut board_stack);
+            }
+            _ => {
+                // should never get here
+                log(&"Fatal Error. command did not match anything.".to_string());
+            }
+        }
+    }
+    board_stack
 }
 
 fn handle_move(board_stack: &mut Vec<Board>) -> Commands {
