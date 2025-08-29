@@ -231,71 +231,7 @@ fn play(mut rnglcg: PortableLCG) {
             // if there were no cells which could only be set to a single digit
             if !change_made
             {
-                // sync these 3
-                let mut candidate_cells: Vec<CandidateCell> = Vec::new();
-                // 39.
-                // candidate_masks is input
-                // test each digit
-                for digit in 1..=9
-                {
-                    let mask = 1 << (digit - 1);  // mask representing digit
-                    // test every cell in the board
-                    for cell_group in 0..9
-                    {
-                        let mut row_number_count = 0;
-                        let mut index_in_row = 0;
-
-                        let mut col_number_count = 0;
-                        let mut index_in_col = 0;
-
-                        let mut block_number_count = 0;
-                        let mut index_in_block = 0;
-                        // 40.
-                        for index_in_group in 0..9
-                        {
-                            // 41. Check row "cell_group". cell_group covers 0..9 in this case cell_group = row number 0-8
-                            let row_state_index = 9 * cell_group + index_in_group;
-                            if (board_candidate_masks[row_state_index] & mask) != 0  // this cell has digit as a candidate
-                            {
-                                row_number_count += 1;  // We check the row and find cells which can be set to digit. Count the number of cells in this row which can be set to digit.
-                                index_in_row = index_in_group;
-                            }
-                            // 42. Check column "cell_group". cell_group 0..9 In this case cell_group = column 0-8
-                            let col_state_index = 9 * index_in_group + cell_group;
-                            if (board_candidate_masks[col_state_index] & mask) != 0  // this cell has digit as a candidate
-                            {
-                                col_number_count += 1;  // We check the column and find cells which can be set to digit. Count the number of cells in this column which can be set to digit.
-                                index_in_col = index_in_group;
-                            }
-                            // 43. Check block "cell_group". cell_group 0..9 In this case cell_group = block number 0-8
-                            let block_row_index = (cell_group / 3) * 3 + index_in_group / 3;
-                            let block_col_index = (cell_group % 3) * 3 + index_in_group % 3;
-                            let block_state_index = block_row_index * 9 + block_col_index;
-                            if (board_candidate_masks[block_state_index] & mask) != 0  // this cell has digit as a candidate
-                            {
-                                block_number_count += 1;  // We check the block and find cells which can be set to digit. Count the number of cells in this block which can be set to digit.
-                                index_in_block = index_in_group;
-                            }
-                        }
-                        // 44.
-                        if row_number_count == 1  // If there is only one cell in this row which can be set to digit, push cell on candidate stack.
-                        {
-                            candidate_cells.push(CandidateCell::new(&(cell_group*9 + index_in_row), &digit, &format!("Row #{}", cell_group + 1)))
-                        }
-                        // 45.
-                        if col_number_count == 1  // If there is only one cell in this column which can be set to digit, push cell on candidate stack.
-                        {
-                            candidate_cells.push(CandidateCell::new(&(index_in_col*9 + cell_group), &digit, &format!("Column #{}", cell_group + 1)))
-                        }
-                        // 46.
-                        if block_number_count == 1  // If there is only one cell in this block which can be set to digit, push cell on candidate stack.
-                        {
-                            let block_row = cell_group / 3;
-                            let block_col = cell_group % 3;
-                            candidate_cells.push(CandidateCell::new(&((block_row * 3 + index_in_block / 3)*9 + (block_col * 3 + index_in_block % 3)), &digit, &format!("Block ({}, {})", block_row + 1, block_col + 1)));
-                        }
-                    } // for (cell_group = 0..8)
-                } // for (digit = 1..9)
+                let candidate_cells = generate_candidate_cells(&mut board_candidate_masks);
 
                 // 47
                 if candidate_cells.len() > 0
@@ -859,6 +795,74 @@ fn play(mut rnglcg: PortableLCG) {
             //#endregion
     }//while change_made// 27
     log(&"BOARD SOLVED.".to_string())
+}
+
+fn generate_candidate_cells(board_candidate_masks: &mut [u32; 81]) -> Vec<CandidateCell> {
+    let mut candidate_cells: Vec<CandidateCell> = Vec::new();
+    // 39.
+    // candidate_masks is input
+    // test each digit
+    for digit in 1..=9
+    {
+        let mask = 1 << (digit - 1);  // mask representing digit. Convert digit to single bit mask.
+        // test every cell in the board
+        for cell_group in 0..9
+        {
+            let mut row_number_count = 0;
+            let mut index_in_row = 0;
+
+            let mut col_number_count = 0;
+            let mut index_in_col = 0;
+
+            let mut block_number_count = 0;
+            let mut index_in_block = 0;
+            // 40.
+            for index_in_group in 0..9
+            {
+                // 41. Check row "cell_group". cell_group covers 0..9 in this case cell_group = row number 0-8
+                let row_state_index = 9 * cell_group + index_in_group;
+                if (board_candidate_masks[row_state_index] & mask) != 0  // this cell has digit as a candidate
+                {
+                    row_number_count += 1;  // We check the row and find cells which can be set to digit. Count the number of cells in this row which can be set to digit.
+                    index_in_row = index_in_group;
+                }
+                // 42. Check column "cell_group". cell_group 0..9 In this case cell_group = column 0-8
+                let col_state_index = 9 * index_in_group + cell_group;
+                if (board_candidate_masks[col_state_index] & mask) != 0  // this cell has digit as a candidate
+                {
+                    col_number_count += 1;  // We check the column and find cells which can be set to digit. Count the number of cells in this column which can be set to digit.
+                    index_in_col = index_in_group;
+                }
+                // 43. Check block "cell_group". cell_group 0..9 In this case cell_group = block number 0-8
+                let block_row_index = (cell_group / 3) * 3 + index_in_group / 3;
+                let block_col_index = (cell_group % 3) * 3 + index_in_group % 3;
+                let block_state_index = block_row_index * 9 + block_col_index;
+                if (board_candidate_masks[block_state_index] & mask) != 0  // this cell has digit as a candidate
+                {
+                    block_number_count += 1;  // We check the block and find cells which can be set to digit. Count the number of cells in this block which can be set to digit.
+                    index_in_block = index_in_group;
+                }
+            }
+            // 44.
+            if row_number_count == 1  // If there is only one cell in this row which can be set to digit, push cell on candidate stack.
+            {
+                candidate_cells.push(CandidateCell::new(&(cell_group * 9 + index_in_row), &digit, &format!("Row #{}", cell_group + 1)))
+            }
+            // 45.
+            if col_number_count == 1  // If there is only one cell in this column which can be set to digit, push cell on candidate stack.
+            {
+                candidate_cells.push(CandidateCell::new(&(index_in_col * 9 + cell_group), &digit, &format!("Column #{}", cell_group + 1)))
+            }
+            // 46.
+            if block_number_count == 1  // If there is only one cell in this block which can be set to digit, push cell on candidate stack.
+            {
+                let block_row = cell_group / 3;
+                let block_col = cell_group % 3;
+                candidate_cells.push(CandidateCell::new(&((block_row * 3 + index_in_block / 3) * 9 + (block_col * 3 + index_in_block % 3)), &digit, &format!("Block ({}, {})", block_row + 1, block_col + 1)));
+            }
+        } // for (cell_group = 0..8)
+    } // for (digit = 1..9)
+    candidate_cells
 }
 
 fn generate_initial_board(rnglcg: &mut PortableLCG, final_board: &Board) -> Board {
