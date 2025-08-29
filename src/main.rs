@@ -958,8 +958,8 @@ fn handle_move(board_stack: &mut Vec<Board>) -> Commands {
         moved_to_digit += 1;
     }
 
-    let row_to_move = cell_to_move / 9; // row_index_stack.last().unwrap();  // panic if empty which it should never be
-    let col_to_move = cell_to_move % 9;  // col_index_stack.last().unwrap();
+    let row_to_move = index_to_row(cell_to_move);  // row_index_stack.last().unwrap();  // panic if empty which it should never be
+    let col_to_move = index_to_col(cell_to_move);  // col_index_stack.last().unwrap();
     let row_to_write: usize = (row_to_move + row_to_move / 3 + 1) as usize;
     let col_to_write: usize = (col_to_move + col_to_move / 3 + 1) as usize;
     log(&format!("digitToMove:{0} movedToDigit:{1} rowToMove:{2} colToMove:{3} rowToWrite:{4} colToWrite:{5} currentStateIndex:{6}", digit_to_move, moved_to_digit, row_to_move, col_to_move, row_to_write, col_to_write, cell_to_move));
@@ -981,6 +981,7 @@ fn handle_move(board_stack: &mut Vec<Board>) -> Commands {
 
         // Next possible digit was found at current position
         // Next step will be to expand the state
+        // Next step will be to expand the state/ 9
         return Commands::Expand;
     } else {
         // No viable candidate was found at current position - pop it in the next iteration
@@ -1101,8 +1102,8 @@ fn set_cell_with_only_one_candidate(mut rnglcg: &mut PortableLCG, board: &mut Bo
         board_candidate_masks[board_single_candidate_index] = 0; // clear candidates for this cell now that we've set cell to a digit
         change_made = true;  // we made a change to the state and board
         // message to user we set a particular cell to the only digit it could be
-        let row = board_single_candidate_index / 9;
-        let col = board_single_candidate_index % 9;
+        let row = index_to_row(board_single_candidate_index);
+        let col = index_to_col(board_single_candidate_index);
         let s = format!("({0}, {1}) can only contain {2}.", row + 1, col + 1, digit);
         log(&s);
     }
@@ -1142,7 +1143,7 @@ fn get_single_candidate_indices(candidate_masks: &mut [u32; 81]) -> Vec<usize> {
 fn get_indices() -> BTreeMap<usize, Vec<Cell>> {
     let row_indices: BTreeMap<usize, Vec<Cell>> = (0..81)
         .map(|index| {
-            let discriminator = index / 9;
+            let discriminator = index_to_row(index);
             (discriminator, Cell {
                 description: format!("row #{}", discriminator + 1),
                 index,
@@ -1159,9 +1160,9 @@ fn get_indices() -> BTreeMap<usize, Vec<Cell>> {
     // Create the projected items using a for loop instead of Select
     let column_indices: BTreeMap<usize, Vec<Cell>> = (0..81)
         .map(|index| {
-            let discriminator = 9 + index % 9;
+            let discriminator = 9 + index_to_col(index);
             (discriminator, Cell {
-                description: format!("column #{}", index % 9 + 1),
+                description: format!("column #{}", index_to_col(index) + 1),
                 index,
                 digit: 0,
             })
@@ -1335,8 +1336,8 @@ fn get_row_col_block_used_digits(current_state: &Board, index: usize) -> [bool; 
 }
 
 fn gather_digits(current_state: &Board, index: usize) -> [bool; 9]  {
-    let row = index / 9;
-    let col = index % 9;
+    let row = index_to_row(index);
+    let col = index_to_col(index);
     let block_row = row / 3;
     let block_col = col / 3;
     let mut is_digit_used: [bool; 9] = [false; 9];
