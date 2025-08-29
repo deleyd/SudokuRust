@@ -262,17 +262,17 @@ fn play(mut rnglcg: PortableLCG) {
                 if candidate_cells.len() > 0
                 {
                     let random_cell_index = rnglcg.next_range(candidate_cells.len() as i32) as usize;
-                    let candidate_cell = candidate_cells.get(random_cell_index).unwrap();
+                    let random_candidate_cell = candidate_cells.get(random_cell_index).unwrap();
 
-                    board[candidate_cell].digit = candidate_cell.digit;       // we can try digit in this cell
-                    board_candidate_masks[candidate_cell.index] = 0;          // clear for this cell since we just set cell to a number
+                    board[random_candidate_cell].digit = random_candidate_cell.digit;       // we can try digit in this cell
+                    board_candidate_masks[random_candidate_cell.index] = 0;          // clear for this cell since we just set cell to a number
                     change_made = true;
 
                     let message = format!("{} can contain {} only at ({}, {}).",
-                                          candidate_cell.description,
-                                          candidate_cell.digit,
-                                          candidate_cell.get_row() + 1,
-                                          candidate_cell.get_column() + 1);
+                                          random_candidate_cell.description,
+                                          random_candidate_cell.digit,
+                                          random_candidate_cell.get_row() + 1,
+                                          random_candidate_cell.get_column() + 1);
                     log(&message);
                 }
             }
@@ -305,13 +305,11 @@ fn play(mut rnglcg: PortableLCG) {
                     for tuple_kvp in &cell_groups
                     {
                         // First Where condition: group.Count(tuple => candidateMasks[tuple.Index] == mask) == 2
-                        let mut matching_count = 0;
                         let cell_list = tuple_kvp.1;
-                        for cell in cell_list {
-                            if board_candidate_masks[cell.index] == mask {  // mask represents the two digits (unknown which cell)
-                                matching_count += 1;
-                            }
-                        }
+                        let matching_count = cell_list.iter()
+                            .filter(|cell| board_candidate_masks[cell.index] == mask)
+                            .count();
+
                         // we are hoping to find only 2 cells which can have these two digits
                         if matching_count != 2 {
                             continue;
@@ -319,13 +317,9 @@ fn play(mut rnglcg: PortableLCG) {
 
                         // only 2 cells confirmed for 2 digits in mask
                         // Second Where condition: group.Any(tuple => candidateMasks[tuple.Index] != mask && (candidateMasks[tuple.Index] & mask) > 0)
-                        let mut has_overlapping_non_matching = false;
-                        for cell in cell_list {
-                            if board_candidate_masks[cell.index] != mask && (board_candidate_masks[cell.index] & mask) > 0 {
-                                has_overlapping_non_matching = true;
-                                break;
-                            }
-                        }
+                        let has_overlapping_non_matching = cell_list.iter().any(|cell| {
+                            board_candidate_masks[cell.index] != mask && (board_candidate_masks[cell.index] & mask) > 0
+                        });
 
                         if !has_overlapping_non_matching {
                             continue;
@@ -823,6 +817,15 @@ fn index_to_row(i: usize) -> usize {
 fn index_to_col(i: usize) -> usize {
     i % 9
 }
+fn index_to_block_index(i: usize) -> usize {
+    3 * (index_to_row(i) / 3) + index_to_col(i) / 3
+}
+fn index_to_block_row(i: usize) -> usize {
+    index_to_row(i) / 3
+}
+fn index_to_block_col(i: usize) -> usize {
+    index_to_col(i) / 3
+}
 
 fn index_to_block(i: usize) -> usize {
     let row = index_to_row(i);
@@ -1201,11 +1204,9 @@ fn get_indices() -> BTreeMap<usize, Vec<Cell>> {
     // Create list of all 81 cells, grouped by BLOCK. Discriminator is BLOCK, varies from 18-26 (subtract 18 to get BLOCK)
     // 32.
     let block_indices = (0..81).fold(BTreeMap::<usize, Vec<Cell>>::new(), |mut temp_map, index| {
-        let block_row = index / 9;
-        let block_column = index % 9;
-        let discriminator = 18 + 3 * (block_row / 3) + block_column / 3;
+        let discriminator = 18 + index_to_block_index(index);
         let cell = Cell {
-            description: format!("block ({}, {})", block_row / 3 + 1, block_column / 3 + 1),
+            description: format!("block ({}, {})", index_to_block_row(index) + 1, index_to_block_col(index) + 1),
             index,
             digit: 0,
         };
@@ -1223,25 +1224,25 @@ fn get_indices() -> BTreeMap<usize, Vec<Cell>> {
     cell_groups
 }
 
-fn calculate_candidates(cell_state: &Board) -> [u32; 81] {
+fn calculate_candidates(board: &Board) -> [u32; 81] {
     //#region Calculate candidates for current state of the board
     let mut candidate_masks: [u32; 81] = [0; 81];
 
     // go through every cell of board, calculcate candicate numbers for each cell that does not already have a number in it.
     // candidate numbers are any digit 1-9 not already in that cell's row, column, and block
     // candidate numbers are stored as a bitmask where bits 0-8 represent digits 1-9
-    for i in 0..cell_state.cells.len()  // 28.
+    for i in 0..board.cells.len()  // 28.
     {
         // if this cell doesn't already have a number in it,
         // then calculate all the numbers which can go in this cell
         // candidate_mask is bits 0-8 representing numbers 1-9
         // Array candidate_masks[81] is all candidate numbers for each cell of board
-        if cell_state[i].digit == 0
+        if board[i].digit == 0
         {
-            let row = i / 9;
-            let col = i % 9;
-            let block_row = row / 3;
-            let block_col = col / 3;
+            let row = index_to_row(i);
+            let col = index_to_col(i);
+            let block_row = index_to_block_row(i);
+            let block_col = index_to_block_col(i);
 
             let mut colliding_numbers: u32 = 0;
             for j in 0..9
@@ -1250,13 +1251,13 @@ fn calculate_candidates(cell_state: &Board) -> [u32; 81] {
                 let col_sibling_index = 9 * j + col;
                 let block_sibling_index = 9 * (block_row * 3 + j / 3) + block_col * 3 + j % 3;
                 // state[81] holds numbers for each cell (or 0 if no number set yet).
-                let row_shift_amount = if cell_state[row_sibling_index].digit == 0 { 31 } else { cell_state[row_sibling_index].digit - 1 };
-                let col_shift_amount = if cell_state[col_sibling_index].digit == 0 { 31 } else { cell_state[col_sibling_index].digit - 1 };
-                let block_shift_amount = if cell_state[block_sibling_index].digit == 0 { 31 } else { cell_state[block_sibling_index].digit - 1 };
+                let row_digit = if board[row_sibling_index].digit == 0 { 31 } else { board[row_sibling_index].digit };
+                let col_digit = if board[col_sibling_index].digit == 0 { 31 } else { board[col_sibling_index].digit };
+                let block_digit = if board[block_sibling_index].digit == 0 { 31 } else { board[block_sibling_index].digit };
                 // mask has one bit set indicating the digit in state cell. bit 0 = 1, bit 1 = 2,... bit8 = 9. Only bits 0-8 are used.
-                let row_sibling_mask: u32 = 1 << row_shift_amount;
-                let col_sibling_mask: u32 = 1 << col_shift_amount;
-                let block_sibling_mask: u32 = 1 << block_shift_amount;
+                let row_sibling_mask: u32 = convert_digit_to_mask(row_digit); //1 << row_digit;
+                let col_sibling_mask: u32 = convert_digit_to_mask(col_digit);
+                let block_sibling_mask: u32 = convert_digit_to_mask(block_digit);
                 // colliding_numbers bits 0-8 indicate what numbers are already present in this cell's row, column, and block.
                 // This is complete list of numbers already used. Stored in one integer.
                 colliding_numbers = colliding_numbers | row_sibling_mask | col_sibling_mask | block_sibling_mask;
@@ -1269,6 +1270,10 @@ fn calculate_candidates(cell_state: &Board) -> [u32; 81] {
     }
     //#endregion
     candidate_masks
+}
+
+fn convert_digit_to_mask(digit: i32) -> u32 {
+    1 << (digit - 1)
 }
 
 // lazy calculate
