@@ -54,12 +54,9 @@ struct Board {
 }
 impl Board {
     pub fn new() -> Board {
-        let mut cells = Vec::new();
-        for i in 0..81
-        {
-            let cell = Cell::new(i,0);
-            cells.push(cell);
-        }
+        let cells: Vec<Cell> = (0..81)
+            .map(|i| Cell::new(i, 0))
+            .collect();
         Board {
             cells,
             candidate_cell: 9999,
@@ -822,7 +819,7 @@ fn generate_candidate_cells(board_candidate_masks: &mut [u32; 81]) -> Vec<Candid
     // test each digit
     for digit in 1..=9
     {
-        let mask = 1 << (digit - 1);  // mask representing digit. Convert digit to single bit mask.
+        let mask = convert_digit_to_mask(digit);  // mask representing digit. Convert digit to single bit mask.
         // test every cell in the board
         for cell_group in 0..9
         {
@@ -1227,7 +1224,7 @@ fn calculate_candidates(board: &Board) -> [u32; 81] {
                 let col_digit = if board[col_sibling_index].digit == 0 { 31 } else { board[col_sibling_index].digit };
                 let block_digit = if board[block_sibling_index].digit == 0 { 31 } else { board[block_sibling_index].digit };
                 // mask has one bit set indicating the digit in state cell. bit 0 = 1, bit 1 = 2,... bit8 = 9. Only bits 0-8 are used.
-                let row_sibling_mask: u32 = convert_digit_to_mask(row_digit); //1 << row_digit;
+                let row_sibling_mask: u32 = convert_digit_to_mask(row_digit);
                 let col_sibling_mask: u32 = convert_digit_to_mask(col_digit);
                 let block_sibling_mask: u32 = convert_digit_to_mask(block_digit);
                 // colliding_numbers bits 0-8 indicate what numbers are already present in this cell's row, column, and block.
