@@ -1179,37 +1179,24 @@ fn get_indices() -> BTreeMap<usize, Vec<Cell>> {
         .fold(BTreeMap::new(), |mut acc, (key, cell)| {
             acc.entry(key).or_default().push(cell);
             acc
-        });/*
-    let row_indices = {
-        let mut temp_map = BTreeMap::<usize, Vec<Cell>>::new();
-        for index in 0..81 {
-            let discriminator = index / 9;
-            let cell = Cell {
-                description: format!("row #{}", discriminator + 1),
-                index,
-                digit: 0,
-            };
-            temp_map.entry(discriminator).or_insert_with(Vec::new).push(cell);
-        }
-        temp_map
-    };*/
+        });
     // 31.
     // Group by columns
     // Create list of all 81 cells, grouped by COLUMN. Discriminator is COLUMN, varies from 9 - 17 (subtract 9 to get column)
     // Create the projected items using a for loop instead of Select
-    let column_indices = {
-        let mut temp_map = BTreeMap::<usize, Vec<Cell>>::new();
-        for index in 0..81 {
+    let column_indices: BTreeMap<usize, Vec<Cell>> = (0..81)
+        .map(|index| {
             let discriminator = 9 + index % 9;
-            let cell = Cell {
+            (discriminator, Cell {
                 description: format!("column #{}", index % 9 + 1),
                 index,
                 digit: 0,
-            };
-            temp_map.entry(discriminator).or_insert_with(Vec::new).push(cell);
-        }
-        temp_map
-    };
+            })
+        })
+        .fold(BTreeMap::new(), |mut acc, (key, cell)| {
+            acc.entry(key).or_default().push(cell);
+            acc
+        });
     // Group by blocks
     // Create list of all 81 cells, grouped by BLOCK. Discriminator is BLOCK, varies from 18-26 (subtract 18 to get BLOCK)
     // 32.
