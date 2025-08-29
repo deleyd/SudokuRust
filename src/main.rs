@@ -167,61 +167,7 @@ fn play(mut rnglcg: PortableLCG) {
     {
         if command == Commands::Expand
         {
-            let mut current_board: Board = if !board_stack.is_empty()   // 9.
-            {
-                board_stack.last_mut().unwrap().clone()
-            } else {
-                Board::new()
-            };
-
-            // input: current_state. output: contains_unsolvable_cells, best_row, best_col,
-            let mut best_index: usize = 9999;
-            let mut best_used_digits: [bool; 9] = [false; 9];
-            let mut best_candidates_count: i32 = -1;
-            let mut best_random_value: i32 = -1;
-            let mut contains_unsolvable_cells: bool = false;
-            // loop through all cells looking for empty ones
-            for index in 0..81  // 10.
-            {
-                if current_board[index].value == 0  // 11.  if cell unused, then let's see what we can do with it
-                {
-                    let digits_used_array: [bool; 9] = get_row_col_block_used_digits(&current_board, index); // returns an array of 9 true/false values
-
-                    // 13.
-                    let candidates_count: i32 = digits_used_array
-                        .iter() // Get an iterator over the elements
-                        .filter(|&&value| !value) // count the 'false' values (filter out 'true' values)
-                        .count() as i32; // Count the remaining elements
-
-                    if candidates_count == 0  // 14.  if there are no candidates, then this cell has no options and Sudoku is unsolvable
-                    {
-                        contains_unsolvable_cells = true;
-                        break;
-                    }
-
-                    let random_value = rnglcg.next();  // 15. random value if we need it
-
-                    // if we have no best candidates, or best candidates outnumber candidates, or
-                    // then update best everything
-                    if best_candidates_count < 0 ||                  // if we're just starting
-                        candidates_count < best_candidates_count ||  // looking for the cell with the LEAST number of candidates 
-                        (candidates_count == best_candidates_count && random_value < best_random_value) // if two cells both have the same number of candidates, randomly select one (this "random" looks not random)
-                    {
-                        best_index = index; // this cell becomes the best cell (saved as row,col. we could save index instead?)
-                        best_used_digits = digits_used_array;
-                        best_candidates_count = candidates_count;  // candidates_count is a function of is_digit_used array
-                        best_random_value = random_value;
-                    }
-                }
-            }
-
-            if !contains_unsolvable_cells  // 16.
-            {
-                current_board.candidate_cell = best_index;
-                current_board.used_digits = best_used_digits;
-                current_board.last_digit = 0;
-                board_stack.push(current_board);          // current state came from state_stack?
-            }
+            handle_expand(&mut rnglcg, &mut board_stack);
 
             // Always try to move after expand
             command = Commands::Move;  // 17.
@@ -1006,6 +952,64 @@ fn play(mut rnglcg: PortableLCG) {
             //#endregion
     }//while change_made// 27
     log(&"BOARD SOLVED.".to_string())
+}
+
+fn handle_expand(rnglcg: &mut PortableLCG, board_stack: &mut Vec<Board>) {
+    let mut current_board: Board = if !board_stack.is_empty()   // 9.
+    {
+        board_stack.last_mut().unwrap().clone()
+    } else {
+        Board::new()
+    };
+
+    // input: current_state. output: contains_unsolvable_cells, best_row, best_col,
+    let mut best_index: usize = 9999;
+    let mut best_used_digits: [bool; 9] = [false; 9];
+    let mut best_candidates_count: i32 = -1;
+    let mut best_random_value: i32 = -1;
+    let mut contains_unsolvable_cells: bool = false;
+    // loop through all cells looking for empty ones
+    for index in 0..81  // 10.
+    {
+        if current_board[index].value == 0  // 11.  if cell unused, then let's see what we can do with it
+        {
+            let digits_used_array: [bool; 9] = get_row_col_block_used_digits(&current_board, index); // returns an array of 9 true/false values
+
+            // 13.
+            let candidates_count: i32 = digits_used_array
+                .iter() // Get an iterator over the elements
+                .filter(|&&value| !value) // count the 'false' values (filter out 'true' values)
+                .count() as i32; // Count the remaining elements
+
+            if candidates_count == 0  // 14.  if there are no candidates, then this cell has no options and Sudoku is unsolvable
+            {
+                contains_unsolvable_cells = true;
+                break;
+            }
+
+            let random_value = rnglcg.next();  // 15. random value if we need it
+
+            // if we have no best candidates, or best candidates outnumber candidates, or
+            // then update best everything
+            if best_candidates_count < 0 ||                  // if we're just starting
+                candidates_count < best_candidates_count ||  // looking for the cell with the LEAST number of candidates
+                (candidates_count == best_candidates_count && random_value < best_random_value) // if two cells both have the same number of candidates, randomly select one (this "random" looks not random)
+            {
+                best_index = index; // this cell becomes the best cell (saved as row,col. we could save index instead?)
+                best_used_digits = digits_used_array;
+                best_candidates_count = candidates_count;  // candidates_count is a function of is_digit_used array
+                best_random_value = random_value;
+            }
+        }
+    }
+
+    if !contains_unsolvable_cells  // 16.
+    {
+        current_board.candidate_cell = best_index;
+        current_board.used_digits = best_used_digits;
+        current_board.last_digit = 0;
+        board_stack.push(current_board);          // current state came from state_stack?
+    }
 }
 
 fn log_a_message(group_with_n_masks: &CellWithMask, mask: u32) {
