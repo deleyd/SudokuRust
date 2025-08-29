@@ -180,47 +180,7 @@ fn play(mut rnglcg: PortableLCG) {
         }
         else if command == Commands::Move  // 19.
         {
-            let stack_len = board_stack.len();
-            log(&format!("rowIndexStack Count={} rowToMove={}", stack_len, board_stack.last().unwrap().candidate_cell / 9 ));
-            let cell_to_move : usize = board_stack.last_mut().unwrap().candidate_cell;
-            let digit_to_move: i32 = board_stack.last_mut().unwrap().last_digit;
-            let mut moved_to_digit = digit_to_move + 1;
-
-            while moved_to_digit <= 9 && board_stack.last_mut().unwrap().used_digits[moved_to_digit as usize - 1]
-            {
-                moved_to_digit += 1;
-            }
-
-            let row_to_move = cell_to_move / 9; // row_index_stack.last().unwrap();  // panic if empty which it should never be
-            let col_to_move = cell_to_move % 9;  // col_index_stack.last().unwrap();
-            let row_to_write : usize = (row_to_move + row_to_move / 3 + 1) as usize;
-            let col_to_write : usize = (col_to_move + col_to_move / 3 + 1) as usize;
-            log(&format!("digitToMove:{0} movedToDigit:{1} rowToMove:{2} colToMove:{3} rowToWrite:{4} colToWrite:{5} currentStateIndex:{6}", digit_to_move, moved_to_digit, row_to_move, col_to_move, row_to_write, col_to_write, cell_to_move));
-
-            if digit_to_move > 0
-            {
-                //used_digits[digit_to_move as usize - 1] = false;
-                board_stack.last_mut().unwrap().used_digits[digit_to_move as usize - 1] = false;
-                board_stack.last_mut().unwrap()[cell_to_move].value = 0; // does this change last element of state_stack?
-            }
-
-            if moved_to_digit <= 9
-            {
-                log(&format!("19d. moved_to_digit: {:?}", moved_to_digit));
-                board_stack.last_mut().unwrap().last_digit = moved_to_digit;
-                board_stack.last_mut().unwrap().used_digits[moved_to_digit as usize - 1] = true;
-
-                board_stack.last_mut().unwrap()[cell_to_move].value = moved_to_digit;
-
-                // Next possible digit was found at current position
-                // Next step will be to expand the state
-                command = Commands::Expand;
-            } else {
-                // No viable candidate was found at current position - pop it in the next iteration
-                board_stack.last_mut().unwrap().last_digit = 0;
-                command = Commands::Collapse;
-                log(&format!("collapse. last_digit_stack.last():{}", board_stack.last_mut().unwrap().last_digit));
-            }
+            command = handle_move(&mut board_stack);
         } // if (command == Commands::Move)
     }
 
@@ -952,6 +912,50 @@ fn play(mut rnglcg: PortableLCG) {
             //#endregion
     }//while change_made// 27
     log(&"BOARD SOLVED.".to_string())
+}
+
+fn handle_move(board_stack: &mut Vec<Board>) -> Commands {
+    let stack_len = board_stack.len();
+    log(&format!("rowIndexStack Count={} rowToMove={}", stack_len, board_stack.last().unwrap().candidate_cell / 9));
+    let cell_to_move: usize = board_stack.last_mut().unwrap().candidate_cell;
+    let digit_to_move: i32 = board_stack.last_mut().unwrap().last_digit;
+    let mut moved_to_digit = digit_to_move + 1;
+
+    while moved_to_digit <= 9 && board_stack.last_mut().unwrap().used_digits[moved_to_digit as usize - 1]
+    {
+        moved_to_digit += 1;
+    }
+
+    let row_to_move = cell_to_move / 9; // row_index_stack.last().unwrap();  // panic if empty which it should never be
+    let col_to_move = cell_to_move % 9;  // col_index_stack.last().unwrap();
+    let row_to_write: usize = (row_to_move + row_to_move / 3 + 1) as usize;
+    let col_to_write: usize = (col_to_move + col_to_move / 3 + 1) as usize;
+    log(&format!("digitToMove:{0} movedToDigit:{1} rowToMove:{2} colToMove:{3} rowToWrite:{4} colToWrite:{5} currentStateIndex:{6}", digit_to_move, moved_to_digit, row_to_move, col_to_move, row_to_write, col_to_write, cell_to_move));
+
+    if digit_to_move > 0
+    {
+        //used_digits[digit_to_move as usize - 1] = false;
+        board_stack.last_mut().unwrap().used_digits[digit_to_move as usize - 1] = false;
+        board_stack.last_mut().unwrap()[cell_to_move].value = 0; // does this change last element of state_stack?
+    }
+
+    if moved_to_digit <= 9
+    {
+        log(&format!("19d. moved_to_digit: {:?}", moved_to_digit));
+        board_stack.last_mut().unwrap().last_digit = moved_to_digit;
+        board_stack.last_mut().unwrap().used_digits[moved_to_digit as usize - 1] = true;
+
+        board_stack.last_mut().unwrap()[cell_to_move].value = moved_to_digit;
+
+        // Next possible digit was found at current position
+        // Next step will be to expand the state
+        return Commands::Expand;
+    } else {
+        // No viable candidate was found at current position - pop it in the next iteration
+        board_stack.last_mut().unwrap().last_digit = 0;
+        log(&format!("collapse. last_digit_stack.last():{}", board_stack.last_mut().unwrap().last_digit));
+        return Commands::Collapse;
+    }
 }
 
 fn handle_expand(rnglcg: &mut PortableLCG, board_stack: &mut Vec<Board>) {
