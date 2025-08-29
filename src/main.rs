@@ -162,7 +162,7 @@ fn play(mut rnglcg: PortableLCG) {
 
 
     // we add to the stack each time we add a number to a cell
-    let mut board_stack = construct_final_board(&mut rnglcg);
+    let board_stack = construct_final_board(&mut rnglcg);
 
     // 20.
     log(&"".to_string());
@@ -173,42 +173,9 @@ fn play(mut rnglcg: PortableLCG) {
     //#region Generate initial board from the completely solved one
     // Board is solved at this point.
     // Now pick subset of digits as the starting position.
-    let remaining_digits : usize = 30;
-    let max_removed_per_block = 6;
-    let mut removed_per_block: [[i32; 3]; 3] = [[0; 3]; 3];
-    let mut positions: [usize; 9 * 9] = std::array::from_fn(|i| i);
-    let board = board_stack.last_mut().unwrap();
+    let final_board = board_stack.last().unwrap();
 
-    let final_board = board.clone(); // new int[state.len()]; Array.Copy(state, final_state, final_state.len());
-
-    let mut removed_pos : usize = 0;
-    while removed_pos < 9 * 9 - remaining_digits  // 21.
-    {
-        let cur_remaining_digits : i32 = (positions.len() - removed_pos) as i32;
-        let index_to_pick = removed_pos + rnglcg.next_range(cur_remaining_digits) as usize;
-
-        let row: usize = positions[index_to_pick] / 9;
-        let col: usize = positions[index_to_pick] % 9;
-
-        let block_row_to_remove = row / 3;
-        let block_col_to_remove = col / 3;
-
-        if removed_per_block[block_row_to_remove][block_col_to_remove] >= max_removed_per_block
-        {
-            continue;
-        }
-
-        removed_per_block[block_row_to_remove][block_col_to_remove] += 1;
-        // 21.
-        let cell_index: usize = 9 * row + col;
-        board[cell_index].value = 0;
-
-        // swap [removed_pos] with [index_to_pick]
-        let temp = positions[removed_pos];
-        positions[removed_pos] = positions[index_to_pick];
-        positions[index_to_pick] = temp;
-        removed_pos += 1;
-    }
+    let mut board = generate_initial_board(&mut rnglcg, &final_board);
 
     // 23
     log(&"".to_string());
@@ -231,7 +198,7 @@ fn play(mut rnglcg: PortableLCG) {
     while change_made// 27
     {
         change_made = false;
-        let mut board_candidate_masks: [u32; 81] =  calculate_candidates(board);
+        let mut board_candidate_masks: [u32; 81] =  calculate_candidates(&board);
         //#endregion
         //#region Build a collection (named cellGroups) which maps cell indices into distinct groups (rows/columns/blocks)
         // 29.
@@ -256,7 +223,7 @@ fn play(mut rnglcg: PortableLCG) {
 
             //#region Pick cells with only one candidate left
 
-            change_made = change_made || set_cell_with_only_one_candidate(&mut rnglcg, board, &mut board_candidate_masks);
+            change_made = change_made || set_cell_with_only_one_candidate(&mut rnglcg, &mut board, &mut board_candidate_masks);
             //#endregion*
 
             //#region Try to find a number which can only appear in one place in a row/column/block
@@ -894,6 +861,44 @@ fn play(mut rnglcg: PortableLCG) {
     log(&"BOARD SOLVED.".to_string())
 }
 
+fn generate_initial_board(rnglcg: &mut PortableLCG, final_board: &Board) -> Board {
+    let remaining_digits : usize = 30;
+    let max_removed_per_block = 6;
+    let mut removed_per_block: [[i32; 3]; 3] = [[0; 3]; 3];
+    let mut positions: [usize; 9 * 9] = std::array::from_fn(|i| i);
+    let mut removed_pos: usize = 0;
+    let mut board = final_board.clone(); // new int[state.len()]; Array.Copy(state, final_state, final_state.len());
+
+    while removed_pos < 9 * 9 - remaining_digits  // 21.
+    {
+        let cur_remaining_digits: i32 = (positions.len() - removed_pos) as i32;
+        let index_to_pick = removed_pos + rnglcg.next_range(cur_remaining_digits) as usize;
+
+        let row: usize = positions[index_to_pick] / 9;
+        let col: usize = positions[index_to_pick] % 9;
+
+        let block_row_to_remove = row / 3;
+        let block_col_to_remove = col / 3;
+
+        if removed_per_block[block_row_to_remove][block_col_to_remove] >= max_removed_per_block
+        {
+            continue;
+        }
+
+        removed_per_block[block_row_to_remove][block_col_to_remove] += 1;
+        // 21.
+        let cell_index: usize = 9 * row + col;
+        board[cell_index].value = 0;
+
+        // swap [removed_pos] with [index_to_pick]
+        let temp = positions[removed_pos];
+        positions[removed_pos] = positions[index_to_pick];
+        positions[index_to_pick] = temp;
+        removed_pos += 1;
+    }
+    board
+}
+
 fn construct_final_board(mut rnglcg: &mut PortableLCG) -> Vec<Board> {
     let mut command = Commands::Expand;
     let mut board_stack: Vec<Board> = Vec::new();
@@ -1181,7 +1186,7 @@ fn get_indices() -> BTreeMap<usize, Vec<Cell>> {
     cell_groups
 }
 
-fn calculate_candidates(cell_state: &mut Board) -> [u32; 81] {
+fn calculate_candidates(cell_state: &Board) -> [u32; 81] {
     //#region Calculate candidates for current state of the board
     let mut candidate_masks: [u32; 81] = [0; 81];
 
