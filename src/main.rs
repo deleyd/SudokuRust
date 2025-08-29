@@ -189,19 +189,17 @@ fn play(mut rnglcg: PortableLCG) {
 
 
     // we add to the stack each time we add a number to a cell
-    let board_stack = construct_final_board(&mut rnglcg);
+    let final_board = construct_final_board(&mut rnglcg);
 
     // 20.
     log(&"".to_string());
     log(&"Final look of the solved board:".to_string());
-    print_board(&board_stack.last().cloned().unwrap());
+    print_board(&final_board);
     //#endregion
 
     //#region Generate initial board from the completely solved one
     // Board is solved at this point.
     // Now pick subset of digits as the starting position.
-    let final_board = board_stack.last().unwrap();
-
     let mut board = generate_initial_board(&mut rnglcg, &final_board);
 
     // 23
@@ -419,8 +417,8 @@ fn play(mut rnglcg: PortableLCG) {
                                 // 52.
                                 for cell in &cells
                                 {
-                                    let mask_to_remove = board_candidate_masks[cell.index] & group.mask;
-                                    let values_to_remove = mask_to_digits(mask_to_remove);
+                                    let mask_to_remove = board_candidate_masks[cell.index] & group.mask;  // intersection
+                                    let values_to_remove = mask_to_vec_digits(mask_to_remove);
 
                                     //string valuesReport = string.Join(", ", values_to_remove.ToArray());
                                     let string_values_to_remove: Vec<String> = values_to_remove
@@ -500,13 +498,13 @@ fn play(mut rnglcg: PortableLCG) {
                         (candidate_mask_for_cell & mask) != 0 && (candidate_mask_for_cell & !mask) != 0  // there is some overlap
                     })
                     {
-                        log_a_message(&group_with_n_masks, mask);
+                        log_group_with_n_masks_message(&group_with_n_masks, mask);
                     }
 
                     // 57.
                     for cell in group_with_n_masks.cells_with_mask
                     {
-                        let mask_to_clear = board_candidate_masks[cell.index] & !group_with_n_masks.mask;
+                        let mask_to_clear = board_candidate_masks[cell.index] & !group_with_n_masks.mask;  // mask_to_clear is the intersection of
                         if mask_to_clear == 0
                         {
                             continue;
@@ -948,7 +946,7 @@ fn generate_initial_board(rnglcg: &mut PortableLCG, final_board: &Board) -> Boar
     board
 }
 
-fn construct_final_board(mut rnglcg: &mut PortableLCG) -> Vec<Board> {
+fn construct_final_board(mut rnglcg: &mut PortableLCG) -> Board {
     let mut command = Commands::Expand;
     let mut board_stack: Vec<Board> = Vec::new();
 
@@ -972,7 +970,7 @@ fn construct_final_board(mut rnglcg: &mut PortableLCG) -> Vec<Board> {
             }
         }
     }
-    board_stack
+    board_stack.last().unwrap().clone()
 }
 
 fn handle_move(board_stack: &mut Vec<Board>) -> Commands {
@@ -1077,7 +1075,7 @@ fn handle_expand(rnglcg: &mut PortableLCG, board_stack: &mut Vec<Board>) {
     }
 }
 
-fn log_a_message(group_with_n_masks: &CellWithMask, mask: u32) {
+fn log_group_with_n_masks_message(group_with_n_masks: &CellWithMask, mask: u32) {
     let mut message = format!("In {} values ", group_with_n_masks.description);
     let mut separator = "";
     let mut temp = mask;
@@ -1169,7 +1167,19 @@ fn get_single_candidate_indices(candidate_masks: &mut [u32; 81]) -> Vec<usize> {
 }
 
 fn get_indices() -> BTreeMap<usize, Vec<Cell>> {
-    // Create the projected items using a for loop instead of Select
+    let row_indices: BTreeMap<usize, Vec<Cell>> = (0..81)
+        .map(|index| {
+            let discriminator = index / 9;
+            (discriminator, Cell {
+                description: format!("row #{}", discriminator + 1),
+                index,
+                digit: 0,
+            })
+        })
+        .fold(BTreeMap::new(), |mut acc, (key, cell)| {
+            acc.entry(key).or_default().push(cell);
+            acc
+        });/*
     let row_indices = {
         let mut temp_map = BTreeMap::<usize, Vec<Cell>>::new();
         for index in 0..81 {
@@ -1182,9 +1192,7 @@ fn get_indices() -> BTreeMap<usize, Vec<Cell>> {
             temp_map.entry(discriminator).or_insert_with(Vec::new).push(cell);
         }
         temp_map
-    };
-
-
+    };*/
     // 31.
     // Group by columns
     // Create list of all 81 cells, grouped by COLUMN. Discriminator is COLUMN, varies from 9 - 17 (subtract 9 to get column)
@@ -1202,8 +1210,6 @@ fn get_indices() -> BTreeMap<usize, Vec<Cell>> {
         }
         temp_map
     };
-
-
     // Group by blocks
     // Create list of all 81 cells, grouped by BLOCK. Discriminator is BLOCK, varies from 18-26 (subtract 18 to get BLOCK)
     // 32.
@@ -1331,7 +1337,7 @@ fn get_single_bitmask_to_digit() -> &'static HashMap<usize, i32> {
 }
 
 // Convert mask to list of digits they represent. Returns list of digits.
-fn mask_to_digits(input_mask: u32) -> Vec<i32> {
+fn mask_to_vec_digits(input_mask: u32) -> Vec<i32> {
     let mut mask_to_remove = input_mask;
     let mut values_to_remove: Vec<i32> = Vec::new();
     let mut cur_value: i32 = 1;
