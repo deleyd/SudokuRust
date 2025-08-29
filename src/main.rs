@@ -165,23 +165,23 @@ fn play(mut rnglcg: PortableLCG) {
     // we add to the stack each time we add a number to a cell
     while board_stack.len() <= 81  // 8.
     {
-        if command == Commands::Expand
-        {
-            handle_expand(&mut rnglcg, &mut board_stack);
-
-            // Always try to move after expand
-            command = Commands::Move;  // 17.
-
-        } // if (command == Commands::Expand)
-        else if command == Commands::Collapse  // 18.
-        {
-            board_stack.pop();
-            command = Commands::Move;   // Always try to move after collapse
+        match command {
+            Commands::Expand => {
+                handle_expand(&mut rnglcg, &mut board_stack);
+                command = Commands::Move;  // 17. // Always try to move after expand
+            }
+            Commands::Collapse => {
+                board_stack.pop();
+                command = Commands::Move;   // Always try to move after collapse
+            }
+            Commands::Move => {
+                command = handle_move(&mut board_stack);
+            }
+            _ => {
+                // should never get here
+                log(&"Fatal Error. command did not match anything.".to_string());
+            }
         }
-        else if command == Commands::Move  // 19.
-        {
-            command = handle_move(&mut board_stack);
-        } // if (command == Commands::Move)
     }
 
     // 20.
