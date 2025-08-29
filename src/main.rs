@@ -327,12 +327,8 @@ fn play(mut rnglcg: PortableLCG) {
 
 
                         // Get first description from the group
-                        let mut description = String::new();
-                        if let Some(first_cell) = cell_list.first() {
-                            description = first_cell.description.clone();
-                        }
+                        let description = cell_list.first().map(|cell| cell.description.clone()).unwrap_or_default();
 
-                        // Select equivalent: create the anonymous object equivalent
                         let cell_group = CellGroup {
                             mask,
                             discriminator: tuple_kvp.0.clone() as i32,
@@ -351,23 +347,11 @@ fn play(mut rnglcg: PortableLCG) {
                         for group in groups.iter().sorted_by_key(|cell_group| cell_group.discriminator)
                         {
                             // Translation of the original C# code
-                            let mut cells: Vec<Cell> = Vec::new();
-
-                            for cell in &group.cells {
-                                if board_candidate_masks[cell.index] != group.mask &&
-                                    (board_candidate_masks[cell.index] & group.mask) > 0 {
-                                    cells.push(cell.clone());
-                                }
-                            }
-                            let mut cells: Vec<_> = group.cells
-                                .iter()
-                                .filter(|cell| {
-                                    board_candidate_masks[cell.index] != group.mask &&
-                                        (board_candidate_masks[cell.index] & group.mask) > 0
-                                })
+                            let mut cells: Vec<_> = group.cells.iter()
+                                .filter(|cell| board_candidate_masks[cell.index] != group.mask &&
+                                    (board_candidate_masks[cell.index] & group.mask) > 0)
                                 .sorted_by_key(|cell| cell.index)
                                 .collect::<Vec<_>>();
-
                             for cell in &group.cells {
                                 if board_candidate_masks[cell.index] != group.mask &&
                                     (board_candidate_masks[cell.index] & group.mask) > 0 {
