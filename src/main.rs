@@ -91,7 +91,7 @@ impl IndexMut<usize> for Board {
 }
 
 #[derive(Debug, Clone)]
-pub struct CellGroup {
+pub struct CellGroup1 {
     pub mask: u32,
     pub discriminator: i32,
     pub description: String,
@@ -100,7 +100,7 @@ pub struct CellGroup {
 
 
 #[derive(Debug, Clone)]
-pub struct CellWithMask<'a> {
+pub struct CellGroup2<'a> {
     pub mask: u32,
     pub description: String,
     cell_group: (&'a usize, &'a Vec<Cell>),
@@ -326,7 +326,7 @@ fn play(mut rnglcg: PortableLCG) {
                         // Get first description from the group
                         let description = cell_list.first().map(|cell| cell.description.clone()).unwrap_or_default();
 
-                        let cell_group = CellGroup {
+                        let cell_group = CellGroup1 {
                             mask,
                             discriminator: tuple_kvp.0.clone() as i32,
                             description,
@@ -404,11 +404,11 @@ fn play(mut rnglcg: PortableLCG) {
             // 53.
             if !change_made && !step_change_made
             {
-                let masks: Vec<u32> = mask_to_ones_count().iter()
+                let digit_masks: Vec<u32> = mask_to_ones_count().iter()
                     .filter(|&(_, count)| *count > 1)
                     .map(|(mask, _)| *mask)
                     .collect();
-                let groups_with_n_masks : Vec<CellWithMask> = masks
+                let groups_with_n_masks : Vec<CellGroup2> = digit_masks
                     .iter()
                     .flat_map(|mask| {
                         cell_groups
@@ -439,15 +439,15 @@ fn play(mut rnglcg: PortableLCG) {
                                     })
                                     .count() as u32;
 
-                                CellWithMask {
+                                CellGroup2 {
                                     mask: *mask,
                                     description: cell_group2.1.iter().next().unwrap().description.clone(),
                                     cell_group: cell_group2.clone(),
                                     cells_with_mask,
                                     cleanable_cells_count,
                                 }
-                            })
-                    })
+                            }) // .map
+                    })// .flat_map
                     .filter(|group| group.cells_with_mask.len() == *mask_to_ones_count().get(&group.mask).unwrap())
                     .collect();
 
@@ -476,7 +476,7 @@ fn play(mut rnglcg: PortableLCG) {
                         board_candidate_masks[cell.index] &= group_with_n_masks.mask;  // Add more candidate digits to this cell
                         step_change_made = true;
 
-                        generate_and_log_maks_to_clear_message(mask_to_clear, cell);
+                        generate_and_log_mask_to_clear_message(mask_to_clear, cell);
 
                         // 59.
 
@@ -758,7 +758,7 @@ fn play(mut rnglcg: PortableLCG) {
     log(&"BOARD SOLVED.".to_string())
 }
 
-fn generate_and_log_maks_to_clear_message(mask_to_clear: u32, cell: Cell) {
+fn generate_and_log_mask_to_clear_message(mask_to_clear: u32, cell: Cell) {
     let mut mask_to_clear = mask_to_clear;
     let mut value_to_clear = 1;
     let mut separator: String = "".to_string();
@@ -819,7 +819,7 @@ fn generate_candidate_cells(board_candidate_masks: &mut [u32; 81]) -> Vec<Candid
     // test each digit
     for digit in 1..=9
     {
-        let mask = convert_digit_to_mask(digit);  // mask representing digit. Convert digit to single bit mask.
+        let digit_mask = convert_digit_to_mask(digit);  // mask representing digit. Convert digit to single bit mask.
         // test every cell in the board
         for cell_group in 0..9
         {
@@ -836,14 +836,14 @@ fn generate_candidate_cells(board_candidate_masks: &mut [u32; 81]) -> Vec<Candid
             {
                 // 41. Check row "cell_group". cell_group covers 0..9 in this case cell_group = row number 0-8
                 let row_state_index = 9 * cell_group + index_in_group;
-                if (board_candidate_masks[row_state_index] & mask) != 0  // this cell has digit as a candidate
+                if (board_candidate_masks[row_state_index] & digit_mask) != 0  // this cell has digit as a candidate
                 {
                     row_number_count += 1;  // We check the row and find cells which can be set to digit. Count the number of cells in this row which can be set to digit.
                     index_in_row = index_in_group;
                 }
                 // 42. Check column "cell_group". cell_group 0..9 In this case cell_group = column 0-8
                 let col_state_index = 9 * index_in_group + cell_group;
-                if (board_candidate_masks[col_state_index] & mask) != 0  // this cell has digit as a candidate
+                if (board_candidate_masks[col_state_index] & digit_mask) != 0  // this cell has digit as a candidate
                 {
                     col_number_count += 1;  // We check the column and find cells which can be set to digit. Count the number of cells in this column which can be set to digit.
                     index_in_col = index_in_group;
@@ -852,7 +852,7 @@ fn generate_candidate_cells(board_candidate_masks: &mut [u32; 81]) -> Vec<Candid
                 let block_row_index = (cell_group / 3) * 3 + index_in_group / 3;
                 let block_col_index = (cell_group % 3) * 3 + index_in_group % 3;
                 let block_state_index = block_row_index * 9 + block_col_index;
-                if (board_candidate_masks[block_state_index] & mask) != 0  // this cell has digit as a candidate
+                if (board_candidate_masks[block_state_index] & digit_mask) != 0  // this cell has digit as a candidate
                 {
                     block_number_count += 1;  // We check the block and find cells which can be set to digit. Count the number of cells in this block which can be set to digit.
                     index_in_block = index_in_group;
@@ -893,11 +893,12 @@ fn generate_initial_board(rnglcg: &mut PortableLCG, final_board: &Board) -> Boar
         let cur_remaining_digits: i32 = (positions.len() - removed_pos) as i32;
         let index_to_pick = removed_pos + rnglcg.next_range(cur_remaining_digits) as usize;
 
-        let row: usize = positions[index_to_pick] / 9;
-        let col: usize = positions[index_to_pick] % 9;
+        let picked_index = positions[index_to_pick];
+        let row: usize = index_to_row(picked_index); //positions[index_to_pick] / 9;
+        let col: usize = index_to_col(picked_index); //positions[index_to_pick] % 9;
 
-        let block_row_to_remove = row / 3;
-        let block_col_to_remove = col / 3;
+        let block_row_to_remove = index_to_block_row(picked_index); //row / 3;
+        let block_col_to_remove = index_to_block_col(picked_index); //col / 3;
 
         if removed_per_block[block_row_to_remove][block_col_to_remove] >= max_removed_per_block
         {
@@ -1047,7 +1048,7 @@ fn handle_expand(rnglcg: &mut PortableLCG, board_stack: &mut Vec<Board>) {
     }
 }
 
-fn log_group_with_n_masks_message(group_with_n_masks: &CellWithMask, mask: u32) {
+fn log_group_with_n_masks_message(group_with_n_masks: &CellGroup2, mask: u32) {
     let mut message = format!("In {} values ", group_with_n_masks.description);
     let mut separator = "";
     let mut temp = mask;
