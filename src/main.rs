@@ -257,16 +257,14 @@ fn play(mut rnglcg: PortableLCG) {
                 {
                     let random_cell_index = rnglcg.next_range(candidate_cells.len() as i32) as usize;
                     let candidate_cell = candidate_cells.get(random_cell_index).unwrap();
-                    let description = candidate_cell.description.clone();  //get(random_cell_index).unwrap().description.clone();
                     let row = candidate_cell.get_row();
                     let col = candidate_cell.get_column();
-                    let digit = candidate_cell.digit;
 
-                    board[candidate_cell].value = digit;       // we can try digit in this cell
-                    board_candidate_masks[candidate_cell.index] = 0; // clear for this cell since we just set cell to a number
+                    board[candidate_cell].value = candidate_cell.digit;       // we can try digit in this cell
+                    board_candidate_masks[candidate_cell.index] = 0;          // clear for this cell since we just set cell to a number
                     change_made = true;
 
-                    let message = format!("{} can contain {} only at ({}, {}).", description, digit, row + 1, col + 1);
+                    let message = format!("{} can contain {} only at ({}, {}).", candidate_cell.description, candidate_cell.digit, row + 1, col + 1);
                     log(&message);
                 }
             }
