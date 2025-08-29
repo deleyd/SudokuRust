@@ -347,29 +347,14 @@ fn play(mut rnglcg: PortableLCG) {
                         for group in groups.iter().sorted_by_key(|cell_group| cell_group.discriminator)
                         {
                             // Translation of the original C# code
-                            let mut cells: Vec<_> = group.cells.iter()
-                                .filter(|cell| board_candidate_masks[cell.index] != group.mask &&
+                            let cells: Vec<_> = group.cells.iter()
+                                .filter(|cell| board_candidate_masks[cell.index] != group.mask && // not equal but overlaps group.mask
                                     (board_candidate_masks[cell.index] & group.mask) > 0)
                                 .sorted_by_key(|cell| cell.index)
                                 .collect::<Vec<_>>();
-                            for cell in &group.cells {
-                                if board_candidate_masks[cell.index] != group.mask &&
-                                    (board_candidate_masks[cell.index] & group.mask) > 0 {
-                                    cells.push(cell);
-                                }
-                            }
-                            let cells: Vec<Cell> = group.cells.clone()
-                                .iter()
-                                .filter(|cell| {
-                                    board_candidate_masks[cell.index] != group.mask &&        // not equal to
-                                        (board_candidate_masks[cell.index] & group.mask) > 0  // but overlaps
-                                })
-                                .cloned() // or .copied() depending on the type of cell and if you need to clone or copy it
-                                .collect();
 
-                            let mask_cells: Vec<Cell> = group.cells.clone()
-                                .into_iter()
-                                .filter(|cell| board_candidate_masks[cell.index] == group.mask)
+                            let mask_cells: Vec<&Cell> = group.cells.iter()
+                                .filter(|cell| board_candidate_masks[cell.index] == group.mask) // equal to group.mask
                                 .map(|x| x)
                                 .collect();
 
@@ -422,7 +407,10 @@ fn play(mut rnglcg: PortableLCG) {
             // 53.
             if !change_made && !step_change_made
             {
-                let masks: Vec<u32> = mask_to_ones_count().iter().filter(|&(_, count)| *count > 1).map(|(mask, _)| *mask).collect();
+                let masks: Vec<u32> = mask_to_ones_count().iter()
+                    .filter(|&(_, count)| *count > 1)
+                    .map(|(mask, _)| *mask)
+                    .collect();
                 let groups_with_n_masks : Vec<CellWithMask> = masks
                     .iter()
                     .flat_map(|mask| {
@@ -431,7 +419,7 @@ fn play(mut rnglcg: PortableLCG) {
                             .filter(|cell_group1| {
                                 cell_group1.1.iter().all(|cell| {
                                     board[cell.index].digit == 0          // cell not being used
-                                        || (mask.clone() & (1 << (board[cell.index].digit - 1))) == 0  // cell not using value
+                                        || (mask.clone() & convert_digit_to_mask(board[cell.index].digit)) == 0  // cell not using value
                                 })
                             })
                             .map(|cell_group2| {
