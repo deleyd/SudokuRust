@@ -506,7 +506,7 @@ fn play(mut rnglcg: PortableLCG) {
                     // 57.
                     for cell in group_with_n_masks.cells_with_mask
                     {
-                        let mut mask_to_clear = board_candidate_masks[cell.index] & !group_with_n_masks.mask;
+                        let mask_to_clear = board_candidate_masks[cell.index] & !group_with_n_masks.mask;
                         if mask_to_clear == 0
                         {
                             continue;
@@ -515,26 +515,10 @@ fn play(mut rnglcg: PortableLCG) {
                         board_candidate_masks[cell.index] &= group_with_n_masks.mask;  // Add more candidate digits to this cell
                         step_change_made = true;
 
-                        let mut value_to_clear = 1;
-                        let mut separator: String = "".to_string();
-                        let mut message: String = "".to_string();
-
-                        // 58.
-                        // convert mask to digits and append to message for each digit
-                        while mask_to_clear > 0
-                        {
-                            if mask_to_clear & 1 > 0
-                            {
-                                message.push_str(&format!("{}{}", separator, value_to_clear));
-                                separator = ", ".to_string();
-                            }
-                            mask_to_clear = mask_to_clear >> 1;
-                            value_to_clear += 1;
-                        }
+                        generate_and_log_maks_to_clear_message(mask_to_clear, cell);
 
                         // 59.
-                        message.push_str(&format!(" cannot appear in cell ({}, {}).", cell.get_row() + 1, cell.get_column() + 1));
-                        log(&message);
+
                     }
                 }
             }
@@ -811,6 +795,28 @@ fn play(mut rnglcg: PortableLCG) {
             //#endregion
     }//while change_made// 27
     log(&"BOARD SOLVED.".to_string())
+}
+
+fn generate_and_log_maks_to_clear_message(mask_to_clear: u32, cell: Cell) {
+    let mut mask_to_clear = mask_to_clear;
+    let mut value_to_clear = 1;
+    let mut separator: String = "".to_string();
+    let mut message: String = "".to_string();
+
+    // 58.
+    // convert mask to digits and append to message for each digit
+    while mask_to_clear > 0
+    {
+        if mask_to_clear & 1 > 0
+        {
+            message.push_str(&format!("{}{}", separator, value_to_clear));
+            separator = ", ".to_string();
+        }
+        mask_to_clear = mask_to_clear >> 1;
+        value_to_clear += 1;
+    }
+    message.push_str(&format!(" cannot appear in cell ({}, {}).", cell.get_row() + 1, cell.get_column() + 1));
+    log(&message);
 }
 
 fn index_to_row(i: usize) -> usize {
