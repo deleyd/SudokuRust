@@ -525,8 +525,8 @@ fn play(mut rnglcg: PortableLCG) {
             // At this point we have the lists with pairs of cells that might pick one of two digits each
             // Now we have to check whether that is really true - does the board have two solutions?
             // possibly replace with cellList1,2. holding cells and values set for cell.
-            let mut board_stack1: Vec<CandidateCell> = Vec::new();
-            let mut board_stack2: Vec<CandidateCell> = Vec::new();
+            let mut candidate_cells_stack1: Vec<CandidateCell> = Vec::new();
+            let mut candidate_cells_stack2: Vec<CandidateCell> = Vec::new();
 
             // 64.
             while !candidate_cells1.is_empty()
@@ -689,17 +689,17 @@ fn play(mut rnglcg: PortableLCG) {
                 {   // Board was solved successfully even with two digits swapped
                     // sync state_index with value
                     // state_index : an array of indexes (indexes are cells, cells have values). value : array of values corresponding to array of indexes.
-                    board_stack1.push(candidate_cell1);
-                    board_stack2.push(candidate_cell2);
+                    push_candidate_cell(&mut candidate_cells_stack1, candidate_cell1);
+                    push_candidate_cell(&mut candidate_cells_stack2, candidate_cell2);
                 }
             } // while (candidate_index1.Any())
 
             // 78.
-            if !board_stack1.is_empty()
+            if !candidate_cells_stack1.is_empty()
             {
-                let random_pos = rnglcg.next_range(board_stack1.len() as i32) as usize;
-                let candidate_cell1 = &board_stack1[random_pos];
-                let candidate_cell2 = &board_stack2[random_pos];
+                let random_pos = rnglcg.next_range(candidate_cells_stack1.len() as i32) as usize;
+                let candidate_cell1 = &candidate_cells_stack1[random_pos];
+                let candidate_cell2 = &candidate_cells_stack2[random_pos];
 
                 board[candidate_cell1].digit = final_board[candidate_cell1].digit;
                 board[candidate_cell2].digit = final_board[candidate_cell2].digit;
@@ -756,6 +756,10 @@ fn play(mut rnglcg: PortableLCG) {
             //#endregion
     }//while change_made// 27
     log(&"BOARD SOLVED.".to_string())
+}
+
+fn push_candidate_cell(board_stack2: &mut Vec<CandidateCell>, candidate_cell2: CandidateCell) {
+    board_stack2.push(candidate_cell2);
 }
 
 fn generate_and_log_mask_to_clear_message(mask_to_clear: u32, cell: Cell) {
@@ -894,11 +898,11 @@ fn generate_initial_board(rnglcg: &mut PortableLCG, final_board: &Board) -> Boar
         let index_to_pick = removed_pos + rnglcg.next_range(cur_remaining_digits) as usize;
 
         let picked_index = positions[index_to_pick];
-        let row: usize = index_to_row(picked_index); //positions[index_to_pick] / 9;
-        let col: usize = index_to_col(picked_index); //positions[index_to_pick] % 9;
+        let row: usize = index_to_row(picked_index);
+        let col: usize = index_to_col(picked_index);
 
-        let block_row_to_remove = index_to_block_row(picked_index); //row / 3;
-        let block_col_to_remove = index_to_block_col(picked_index); //col / 3;
+        let block_row_to_remove = index_to_block_row(picked_index);
+        let block_col_to_remove = index_to_block_col(picked_index);
 
         if removed_per_block[block_row_to_remove][block_col_to_remove] >= max_removed_per_block
         {
@@ -976,7 +980,6 @@ fn handle_move(board_stack: &mut Vec<Board>) -> Commands {
         log(&format!("19d. moved_to_digit: {:?}", moved_to_digit));
         board_stack.last_mut().unwrap().last_digit = moved_to_digit;
         board_stack.last_mut().unwrap().used_digits[moved_to_digit as usize - 1] = true;
-
         board_stack.last_mut().unwrap()[cell_to_move].digit = moved_to_digit;
 
         // Next possible digit was found at current position
