@@ -580,10 +580,6 @@ fn play(mut rnglcg: PortableLCG) {
             // At this point we have the lists with pairs of cells that might pick one of two digits each
             // Now we have to check whether that is really true - does the board have two solutions?
             // possibly replace with cellList1,2. holding cells and values set for cell.
-            let mut board_index_stack1: Vec<usize> = Vec::new();
-            let mut digit1: Vec<i32> = Vec::new();
-            let mut board_index_stack2: Vec<usize> = Vec::new();
-            let mut digit2: Vec<i32> = Vec::new();
             let mut board_stack1: Vec<CandidateCell> = Vec::new();
             let mut board_stack2: Vec<CandidateCell> = Vec::new();
 
@@ -748,21 +744,15 @@ fn play(mut rnglcg: PortableLCG) {
                 {   // Board was solved successfully even with two digits swapped
                     // sync state_index with value
                     // state_index : an array of indexes (indexes are cells, cells have values). value : array of values corresponding to array of indexes.
-                    board_index_stack1.push(candidate_cell1.index);
-                    board_index_stack2.push(candidate_cell2.index);
-                    digit1.push(candidate_cell1.digit);
-                    digit2.push(candidate_cell2.digit);
                     board_stack1.push(candidate_cell1);
                     board_stack2.push(candidate_cell2);
                 }
             } // while (candidate_index1.Any())
 
             // 78.
-            if !board_index_stack1.is_empty()
+            if !board_stack1.is_empty()
             {
-                let random_pos = rnglcg.next_range(board_index_stack1.len() as i32) as usize;
-                //let index1 = board_stack1[random_pos].index;
-                //let index2 = board_stack2[random_pos].index;
+                let random_pos = rnglcg.next_range(board_stack1.len() as i32) as usize;
                 let candidate_cell1 = &board_stack1[random_pos];
                 let candidate_cell2 = &board_stack2[random_pos];
 
@@ -840,7 +830,7 @@ fn row_or_column_or_block_overlap(i:usize, j:usize) -> bool {
     let row_i = index_to_row(i);
     let col_i = index_to_col(i);
     let block_i = index_to_block(i);
-    let row_j = index_to_row(j);  // get row,col,block of cell[j]
+    let row_j = index_to_row(j);
     let col_j = index_to_col(j);
     let block_j = index_to_block(j);
     return row_i == row_j || col_i == col_j || block_i == block_j
