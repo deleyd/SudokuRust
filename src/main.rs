@@ -50,6 +50,7 @@ struct Board {
     cells: Vec<Cell>,
     candidate_cell: usize,
     used_digits: [bool; 9],
+    used_digits_digits: Digits,
     last_digit: i32,
 }
 impl Board {
@@ -61,6 +62,7 @@ impl Board {
             cells,
             candidate_cell: 9999,
             used_digits:  [false; 9],
+            used_digits_digits: Digits::new(0),
             last_digit: -2,
         }
     }
@@ -92,7 +94,7 @@ impl IndexMut<usize> for Board {
 
 #[derive(Debug, Clone)]
 pub struct CellGroup1 {
-    pub mask: u32,
+    pub mask: i32,
     pub discriminator: i32,
     pub description: String,
     cells: Vec<Cell>,
@@ -101,7 +103,7 @@ pub struct CellGroup1 {
 
 #[derive(Debug, Clone)]
 pub struct CellGroup2<'a> {
-    pub mask: u32,
+    pub mask: i32,
     pub description: String,
     cell_group: (&'a usize, &'a Vec<Cell>),
     cells_with_mask: Vec<Cell>,
@@ -137,6 +139,37 @@ impl CandidateCell {
     }
 }
 
+#[derive(Debug, Clone)]
+struct Digits {
+    mask: i32,
+}
+impl Digits {
+    pub fn new(mask: i32) -> Digits {
+        Digits {
+            mask,
+        }
+    }
+
+    fn is_present(&self, digit: i32) -> bool {
+        let i: i32 = digit - 1;
+        let m: i32 = 1 << i;
+        (self.mask & m) != 0
+    }
+
+    fn set_digit(&mut self, digit: i32) {
+        let i: i32 = digit - 1;
+        self.mask |= 1 << i;
+    }
+    fn clear_digit(&mut self, digit: i32) {
+        let i: i32 = digit - 1;
+        self.mask &= !(1 << i);
+    }
+    fn count(&self) -> i32 {
+        let count = mask_to_ones_count().get(&self.mask).copied().unwrap_or(0);
+        return count as i32;
+    }
+}
+
 
 #[derive(Debug, PartialEq)]
 enum Commands {
@@ -167,64 +200,19 @@ fn print_board(state : &Board)
 }
 
 fn play(mut rnglcg: PortableLCG) {
-    // 2. Construct board to be solved
-    // 3. Top element is current state of the board
-    //Stack<int[]> state_stack = new Stack<int[]>();
-
-    // 4. Top elements are (row, col) of cell which has been modified compared to previous state
-    //let mut cell_candidate_stack: Vec<usize> = Vec::new();
-
-    // 5. Top element indicates candidate digits (those with False) for (row, col)
-    // let mut used_digits_stack: Vec<[bool; 9]> = Vec::new();
-
-    // 6. Top element is the value that was set on (row, col)
-
-    // 7. Indicates operation to perform next
-    // - expand - finds next empty cell and puts new state on stacks
-    // - move - finds next candidate number at current pos and applies it to current state
-    // - collapse - pops current state from stack as it did not yield a solution
-
-
-    // we add to the stack each time we add a number to a cell
     let final_board = construct_final_board(&mut rnglcg);
-
-    // 20.
-    log(&"".to_string());
-    log(&"Final look of the solved board:".to_string());
-    print_board(&final_board);
-    //#endregion
-
-    //#region Generate initial board from the completely solved one
-    // Board is solved at this point.
-    // Now pick subset of digits as the starting position.
-    let mut board = generate_initial_board(&mut rnglcg, &final_board);
-
-    // 23
-    log(&"".to_string());
-    log(&"Starting look of the board to solve:".to_string());
-    print_board(&board);
-    //#endregion
-
-    // 24.
-    //#region Prepare lookup structures that will be used in further execution
-    log(&"".to_string());
-    let s = "=".repeat(80);
-    log(&s);
-    log(&"".to_string());
-
-    // 25.
-    // 26.
-    //#endregion
+    print_final_board(&final_board);  // 20.
+    let mut board = generate_initial_board(&mut rnglcg, &final_board);  // Generate initial board from the completely solved one
+    print_starting_board(&mut board);
 
     let mut change_made: bool = true;
     while change_made// 27
     {
         change_made = false;
-        let mut board_candidate_masks: [u32; 81] =  calculate_candidates(&board);
-        //#endregion
+        let mut board_candidate_masks: [i32; 81] =  calculate_candidates(&board);
         //#region Build a collection (named cellGroups) which maps cell indices into distinct groups (rows/columns/blocks)
         // 29.
-        // generate cell_groups which isa BTreeMap<int, Vec<Cell>>
+        // generate cell_groups which is a BTreeMap<int, Vec<Cell>>
         // int is the Cell discriminator. 0-8 is row this cell is in, 9-17 is column, 18-27 is block
         // for discriminator in range 9-17, subtract 9 to get column
         // for discriminator in range 18-27, subtract 18 to get block
@@ -283,7 +271,7 @@ fn play(mut rnglcg: PortableLCG) {
             }
             //let two_digit_masks = candidate_masks.Where(mask => mask_to_ones_count[mask] == 2).Distinct().ToList();
             // look for cells which have only 2 options for digits
-            let two_digit_masks: Vec<u32> = board_candidate_masks
+            let two_digit_masks: Vec<i32> = board_candidate_masks
                 .into_iter()
                 .filter(|&mask| mask_to_ones_count()[&mask] == 2)
                 .unique()
@@ -407,7 +395,7 @@ fn play(mut rnglcg: PortableLCG) {
             if change_made || step_change_made {
                 continue;
             }
-            let digit_masks: Vec<u32> = mask_to_ones_count().iter()
+            let digit_masks: Vec<i32> = mask_to_ones_count().iter()
                 .filter(|&(_, count)| *count > 1)
                 .map(|(mask, _)| *mask)
                 .collect();
@@ -550,9 +538,6 @@ fn play(mut rnglcg: PortableLCG) {
                 // However, the algorithm couldn't be applied directly, and it had to be modified.
                 // Implementation below assumes that the board might not have a solution.
                 let mut board_stack: Vec<Board> = Vec::new();
-                //let mut cell_candidate_stack: Vec<usize> = Vec::new();
-                //let mut used_digits_stack: Vec<[bool; 9]> = Vec::new();
-                //let mut last_digit_stack: Vec<i32> = Vec::new();
 
                 // 66.
                 let mut command = Commands::Expand;
@@ -567,7 +552,8 @@ fn play(mut rnglcg: PortableLCG) {
                             };
 
                             let mut best_index: usize = 9999;                  // best will be cell with lowest number of candidate digits
-                            let mut best_used_digits: [bool; 9] = [false; 9];  // corresponding candidate digits for best cell
+                            let mut best_used_digits_arr: [bool; 9] = [false; 9];  // corresponding candidate digits for best cell
+                            let mut best_used_digits: Digits = Digits::new(0);           // corresponding candidate digits for best cell
                             let mut best_candidates_count: i32 = -1;          // number of candidate digits for best cell
                             let mut best_random_value: i32 = -1;
                             let mut contains_unsolvable_cells: bool = false;
@@ -578,7 +564,7 @@ fn play(mut rnglcg: PortableLCG) {
                                 if current_board[index].digit == 0
                                 {
                                     // 68.
-                                    let digit_used_array = gather_digits(&current_board, index);
+                                    let (digit_used_array, used_digits) = gather_digits(&current_board, index);
 
                                     let candidates_count: i32 = digit_used_array
                                         .iter()  // 1. Get an iterator over the vector
@@ -599,7 +585,8 @@ fn play(mut rnglcg: PortableLCG) {
                                         (candidates_count == best_candidates_count && random_value < best_random_value)
                                     {
                                         best_index = index;                               // corresponding cell with lowest number of candidate digits
-                                        best_used_digits = digit_used_array;                 // the candidate digits for this cell
+                                        best_used_digits_arr = digit_used_array;              // the candidate digits for this cell
+                                        best_used_digits = used_digits;
                                         best_candidates_count = candidates_count as i32;  // best is lowest number of candidate digits for a cell
                                         best_random_value = random_value;
                                     }
@@ -610,7 +597,8 @@ fn play(mut rnglcg: PortableLCG) {
                             if !contains_unsolvable_cells
                             {
                                 current_board.candidate_cell = best_index;
-                                current_board.used_digits = best_used_digits;
+                                current_board.used_digits = best_used_digits_arr;
+                                current_board.used_digits_digits = best_used_digits;
                                 current_board.last_digit = 0;
                                 board_stack.push(current_board);
 
@@ -645,7 +633,7 @@ fn play(mut rnglcg: PortableLCG) {
 
                             let mut moved_to_digit = digit_to_move + 1;
                             // Find next digit not used
-                            while moved_to_digit <= 9 && board_stack.last_mut().unwrap().used_digits[moved_to_digit as usize - 1]
+                            while moved_to_digit <= 9 && board_stack.last_mut().unwrap().used_digits_digits.is_present(moved_to_digit)
                             {
                                 moved_to_digit += 1;
                             }
@@ -712,6 +700,22 @@ fn play(mut rnglcg: PortableLCG) {
     log(&"BOARD SOLVED.".to_string())
 }
 
+fn print_starting_board(board: &mut Board) {
+    log(&"".to_string());
+    log(&"Starting look of the board to solve:".to_string());
+    print_board(&board);
+    log(&"".to_string());
+    let s = "=".repeat(80);
+    log(&s);
+    log(&"".to_string());
+}
+
+fn print_final_board(final_board: &Board) {
+    log(&"".to_string());
+    log(&"Final look of the solved board:".to_string());
+    print_board(&final_board);
+}
+
 fn print_and_log_guessing_message(final_board: &Board, candidate_cell1: &CandidateCell, candidate_cell2: &CandidateCell) {
     let row1 = candidate_cell1.get_row();
     let col1 = candidate_cell1.get_column();
@@ -752,7 +756,7 @@ fn print_board_and_code(board: &mut Board) {
     log(&"".to_string());
 }
 
-fn generate_and_log_mask_to_clear_message(mask_to_clear: u32, cell: Cell) {
+fn generate_and_log_mask_to_clear_message(mask_to_clear: i32, cell: Cell) {
     let mut mask_to_clear = mask_to_clear;
     let mut value_to_clear = 1;
     let mut separator: String = "".to_string();
@@ -806,7 +810,7 @@ fn row_or_column_or_block_overlap(i:usize, j:usize) -> bool {
     return row_i == row_j || col_i == col_j || block_i == block_j
 }
 
-fn generate_candidate_cells(board_candidate_masks: &mut [u32; 81]) -> Vec<CandidateCell> {
+fn generate_candidate_cells(board_candidate_masks: &mut [i32; 81]) -> Vec<CandidateCell> {
     let mut candidate_cells: Vec<CandidateCell> = Vec::new();
     // 39.
     // candidate_masks is input
@@ -914,6 +918,7 @@ fn generate_initial_board(rnglcg: &mut PortableLCG, final_board: &Board) -> Boar
 }
 
 fn construct_final_board(mut rnglcg: &mut PortableLCG) -> Board {
+    // we add to the stack each time we add a number to a cell
     let mut command = Commands::Expand;
     let mut board_stack: Vec<Board> = Vec::new();
 
@@ -942,6 +947,7 @@ fn construct_final_board(mut rnglcg: &mut PortableLCG) -> Board {
 
 fn handle_move(board_stack: &mut Vec<Board>) -> Commands {
     let stack_len = board_stack.len();
+    log(&format!("rowIndexStack Count={} ", stack_len));
     log(&format!("rowIndexStack Count={} rowToMove={}", stack_len, board_stack.last().unwrap().candidate_cell / 9));
     let cell_to_move: usize = board_stack.last_mut().unwrap().candidate_cell;
     let digit_to_move: i32 = board_stack.last_mut().unwrap().last_digit;
@@ -1013,6 +1019,7 @@ fn handle_expand(rnglcg: &mut PortableLCG, board_stack: &mut Vec<Board>) {
     // input: current_state. output: contains_unsolvable_cells, best_row, best_col,
     let mut best_index: usize = 9999;
     let mut best_used_digits: [bool; 9] = [false; 9];
+    let mut best_digits_used: Digits = Digits::new(0);
     let mut best_candidates_count: i32 = -1;
     let mut best_random_value: i32 = -1;
     let mut contains_unsolvable_cells: bool = false;
@@ -1024,14 +1031,16 @@ fn handle_expand(rnglcg: &mut PortableLCG, board_stack: &mut Vec<Board>) {
         }
         // 11.  otherwise cell unused. Let's see what we can do with it
 
-        let digits_used_array: [bool; 9] = get_row_col_block_used_digits(&current_board, index); // returns an array of 9 true/false values
+        let (digits_used_array, digits_used) = get_row_col_block_used_digits(&current_board, index); // returns an array of 9 true/false values
 
         // 13.
-        let candidates_count: i32 = digits_used_array
+        let candidates_count: i32 = 9 - digits_used.count();
+        /*let candidates_count1: i32 = digits_used_array
             .iter() // Get an iterator over the elements
             .filter(|&&value| !value) // count the 'false' values (filter out 'true' values)
-            .count() as i32; // Count the remaining elements
+            .count() as i32; // Count the remaining elements */
 
+        //assert_eq!(candidates_count,candidates_count1);
         if candidates_count == 0  // 14.  if there are no candidates, then this cell has no options and Sudoku is unsolvable
         {
             contains_unsolvable_cells = true;
@@ -1048,6 +1057,7 @@ fn handle_expand(rnglcg: &mut PortableLCG, board_stack: &mut Vec<Board>) {
         {
             best_index = index; // this cell becomes the best cell (saved as row,col. we could save index instead?)
             best_used_digits = digits_used_array;
+            best_digits_used = digits_used;
             best_candidates_count = candidates_count;  // candidates_count is a function of is_digit_used array
             best_random_value = random_value;
         }
@@ -1056,13 +1066,14 @@ fn handle_expand(rnglcg: &mut PortableLCG, board_stack: &mut Vec<Board>) {
     if !contains_unsolvable_cells  // 16.
     {
         current_board.candidate_cell = best_index;
+        current_board.used_digits_digits = best_digits_used;
         current_board.used_digits = best_used_digits;
         current_board.last_digit = 0;
         board_stack.push(current_board);          // current state came from state_stack?
     }
 }
 
-fn log_group_with_n_masks_message(group_with_n_masks: &CellGroup2, mask: u32) {
+fn log_group_with_n_masks_message(group_with_n_masks: &CellGroup2, mask: i32) {
     let mut message = format!("In {} values ", group_with_n_masks.description);
     let mut separator = "";
     let mut temp = mask;
@@ -1093,7 +1104,7 @@ fn log_group_with_n_masks_message(group_with_n_masks: &CellGroup2, mask: u32) {
     log(&message);
 }
 
-fn set_cell_with_only_one_candidate(mut rnglcg: &mut PortableLCG, board: &mut Board, mut board_candidate_masks: &mut [u32; 81]) -> bool {
+fn set_cell_with_only_one_candidate(mut rnglcg: &mut PortableLCG, board: &mut Board, mut board_candidate_masks: &mut [i32; 81]) -> bool {
     // note mask_to_ones_count. Each bit represents a digit available for this cell.
     // We want to know how many digits to choose from we have. If only one digit, then use that digit.
     // 36.
@@ -1124,7 +1135,7 @@ fn set_cell_with_only_one_candidate(mut rnglcg: &mut PortableLCG, board: &mut Bo
 }
 
 // return a cell which can be set to only one number
-fn get_random_single_candidate_cell(rnglcg: &mut PortableLCG, board_candidate_masks: &[u32; 81], single_candidate_cells: Vec<usize>) -> (usize, i32) {
+fn get_random_single_candidate_cell(rnglcg: &mut PortableLCG, board_candidate_masks: &[i32; 81], single_candidate_cells: Vec<usize>) -> (usize, i32) {
     // randomly select one of the cells in single_candidate_cells list
     let random_single_candidate_index: usize = rnglcg.next_range(single_candidate_cells.len() as i32).try_into().unwrap();
     // single_candidate_index identifies the cell we are talking about
@@ -1137,7 +1148,7 @@ fn get_random_single_candidate_cell(rnglcg: &mut PortableLCG, board_candidate_ma
 }
 
 // candidate_masks : list of 81, for each cell, the digits which are candidates (encoded as a bit mask)
-fn get_single_candidate_indices(candidate_masks: &mut [u32; 81]) -> Vec<usize> {
+fn get_single_candidate_indices(candidate_masks: &mut [i32; 81]) -> Vec<usize> {
     let single_candidate_indices: Vec<usize> = candidate_masks
         .iter()
         .enumerate()
@@ -1208,9 +1219,9 @@ fn get_indices() -> BTreeMap<usize, Vec<Cell>> {
     cell_groups
 }
 
-fn calculate_candidates(board: &Board) -> [u32; 81] {
+fn calculate_candidates(board: &Board) -> [i32; 81] {
     //#region Calculate candidates for current state of the board
-    let mut candidate_masks: [u32; 81] = [0; 81];
+    let mut candidate_masks: [i32; 81] = [0; 81];
 
     // go through every cell of board, calculcate candicate numbers for each cell that does not already have a number in it.
     // candidate numbers are any digit 1-9 not already in that cell's row, column, and block
@@ -1228,7 +1239,7 @@ fn calculate_candidates(board: &Board) -> [u32; 81] {
             let block_row = index_to_block_row(i);
             let block_col = index_to_block_col(i);
 
-            let mut colliding_numbers: u32 = 0;
+            let mut colliding_numbers: i32 = 0;
             for j in 0..9
             {
                 let row_sibling_index = 9 * row + j;
@@ -1239,16 +1250,16 @@ fn calculate_candidates(board: &Board) -> [u32; 81] {
                 let col_digit = if board[col_sibling_index].digit == 0 { 31 } else { board[col_sibling_index].digit };
                 let block_digit = if board[block_sibling_index].digit == 0 { 31 } else { board[block_sibling_index].digit };
                 // mask has one bit set indicating the digit in state cell. bit 0 = 1, bit 1 = 2,... bit8 = 9. Only bits 0-8 are used.
-                let row_sibling_mask: u32 = convert_digit_to_mask(row_digit);
-                let col_sibling_mask: u32 = convert_digit_to_mask(col_digit);
-                let block_sibling_mask: u32 = convert_digit_to_mask(block_digit);
+                let row_sibling_mask: i32 = convert_digit_to_mask(row_digit);
+                let col_sibling_mask: i32 = convert_digit_to_mask(col_digit);
+                let block_sibling_mask: i32 = convert_digit_to_mask(block_digit);
                 // colliding_numbers bits 0-8 indicate what numbers are already present in this cell's row, column, and block.
                 // This is complete list of numbers already used. Stored in one integer.
                 colliding_numbers = colliding_numbers | row_sibling_mask | col_sibling_mask | block_sibling_mask;
             }
             // candidate_mask is all numbers available to put in cell[i] of board (state)
             // all the not "already used" numbers
-            let all_ones: u32 = (1 << 9) - 1;
+            let all_ones: i32 = (1 << 9) - 1;
             candidate_masks[i] = all_ones & !colliding_numbers; // mask indicating what numbers are available for this cell.
         }
     }
@@ -1256,7 +1267,7 @@ fn calculate_candidates(board: &Board) -> [u32; 81] {
     candidate_masks
 }
 
-fn convert_digit_to_mask(digit: i32) -> u32 {
+fn convert_digit_to_mask(digit: i32) -> i32 {
     1 << (digit - 1)
 }
 
@@ -1269,13 +1280,13 @@ fn convert_digit_to_mask(digit: i32) -> u32 {
 // Now we just need to add in the lowest bit, bit 0, to get the total number of bit set.
 // smaller is i/2 (i >> 1), increment is lowest bit 0 (either 0 or 1)
 // Number of bits set in value i is number of bits set in i/2 + lowest bit of i.
-static MASK_TO_ONES_COUNT: OnceLock<BTreeMap<u32, usize>> = OnceLock::new();
-fn mask_to_ones_count() -> &'static BTreeMap<u32, usize> {
+static MASK_TO_ONES_COUNT: OnceLock<BTreeMap<i32, usize>> = OnceLock::new();
+fn mask_to_ones_count() -> &'static BTreeMap<i32, usize> {
     MASK_TO_ONES_COUNT.get_or_init(|| {
         let mut answers = BTreeMap::new();
         answers.insert(0, 0);
         for i in 1..(1 << 9) {                              // 1 << 9 = 512. Thus goes from 1 to 511
-            let half: u32 = i >> 1;                                 // half = i >> 1 (i/2). Shift to a number we have already solved and stored in answers
+            let half: i32 = i >> 1;                                 // half = i >> 1 (i/2). Shift to a number we have already solved and stored in answers
             let lowbit: usize = (i & 1) as usize;                   // lowbit is lowest bit of i. Either 0 or 1
             let new_result = answers[&half] + lowbit;        // bits set in i is bits set in i >> 1 (answers[half]) + lowest bit of i (lowbit)
             answers.insert(i, new_result);                   // store the value. i, new_result=number of bits set in i
@@ -1308,7 +1319,7 @@ fn get_single_bitmask_to_digit() -> &'static HashMap<usize, i32> {
 }
 
 // Convert mask to list of digits they represent. Returns list of digits.
-fn mask_to_vec_digits(input_mask: u32) -> Vec<i32> {
+fn mask_to_vec_digits(input_mask: i32) -> Vec<i32> {
     let mut mask_to_remove = input_mask;
     let mut values_to_remove: Vec<i32> = Vec::new();
     let mut cur_value: i32 = 1;
@@ -1324,7 +1335,7 @@ fn mask_to_vec_digits(input_mask: u32) -> Vec<i32> {
     values_to_remove
 }
 
-fn top_two_digits(value: u32) -> (i32, i32) {
+fn top_two_digits(value: i32) -> (i32, i32) {
     let mut temp = value;
     let mut lower = 0;
     let mut upper = 0;
@@ -1342,18 +1353,18 @@ fn top_two_digits(value: u32) -> (i32, i32) {
     (lower, upper)
 }
 
-fn get_row_col_block_used_digits(current_state: &Board, index: usize) -> [bool; 9] {
+fn get_row_col_block_used_digits(current_state: &Board, index: usize) -> ([bool; 9], Digits) {
     // gather all digits used in cell's row, column, and block. output is_digit_used. input: current_state, row, col, block_row, block_col
-    let is_digit_used = gather_digits(&current_state, index);
-    is_digit_used
+    return gather_digits(&current_state, index);
 }
 
-fn gather_digits(current_state: &Board, index: usize) -> [bool; 9]  {
+fn gather_digits(current_state: &Board, index: usize) -> ([bool; 9], Digits)  {
     let row = index_to_row(index);
     let col = index_to_col(index);
     let block_row = row / 3;
     let block_col = col / 3;
     let mut is_digit_used: [bool; 9] = [false; 9];
+    let mut used_digits = Digits::new(0);
 
     for i in 0..9  // 12.
     {
@@ -1362,6 +1373,7 @@ fn gather_digits(current_state: &Board, index: usize) -> [bool; 9]  {
         if row_digit > 0
         {
             is_digit_used[row_digit as usize - 1] = true;
+            used_digits.set_digit(row_digit);
         }
 
         let cell = current_state[9 * row + i].clone();
@@ -1369,6 +1381,7 @@ fn gather_digits(current_state: &Board, index: usize) -> [bool; 9]  {
         if col_digit > 0
         {
             is_digit_used[col_digit as usize - 1] = true;
+            used_digits.set_digit(col_digit);
         }
 
         let cell = current_state[(block_row * 3 + i / 3) * 9 + (block_col * 3 + i % 3)].clone();
@@ -1376,9 +1389,11 @@ fn gather_digits(current_state: &Board, index: usize) -> [bool; 9]  {
         if block_digit > 0
         {
             is_digit_used[block_digit as usize - 1] = true;
+            used_digits.set_digit(block_digit);
+
         }
     } // for (i = 0..8)
-    is_digit_used
+    (is_digit_used, used_digits)
 }
 
 #[derive(Clone, Copy)]
