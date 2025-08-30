@@ -340,59 +340,60 @@ fn play(mut rnglcg: PortableLCG) {
 
 
                 // 50.
-                if !groups.is_empty()
+                if groups.is_empty() {
+                    continue;
+                }
+
+                //log("50. Groups is NOT empty".to_string());
+                for group in groups.iter().sorted_by_key(|cell_group| cell_group.discriminator)
                 {
-                    //log("50. Groups is NOT empty".to_string());
-                    for group in groups.iter().sorted_by_key(|cell_group| cell_group.discriminator)
+                    // Translation of the original C# code
+                    let cells: Vec<_> = group.cells.iter()
+                        .filter(|cell| board_candidate_masks[cell.index] != group.mask && // not equal but overlaps group.mask
+                            (board_candidate_masks[cell.index] & group.mask) > 0)
+                        .sorted_by_key(|cell| cell.index)
+                        .collect::<Vec<_>>();
+
+                    let mask_cells: Vec<&Cell> = group.cells.iter()
+                        .filter(|cell| board_candidate_masks[cell.index] == group.mask) // equal to group.mask
+                        .map(|x| x)
+                        .collect();
+
+                    // 51.
+                    if !cells.is_empty()
                     {
-                        // Translation of the original C# code
-                        let cells: Vec<_> = group.cells.iter()
-                            .filter(|cell| board_candidate_masks[cell.index] != group.mask && // not equal but overlaps group.mask
-                                (board_candidate_masks[cell.index] & group.mask) > 0)
-                            .sorted_by_key(|cell| cell.index)
-                            .collect::<Vec<_>>();
+                        // "Values {lower} and {upper} in {} are in cells ({mask_cells[0].row+1}, {mask_cells[0].col+1}) and ({mask_cells[1].row+1}, {mask_cells[1].col+1}).",
+                        // Find the upper two bits. upper & lower represent digits
+                        let (lower, upper) = top_two_digits(group.mask); // bits represent digits
 
-                        let mask_cells: Vec<&Cell> = group.cells.iter()
-                            .filter(|cell| board_candidate_masks[cell.index] == group.mask) // equal to group.mask
-                            .map(|x| x)
-                            .collect();
+                        let s = format!(
+                            "Values {} and {} in {} are in cells ({}, {}) and ({}, {}).",
+                            lower,
+                            upper,
+                            group.description,
+                            mask_cells[0].get_row() + 1,
+                            mask_cells[0].get_column() + 1,
+                            mask_cells[1].get_row() + 1,
+                            mask_cells[1].get_column() + 1
+                        );
+                        log(&s);
 
-                        // 51.
-                        if !cells.is_empty()
+                        // 52.
+                        for cell in &cells
                         {
-                            // "Values {lower} and {upper} in {} are in cells ({mask_cells[0].row+1}, {mask_cells[0].col+1}) and ({mask_cells[1].row+1}, {mask_cells[1].col+1}).",
-                            // Find the upper two bits. upper & lower represent digits
-                            let (lower, upper) = top_two_digits(group.mask); // bits represent digits
+                            let mask_to_remove = board_candidate_masks[cell.index] & group.mask;  // intersection
+                            let values_to_remove = mask_to_vec_digits(mask_to_remove);
 
-                            let s = format!(
-                                "Values {} and {} in {} are in cells ({}, {}) and ({}, {}).",
-                                lower,
-                                upper,
-                                group.description,
-                                mask_cells[0].get_row() + 1,
-                                mask_cells[0].get_column() + 1,
-                                mask_cells[1].get_row() + 1,
-                                mask_cells[1].get_column() + 1
-                            );
+                            //string valuesReport = string.Join(", ", values_to_remove.ToArray());
+                            let string_values_to_remove: Vec<String> = values_to_remove
+                                .iter()
+                                .map(|&num| num.to_string())
+                                .collect();
+                            let values_report = string_values_to_remove.join(", ");
+                            let s = format!("{} cannot appear in ({}, {}).", values_report, cell.get_row() + 1, cell.get_column() + 1);
                             log(&s);
-
-                            // 52.
-                            for cell in &cells
-                            {
-                                let mask_to_remove = board_candidate_masks[cell.index] & group.mask;  // intersection
-                                let values_to_remove = mask_to_vec_digits(mask_to_remove);
-
-                                //string valuesReport = string.Join(", ", values_to_remove.ToArray());
-                                let string_values_to_remove: Vec<String> = values_to_remove
-                                    .iter()
-                                    .map(|&num| num.to_string())
-                                    .collect();
-                                let values_report = string_values_to_remove.join(", ");
-                                let s = format!("{} cannot appear in ({}, {}).", values_report, cell.get_row() + 1, cell.get_column() + 1);
-                                log(&s);
-                                board_candidate_masks[cell.index] &= !group.mask;
-                                step_change_made = true;
-                            }
+                            board_candidate_masks[cell.index] &= !group.mask;
+                            step_change_made = true;
                         }
                     }
                 }
