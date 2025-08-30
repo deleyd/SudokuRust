@@ -1011,35 +1011,37 @@ fn handle_expand(rnglcg: &mut PortableLCG, board_stack: &mut Vec<Board>) {
     // loop through all cells looking for empty ones
     for index in 0..81  // 10.
     {
-        if current_board[index].digit == 0  // 11.  if cell unused, then let's see what we can do with it
+        if current_board[index].digit != 0 {
+            continue;
+        }
+        // 11.  otherwise cell unused. Let's see what we can do with it
+
+        let digits_used_array: [bool; 9] = get_row_col_block_used_digits(&current_board, index); // returns an array of 9 true/false values
+
+        // 13.
+        let candidates_count: i32 = digits_used_array
+            .iter() // Get an iterator over the elements
+            .filter(|&&value| !value) // count the 'false' values (filter out 'true' values)
+            .count() as i32; // Count the remaining elements
+
+        if candidates_count == 0  // 14.  if there are no candidates, then this cell has no options and Sudoku is unsolvable
         {
-            let digits_used_array: [bool; 9] = get_row_col_block_used_digits(&current_board, index); // returns an array of 9 true/false values
+            contains_unsolvable_cells = true;
+            break;
+        }
 
-            // 13.
-            let candidates_count: i32 = digits_used_array
-                .iter() // Get an iterator over the elements
-                .filter(|&&value| !value) // count the 'false' values (filter out 'true' values)
-                .count() as i32; // Count the remaining elements
+        let random_value = rnglcg.next();  // 15. random value if we need it
 
-            if candidates_count == 0  // 14.  if there are no candidates, then this cell has no options and Sudoku is unsolvable
-            {
-                contains_unsolvable_cells = true;
-                break;
-            }
-
-            let random_value = rnglcg.next();  // 15. random value if we need it
-
-            // if we have no best candidates, or best candidates outnumber candidates, or
-            // then update best everything
-            if best_candidates_count < 0 ||                  // if we're just starting
-                candidates_count < best_candidates_count ||  // looking for the cell with the LEAST number of candidates
-                (candidates_count == best_candidates_count && random_value < best_random_value) // if two cells both have the same number of candidates, randomly select one (this "random" looks not random)
-            {
-                best_index = index; // this cell becomes the best cell (saved as row,col. we could save index instead?)
-                best_used_digits = digits_used_array;
-                best_candidates_count = candidates_count;  // candidates_count is a function of is_digit_used array
-                best_random_value = random_value;
-            }
+        // if we have no best candidates, or best candidates outnumber candidates, or
+        // then update best everything
+        if best_candidates_count < 0 ||                  // if we're just starting
+            candidates_count < best_candidates_count ||  // looking for the cell with the LEAST number of candidates
+            (candidates_count == best_candidates_count && random_value < best_random_value) // if two cells both have the same number of candidates, randomly select one (this "random" looks not random)
+        {
+            best_index = index; // this cell becomes the best cell (saved as row,col. we could save index instead?)
+            best_used_digits = digits_used_array;
+            best_candidates_count = candidates_count;  // candidates_count is a function of is_digit_used array
+            best_random_value = random_value;
         }
     }
 
