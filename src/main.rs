@@ -558,140 +558,143 @@ fn play(mut rnglcg: PortableLCG) {
                 let mut command = Commands::Expand;
                 while command != Commands::Complete && command != Commands::Fail
                 {
-                    if command == Commands::Expand
-                    {
-                        let mut current_board : Board = if !board_stack.is_empty() {
-                            board_stack.last_mut().unwrap().clone()
-                        } else {
-                            alternate_board.clone()
-                        };
-
-                        let mut best_index: usize = 9999;                  // best will be cell with lowest number of candidate digits
-                        let mut best_used_digits: [bool; 9] = [false; 9];  // corresponding candidate digits for best cell
-                        let mut best_candidates_count : i32 = -1;          // number of candidate digits for best cell
-                        let mut best_random_value : i32 = -1;
-                        let mut contains_unsolvable_cells: bool = false;
-
-                        // 67.
-                        for index in 0..81
-                        {
-                            if current_board[index].digit == 0
-                            {
-                                // 68.
-                                let digit_used_array = gather_digits(&current_board, index);
-
-                                let candidates_count : i32 = digit_used_array
-                                    .iter()  // 1. Get an iterator over the vector
-                                    .filter(|&used| !*used) // 2. Filter elements where 'used' is false
-                                    .count() as i32; // 3. Count the remaining elements
-                                if candidates_count == 0
-                                {
-                                    contains_unsolvable_cells = true;
-                                    break;
-                                }
-
-                                // 70.
-                                let random_value = rnglcg.next();
-                                //let random_value = rng.Next();
-
-                                if best_candidates_count < 0 ||
-                                    candidates_count < best_candidates_count ||
-                                    (candidates_count == best_candidates_count && random_value < best_random_value)
-                                {
-                                    best_index = index;                               // corresponding cell with lowest number of candidate digits
-                                    best_used_digits = digit_used_array;                 // the candidate digits for this cell
-                                    best_candidates_count = candidates_count as i32;  // best is lowest number of candidate digits for a cell
-                                    best_random_value = random_value;
-                                }
-                            }
-                        } // for (index = 0..81)
-
-                        // 71.
-                        if !contains_unsolvable_cells
-                        {
-                            current_board.candidate_cell = best_index;
-                            current_board.used_digits = best_used_digits;
-                            current_board.last_digit = 0;
-                            board_stack.push(current_board);
-
-                            //cell_candidate_stack.push(best_index);      // CellCandidate is index of cell on Board
-                            //used_digits_stack.push(best_used_digits);   // corresponding digits already used for cell's row,col,block
-                            //last_digit_stack.push(0); // No digit was tried at this position. Last digit tried for this cell
-                        }
-
-                        // Always try to move after expand
-                        command = Commands::Move;
-                    } // if (command == Commands::Expand)
-                    // 72.
-                    else if command == Commands::Collapse
-                    {
-                        board_stack.pop();
-
-                        command = if !board_stack.is_empty() {
-                            Commands::Move // Always try to move after collapse
-                        } else {
-                            Commands::Fail
-                        }
-                    }
-                    // 73.
-                    else if command == Commands::Move
-                    {
-                        let cell_to_move: usize = board_stack.last_mut().unwrap().candidate_cell;  // cell to move is identified by an index
-                        let digit_to_move = board_stack.last_mut().unwrap().last_digit;  // pop here, push below
-                        //let mut used_digits : [bool; 9] = used_digits_stack.last().unwrap().clone();
-
-                        //let current_board = board_stack.last_mut().unwrap();
-                        let current_cell_index: usize = cell_to_move;
-
-                        let mut moved_to_digit = digit_to_move + 1;
-                        // Find next digit not used
-                        while moved_to_digit <= 9 && board_stack.last_mut().unwrap().used_digits[moved_to_digit as usize - 1]
-                        {
-                            moved_to_digit += 1;
-                        }
-
-                        // 74.
-                        if digit_to_move > 0
-                        {
-                            //used_digits[digit_to_move as usize - 1] = false;
-                            board_stack.last_mut().unwrap().used_digits[digit_to_move as usize - 1] = false;
-                            board_stack.last_mut().unwrap()[current_cell_index].digit = 0;  // set cell to unused
-                        }
-
-                        // 75.
-                        if moved_to_digit <= 9
-                        {
-                            board_stack.last_mut().unwrap().last_digit = moved_to_digit;
-                            board_stack.last_mut().unwrap().used_digits[moved_to_digit as usize - 1] = true;
-
-                            //last_digit_stack.pop();
-                            //last_digit_stack.push(moved_to_digit); // Equivalent of C# Push()
-                            //used_digits[moved_to_digit as usize - 1] = true; // DWD Problem here. Does not change stack
-                            board_stack.last_mut().unwrap()[current_cell_index].digit = moved_to_digit; // Array access is similar
-
-                            command = if board_stack.last_mut().unwrap().cells.iter().any(|cell| cell.digit == 0) {
-                                Commands::Expand
+                    match command {
+                        Commands::Expand => {
+                            let mut current_board: Board = if !board_stack.is_empty() {
+                                board_stack.last_mut().unwrap().clone()
                             } else {
-                                Commands::Complete
+                                alternate_board.clone()
                             };
-                        } else {
-                            // 76.
-                            // No viable candidate was found at current position - pop it in the next iteration
-                            board_stack.last_mut().unwrap().last_digit = 0;
-                            command = Commands::Collapse;
+
+                            let mut best_index: usize = 9999;                  // best will be cell with lowest number of candidate digits
+                            let mut best_used_digits: [bool; 9] = [false; 9];  // corresponding candidate digits for best cell
+                            let mut best_candidates_count: i32 = -1;          // number of candidate digits for best cell
+                            let mut best_random_value: i32 = -1;
+                            let mut contains_unsolvable_cells: bool = false;
+
+                            // 67.
+                            for index in 0..81
+                            {
+                                if current_board[index].digit == 0
+                                {
+                                    // 68.
+                                    let digit_used_array = gather_digits(&current_board, index);
+
+                                    let candidates_count: i32 = digit_used_array
+                                        .iter()  // 1. Get an iterator over the vector
+                                        .filter(|&used| !*used) // 2. Filter elements where 'used' is false
+                                        .count() as i32; // 3. Count the remaining elements
+                                    if candidates_count == 0
+                                    {
+                                        contains_unsolvable_cells = true;
+                                        break;
+                                    }
+
+                                    // 70.
+                                    let random_value = rnglcg.next();
+                                    //let random_value = rng.Next();
+
+                                    if best_candidates_count < 0 ||
+                                        candidates_count < best_candidates_count ||
+                                        (candidates_count == best_candidates_count && random_value < best_random_value)
+                                    {
+                                        best_index = index;                               // corresponding cell with lowest number of candidate digits
+                                        best_used_digits = digit_used_array;                 // the candidate digits for this cell
+                                        best_candidates_count = candidates_count as i32;  // best is lowest number of candidate digits for a cell
+                                        best_random_value = random_value;
+                                    }
+                                }
+                            } // for (index = 0..81)
+
+                            // 71.
+                            if !contains_unsolvable_cells
+                            {
+                                current_board.candidate_cell = best_index;
+                                current_board.used_digits = best_used_digits;
+                                current_board.last_digit = 0;
+                                board_stack.push(current_board);
+
+                                //cell_candidate_stack.push(best_index);      // CellCandidate is index of cell on Board
+                                //used_digits_stack.push(best_used_digits);   // corresponding digits already used for cell's row,col,block
+                                //last_digit_stack.push(0); // No digit was tried at this position. Last digit tried for this cell
+                            }
+
+                            // Always try to move after expand
+                            command = Commands::Move;
+                        } // match Commands::Expand
+
+                        // 72.
+                        Commands::Collapse => {
+                            board_stack.pop();
+
+                            command = if !board_stack.is_empty() {
+                                Commands::Move // Always try to move after collapse
+                            } else {
+                                Commands::Fail
+                            }
                         }
-                    } // if (command == Commands::Move)
+
+                        // 73.
+                        Commands::Move => {
+                            let cell_to_move: usize = board_stack.last_mut().unwrap().candidate_cell;  // cell to move is identified by an index
+                            let digit_to_move = board_stack.last_mut().unwrap().last_digit;  // pop here, push below
+                            //let mut used_digits : [bool; 9] = used_digits_stack.last().unwrap().clone();
+
+                            //let current_board = board_stack.last_mut().unwrap();
+                            let current_cell_index: usize = cell_to_move;
+
+                            let mut moved_to_digit = digit_to_move + 1;
+                            // Find next digit not used
+                            while moved_to_digit <= 9 && board_stack.last_mut().unwrap().used_digits[moved_to_digit as usize - 1]
+                            {
+                                moved_to_digit += 1;
+                            }
+
+                            // 74.
+                            if digit_to_move > 0
+                            {
+                                //used_digits[digit_to_move as usize - 1] = false;
+                                board_stack.last_mut().unwrap().used_digits[digit_to_move as usize - 1] = false;
+                                board_stack.last_mut().unwrap()[current_cell_index].digit = 0;  // set cell to unused
+                            }
+
+                            // 75.
+                            if moved_to_digit <= 9
+                            {
+                                board_stack.last_mut().unwrap().last_digit = moved_to_digit;
+                                board_stack.last_mut().unwrap().used_digits[moved_to_digit as usize - 1] = true;
+
+                                //last_digit_stack.pop();
+                                //last_digit_stack.push(moved_to_digit); // Equivalent of C# Push()
+                                //used_digits[moved_to_digit as usize - 1] = true; // DWD Problem here. Does not change stack
+                                board_stack.last_mut().unwrap()[current_cell_index].digit = moved_to_digit; // Array access is similar
+
+                                command = if board_stack.last_mut().unwrap().cells.iter().any(|cell| cell.digit == 0) {
+                                    Commands::Expand
+                                } else {
+                                    Commands::Complete
+                                };
+                            } else {
+                                // 76.
+                                // No viable candidate was found at current position - pop it in the next iteration
+                                board_stack.last_mut().unwrap().last_digit = 0;
+                                command = Commands::Collapse;
+                            }
+                        } // match command::move
+                        _ => {
+                            // should never get here
+                            log(&"Fatal Error. command did not match anything.".to_string());
+                        }
+                    } // match
                 } // while (command != Commands::Complete && command != Commands::Fail)
 
                 // 77.
                 if command == Commands::Complete
                 {   // Board was solved successfully even with two digits swapped
-                    // sync state_index with value
-                    // state_index : an array of indexes (indexes are cells, cells have values). value : array of values corresponding to array of indexes.
                     push_candidate_cell(&mut candidate_cells_stack1, candidate_cell1);
                     push_candidate_cell(&mut candidate_cells_stack2, candidate_cell2);
                 }
-            } // while (candidate_index1.Any())
+            } // while !candidate_cells1.is_empty()
 
             // 78.
             if !candidate_cells_stack1.is_empty()
