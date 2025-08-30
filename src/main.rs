@@ -659,14 +659,9 @@ fn play(mut rnglcg: PortableLCG) {
                             }
 
                             // 75.
-                            if moved_to_digit <= 9
-                            {
+                            if moved_to_digit <= 9 {
                                 board_stack.last_mut().unwrap().last_digit = moved_to_digit;
                                 board_stack.last_mut().unwrap().used_digits[moved_to_digit as usize - 1] = true;
-
-                                //last_digit_stack.pop();
-                                //last_digit_stack.push(moved_to_digit); // Equivalent of C# Push()
-                                //used_digits[moved_to_digit as usize - 1] = true; // DWD Problem here. Does not change stack
                                 board_stack.last_mut().unwrap()[current_cell_index].digit = moved_to_digit; // Array access is similar
 
                                 command = if board_stack.last_mut().unwrap().cells.iter().any(|cell| cell.digit == 0) {
@@ -681,7 +676,7 @@ fn play(mut rnglcg: PortableLCG) {
                                 command = Commands::Collapse;
                             }
                         } // match command::move
-                        _ => {
+                        _ => {  // catch everything else
                             // should never get here
                             log(&"Fatal Error. command did not match anything.".to_string());
                         }
@@ -691,8 +686,8 @@ fn play(mut rnglcg: PortableLCG) {
                 // 77.
                 if command == Commands::Complete
                 {   // Board was solved successfully even with two digits swapped
-                    push_candidate_cell(&mut candidate_cells_stack1, candidate_cell1);
-                    push_candidate_cell(&mut candidate_cells_stack2, candidate_cell2);
+                    candidate_cells_stack1.push(candidate_cell1);
+                    candidate_cells_stack2.push(candidate_cell2);
                 }
             } // while !candidate_cells1.is_empty()
 
@@ -710,35 +705,7 @@ fn play(mut rnglcg: PortableLCG) {
                 change_made = true;
 
                 // 79.
-                // print
-                let row1 = candidate_cell1.get_row();
-                let col1 = candidate_cell1.get_column();
-                let row2 = candidate_cell2.get_row();
-                let col2 = candidate_cell2.get_column();
-                let description: String;
-
-                if row1 == row2
-                {
-                    description = format!("row #{}", row1 + 1);
-                } else if col1 == col2
-                {
-                    description = format!("column #{}", col1 + 1);
-                } else {
-                    let (block_row, block_col) = candidate_cell1.get_block();
-                    description = format!("block ({}, {})", block_row+1, block_col+1);
-                }
-
-                let s = format!("Guessing that {} and {} are arbitrary in {} (multiple solutions): Pick {}->({}, {}), {}->({}, {}).",
-                                candidate_cell1.digit,
-                                candidate_cell2.digit,
-                                description,
-                                final_board[candidate_cell1.index],
-                                row1 + 1,
-                                col1 + 1,
-                                final_board[candidate_cell2.index],
-                                row2 + 1,
-                                col2 + 1);
-                log(&s);
+                print_and_log_guessing_message(&final_board, candidate_cell1, candidate_cell2);
             }
         }
         //#endregion
@@ -746,21 +713,51 @@ fn play(mut rnglcg: PortableLCG) {
         // 80.
         if change_made  // print board and Code if we made a change
         {
-            //#region Print the board as it looks after one change was made to it
-            print_board(&board);
-            let code: String = board.cells.iter()
-                .map(|cell| if cell.digit == 0 { ".".to_string() } else { cell.digit.to_string() })// convert all 0 to .
-                .collect();
-            log(&format!("Code: {0}", code));
-            log(&"".to_string());
+            print_board_and_code(&mut board);  //#region Print the board as it looks after one change was made to it
         }
             //#endregion
     }//while change_made// 27
     log(&"BOARD SOLVED.".to_string())
 }
 
-fn push_candidate_cell(board_stack2: &mut Vec<CandidateCell>, candidate_cell2: CandidateCell) {
-    board_stack2.push(candidate_cell2);
+fn print_and_log_guessing_message(final_board: &Board, candidate_cell1: &CandidateCell, candidate_cell2: &CandidateCell) {
+    let row1 = candidate_cell1.get_row();
+    let col1 = candidate_cell1.get_column();
+    let row2 = candidate_cell2.get_row();
+    let col2 = candidate_cell2.get_column();
+    let description: String;
+
+    if row1 == row2
+    {
+        description = format!("row #{}", row1 + 1);
+    } else if col1 == col2
+    {
+        description = format!("column #{}", col1 + 1);
+    } else {
+        let (block_row, block_col) = candidate_cell1.get_block();
+        description = format!("block ({}, {})", block_row + 1, block_col + 1);
+    }
+
+    let s = format!("Guessing that {} and {} are arbitrary in {} (multiple solutions): Pick {}->({}, {}), {}->({}, {}).",
+                    candidate_cell1.digit,
+                    candidate_cell2.digit,
+                    description,
+                    final_board[candidate_cell1.index],
+                    row1 + 1,
+                    col1 + 1,
+                    final_board[candidate_cell2.index],
+                    row2 + 1,
+                    col2 + 1);
+    log(&s);
+}
+
+fn print_board_and_code(board: &mut Board) {
+    print_board(&board);
+    let code: String = board.cells.iter()
+        .map(|cell| if cell.digit == 0 { ".".to_string() } else { cell.digit.to_string() }) // convert all 0 to .
+        .collect();
+    log(&format!("Code: {0}", code));
+    log(&"".to_string());
 }
 
 fn generate_and_log_mask_to_clear_message(mask_to_clear: u32, cell: Cell) {
@@ -969,6 +966,11 @@ fn handle_move(board_stack: &mut Vec<Board>) -> Commands {
     let col_to_write: usize = (col_to_move + col_to_move / 3 + 1) as usize;
     log(&format!("digitToMove:{0} movedToDigit:{1} rowToMove:{2} colToMove:{3} rowToWrite:{4} colToWrite:{5} currentStateIndex:{6}", digit_to_move, moved_to_digit, row_to_move, col_to_move, row_to_write, col_to_write, cell_to_move));
 
+    let command = foo(board_stack, cell_to_move, digit_to_move, moved_to_digit);
+    return command;
+}
+
+fn foo(board_stack: &mut Vec<Board>, cell_to_move: usize, digit_to_move: i32, moved_to_digit: i32) -> Commands {
     if digit_to_move > 0
     {
         //used_digits[digit_to_move as usize - 1] = false;
@@ -976,8 +978,7 @@ fn handle_move(board_stack: &mut Vec<Board>) -> Commands {
         board_stack.last_mut().unwrap()[cell_to_move].digit = 0; // does this change last element of state_stack?
     }
 
-    if moved_to_digit <= 9
-    {
+    if moved_to_digit <= 9 {
         log(&format!("19d. moved_to_digit: {:?}", moved_to_digit));
         board_stack.last_mut().unwrap().last_digit = moved_to_digit;
         board_stack.last_mut().unwrap().used_digits[moved_to_digit as usize - 1] = true;
@@ -986,13 +987,12 @@ fn handle_move(board_stack: &mut Vec<Board>) -> Commands {
         // Next possible digit was found at current position
         // Next step will be to expand the state
         // Next step will be to expand the state/ 9
-        return Commands::Expand;
-    } else {
-        // No viable candidate was found at current position - pop it in the next iteration
-        board_stack.last_mut().unwrap().last_digit = 0;
-        log(&format!("collapse. last_digit_stack.last():{}", board_stack.last_mut().unwrap().last_digit));
-        return Commands::Collapse;
+        return Commands::Expand
     }
+    // No viable candidate was found at current position - pop it in the next iteration
+    board_stack.last_mut().unwrap().last_digit = 0;
+    log(&format!("collapse. last_digit_stack.last():{}", board_stack.last_mut().unwrap().last_digit));
+    Commands::Collapse
 }
 
 fn handle_expand(rnglcg: &mut PortableLCG, board_stack: &mut Vec<Board>) {
