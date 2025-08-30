@@ -114,7 +114,7 @@ struct CandidateCell {
     description: String,
 }
 impl CandidateCell {
-    pub fn new(&index: &usize, &digit: &i32, description: &String) -> CandidateCell {
+    pub fn new(index: usize, digit: i32, description: &String) -> CandidateCell {
         CandidateCell {
             index,
             digit,
@@ -515,8 +515,8 @@ fn play(mut rnglcg: PortableLCG) {
                     }    // if candidate digits for cells[i] & cells[j] are identical set,
                     if row_or_column_or_block_overlap(i,j)
                     {
-                        candidate_cells1.push_back(CandidateCell::new(&i, &lower_digit, &"".to_string()));
-                        candidate_cells2.push_back(CandidateCell::new(&j, &upper_digit, &"".to_string()));
+                        candidate_cells1.push_back(CandidateCell::new(i, lower_digit, &"".to_string()));
+                        candidate_cells2.push_back(CandidateCell::new(j, upper_digit, &"".to_string()));
                     }
                 }
             }
@@ -855,19 +855,19 @@ fn generate_candidate_cells(board_candidate_masks: &mut [u32; 81]) -> Vec<Candid
             // 44.
             if row_number_count == 1  // If there is only one cell in this row which can be set to digit, push cell on candidate stack.
             {
-                candidate_cells.push(CandidateCell::new(&(cell_group * 9 + index_in_row), &digit, &format!("Row #{}", cell_group + 1)))
+                candidate_cells.push(CandidateCell::new(cell_group * 9 + index_in_row, digit, &format!("Row #{}", cell_group + 1)))
             }
             // 45.
             if col_number_count == 1  // If there is only one cell in this column which can be set to digit, push cell on candidate stack.
             {
-                candidate_cells.push(CandidateCell::new(&(index_in_col * 9 + cell_group), &digit, &format!("Column #{}", cell_group + 1)))
+                candidate_cells.push(CandidateCell::new(index_in_col * 9 + cell_group, digit, &format!("Column #{}", cell_group + 1)))
             }
             // 46.
             if block_number_count == 1  // If there is only one cell in this block which can be set to digit, push cell on candidate stack.
             {
                 let block_row = cell_group / 3;
                 let block_col = cell_group % 3;
-                candidate_cells.push(CandidateCell::new(&((block_row * 3 + index_in_block / 3) * 9 + (block_col * 3 + index_in_block % 3)), &digit, &format!("Block ({}, {})", block_row + 1, block_col + 1)));
+                candidate_cells.push(CandidateCell::new((block_row * 3 + index_in_block / 3) * 9 + (block_col * 3 + index_in_block % 3), digit, &format!("Block ({}, {})", block_row + 1, block_col + 1)));
             }
         } // for (cell_group = 0..8)
     } // for (digit = 1..9)
