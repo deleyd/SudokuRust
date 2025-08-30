@@ -651,12 +651,13 @@ fn play(mut rnglcg: PortableLCG) {
                             }
 
                             // 74.
-                            if digit_to_move > 0
+                            bar(&mut board_stack, cell_to_move, digit_to_move);
+                            /*if digit_to_move > 0
                             {
                                 //used_digits[digit_to_move as usize - 1] = false;
                                 board_stack.last_mut().unwrap().used_digits[digit_to_move as usize - 1] = false;
                                 board_stack.last_mut().unwrap()[current_cell_index].digit = 0;  // set cell to unused
-                            }
+                            }*/
 
                             // 75.
                             if moved_to_digit <= 9 {
@@ -971,12 +972,7 @@ fn handle_move(board_stack: &mut Vec<Board>) -> Commands {
 }
 
 fn foo(board_stack: &mut Vec<Board>, cell_to_move: usize, digit_to_move: i32, moved_to_digit: i32) -> Commands {
-    if digit_to_move > 0
-    {
-        //used_digits[digit_to_move as usize - 1] = false;
-        board_stack.last_mut().unwrap().used_digits[digit_to_move as usize - 1] = false;
-        board_stack.last_mut().unwrap()[cell_to_move].digit = 0; // does this change last element of state_stack?
-    }
+    bar(board_stack, cell_to_move, digit_to_move);
 
     if moved_to_digit <= 9 {
         log(&format!("19d. moved_to_digit: {:?}", moved_to_digit));
@@ -987,12 +983,22 @@ fn foo(board_stack: &mut Vec<Board>, cell_to_move: usize, digit_to_move: i32, mo
         // Next possible digit was found at current position
         // Next step will be to expand the state
         // Next step will be to expand the state/ 9
+
         return Commands::Expand
     }
     // No viable candidate was found at current position - pop it in the next iteration
     board_stack.last_mut().unwrap().last_digit = 0;
     log(&format!("collapse. last_digit_stack.last():{}", board_stack.last_mut().unwrap().last_digit));
     Commands::Collapse
+}
+
+fn bar(board_stack: &mut Vec<Board>, cell_to_move: usize, digit_to_move: i32) {
+    if digit_to_move > 0
+    {
+        //used_digits[digit_to_move as usize - 1] = false;
+        board_stack.last_mut().unwrap().used_digits[digit_to_move as usize - 1] = false;
+        board_stack.last_mut().unwrap()[cell_to_move].digit = 0; // does this change last element of state_stack?
+    }
 }
 
 fn handle_expand(rnglcg: &mut PortableLCG, board_stack: &mut Vec<Board>) {
