@@ -638,6 +638,11 @@ fn play(mut rnglcg: PortableLCG) {
                         Commands::Move => {
                             let cell_to_move: usize = board_stack.last_mut().unwrap().candidate_cell;  // cell to move is identified by an index
                             let digit_to_move = board_stack.last_mut().unwrap().last_digit;  // pop here, push below
+                            //let mut used_digits : [bool; 9] = used_digits_stack.last().unwrap().clone();
+
+                            //let current_board = board_stack.last_mut().unwrap();
+                            //let current_cell_index: usize = cell_to_move;
+
                             let mut moved_to_digit = digit_to_move + 1;
                             // Find next digit not used
                             while moved_to_digit <= 9 && board_stack.last_mut().unwrap().used_digits[moved_to_digit as usize - 1]
@@ -646,7 +651,7 @@ fn play(mut rnglcg: PortableLCG) {
                             }
 
                             // 74.
-                            bar(&mut board_stack, &cell_to_move, digit_to_move, moved_to_digit);
+                            bar(&mut board_stack, cell_to_move, digit_to_move, moved_to_digit);
 
                             // 75.
 
@@ -947,25 +952,23 @@ fn handle_move(board_stack: &mut Vec<Board>) -> Commands {
         moved_to_digit += 1;
     }
 
-    write_digit_to_move_message(&cell_to_move, &digit_to_move, &mut moved_to_digit);
-
-    let command = foo(board_stack, &cell_to_move, digit_to_move, moved_to_digit);
-    return command;
-}
-
-fn write_digit_to_move_message(cell_to_move: &usize, digit_to_move: &i32, moved_to_digit: &mut i32) {
-    let row_to_move = index_to_row(*cell_to_move);  // row_index_stack.last().unwrap();  // panic if empty which it should never be
-    let col_to_move = index_to_col(*cell_to_move);  // col_index_stack.last().unwrap();
+    let row_to_move = index_to_row(cell_to_move);  // row_index_stack.last().unwrap();  // panic if empty which it should never be
+    let col_to_move = index_to_col(cell_to_move);  // col_index_stack.last().unwrap();
     let row_to_write: usize = (row_to_move + row_to_move / 3 + 1) as usize;
     let col_to_write: usize = (col_to_move + col_to_move / 3 + 1) as usize;
     log(&format!("digitToMove:{0} movedToDigit:{1} rowToMove:{2} colToMove:{3} rowToWrite:{4} colToWrite:{5} currentStateIndex:{6}", digit_to_move, moved_to_digit, row_to_move, col_to_move, row_to_write, col_to_write, cell_to_move));
+
+    let command = foo(board_stack, cell_to_move, digit_to_move, moved_to_digit);
+    return command;
 }
 
-fn foo(board_stack: &mut Vec<Board>, cell_to_move: &usize, digit_to_move: i32, moved_to_digit: i32) -> Commands {
+fn foo(board_stack: &mut Vec<Board>, cell_to_move: usize, digit_to_move: i32, moved_to_digit: i32) -> Commands {
     bar(board_stack, cell_to_move, digit_to_move, moved_to_digit);
 
     if moved_to_digit <= 9 {
+        //update_board_state(board_stack, cell_to_move, moved_to_digit);
         log(&format!("19d. moved_to_digit: {:?}", moved_to_digit));
+
         // Next possible digit was found at current position
         // Next step will be to expand the state
         // Next step will be to expand the state/ 9
@@ -978,18 +981,18 @@ fn foo(board_stack: &mut Vec<Board>, cell_to_move: &usize, digit_to_move: i32, m
     }
 }
 
-fn update_board_state(board_stack: &mut Vec<Board>, cell_to_move: &usize, moved_to_digit: i32) {
+fn update_board_state(board_stack: &mut Vec<Board>, cell_to_move: usize, moved_to_digit: i32) {
     board_stack.last_mut().unwrap().last_digit = moved_to_digit;
     board_stack.last_mut().unwrap().used_digits[moved_to_digit as usize - 1] = true;
-    board_stack.last_mut().unwrap()[*cell_to_move].digit = moved_to_digit;
+    board_stack.last_mut().unwrap()[cell_to_move].digit = moved_to_digit;
 }
 
-fn bar(board_stack: &mut Vec<Board>, cell_to_move: &usize, digit_to_move: i32, moved_to_digit: i32) {
+fn bar(board_stack: &mut Vec<Board>, cell_to_move: usize, digit_to_move: i32, moved_to_digit: i32) {
     if digit_to_move > 0
     {
         //used_digits[digit_to_move as usize - 1] = false;
         board_stack.last_mut().unwrap().used_digits[digit_to_move as usize - 1] = false;
-        board_stack.last_mut().unwrap()[*cell_to_move].digit = 0; // does this change last element of state_stack?
+        board_stack.last_mut().unwrap()[cell_to_move].digit = 0; // does this change last element of state_stack?
     }
     if moved_to_digit <= 9 {
         update_board_state(board_stack, cell_to_move, moved_to_digit);
