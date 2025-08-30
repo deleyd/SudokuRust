@@ -360,41 +360,41 @@ fn play(mut rnglcg: PortableLCG) {
                         .collect();
 
                     // 51.
-                    if !cells.is_empty()
+                    if cells.is_empty() {
+                        continue;
+                    }
+                    // "Values {lower} and {upper} in {} are in cells ({mask_cells[0].row+1}, {mask_cells[0].col+1}) and ({mask_cells[1].row+1}, {mask_cells[1].col+1}).",
+                    // Find the upper two bits. upper & lower represent digits
+                    let (lower, upper) = top_two_digits(group.mask); // bits represent digits
+
+                    let s = format!(
+                        "Values {} and {} in {} are in cells ({}, {}) and ({}, {}).",
+                        lower,
+                        upper,
+                        group.description,
+                        mask_cells[0].get_row() + 1,
+                        mask_cells[0].get_column() + 1,
+                        mask_cells[1].get_row() + 1,
+                        mask_cells[1].get_column() + 1
+                    );
+                    log(&s);
+
+                    // 52.
+                    for cell in &cells
                     {
-                        // "Values {lower} and {upper} in {} are in cells ({mask_cells[0].row+1}, {mask_cells[0].col+1}) and ({mask_cells[1].row+1}, {mask_cells[1].col+1}).",
-                        // Find the upper two bits. upper & lower represent digits
-                        let (lower, upper) = top_two_digits(group.mask); // bits represent digits
+                        let mask_to_remove = board_candidate_masks[cell.index] & group.mask;  // intersection
+                        let values_to_remove = mask_to_vec_digits(mask_to_remove);
 
-                        let s = format!(
-                            "Values {} and {} in {} are in cells ({}, {}) and ({}, {}).",
-                            lower,
-                            upper,
-                            group.description,
-                            mask_cells[0].get_row() + 1,
-                            mask_cells[0].get_column() + 1,
-                            mask_cells[1].get_row() + 1,
-                            mask_cells[1].get_column() + 1
-                        );
+                        //string valuesReport = string.Join(", ", values_to_remove.ToArray());
+                        let string_values_to_remove: Vec<String> = values_to_remove
+                            .iter()
+                            .map(|&num| num.to_string())
+                            .collect();
+                        let values_report = string_values_to_remove.join(", ");
+                        let s = format!("{} cannot appear in ({}, {}).", values_report, cell.get_row() + 1, cell.get_column() + 1);
                         log(&s);
-
-                        // 52.
-                        for cell in &cells
-                        {
-                            let mask_to_remove = board_candidate_masks[cell.index] & group.mask;  // intersection
-                            let values_to_remove = mask_to_vec_digits(mask_to_remove);
-
-                            //string valuesReport = string.Join(", ", values_to_remove.ToArray());
-                            let string_values_to_remove: Vec<String> = values_to_remove
-                                .iter()
-                                .map(|&num| num.to_string())
-                                .collect();
-                            let values_report = string_values_to_remove.join(", ");
-                            let s = format!("{} cannot appear in ({}, {}).", values_report, cell.get_row() + 1, cell.get_column() + 1);
-                            log(&s);
-                            board_candidate_masks[cell.index] &= !group.mask;
-                            step_change_made = true;
-                        }
+                        board_candidate_masks[cell.index] &= !group.mask;
+                        step_change_made = true;
                     }
                 }
             }
@@ -471,8 +471,7 @@ fn play(mut rnglcg: PortableLCG) {
                 for cell in group_with_n_masks.cells_with_mask
                 {
                     let mask_to_clear = board_candidate_masks[cell.index] & !group_with_n_masks.mask;  // mask_to_clear is the intersection of
-                    if mask_to_clear == 0
-                    {
+                    if mask_to_clear == 0 {
                         continue;
                     }
 
@@ -480,9 +479,7 @@ fn play(mut rnglcg: PortableLCG) {
                     step_change_made = true;
 
                     generate_and_log_mask_to_clear_message(mask_to_clear, cell);
-
                     // 59.
-
                 }
             }
             //#endregion
@@ -505,21 +502,21 @@ fn play(mut rnglcg: PortableLCG) {
             for i in 0..80  // stop at 80 because j looks at i+1 cell
             {
                 // 62.
-                if mask_to_ones_count()[&(board_candidate_masks[i])] == 2   // if this cell candidate i has exactly 2 digits
-                {
-                    let (lower_digit, upper_digit) = top_two_digits(board_candidate_masks[i]); // we already determined that this candidate has exactly 2 digits
+                if mask_to_ones_count()[&(board_candidate_masks[i])] != 2 {
+                    continue;
+                }   // if this cell candidate i has exactly 2 digits
+                let (lower_digit, upper_digit) = top_two_digits(board_candidate_masks[i]); // we already determined that this candidate has exactly 2 digits
 
-                    // 63.
-                    for j in i + 1..81
+                // 63.
+                for j in i + 1..81
+                {
+                    if board_candidate_masks[j] != board_candidate_masks[i] {
+                        continue;
+                    }    // if candidate digits for cells[i] & cells[j] are identical set,
+                    if row_or_column_or_block_overlap(i,j)
                     {
-                        if board_candidate_masks[j] == board_candidate_masks[i]    // if candidate digits for cells[i] & cells[j] are identical set,
-                        {
-                            if row_or_column_or_block_overlap(i,j)
-                            {
-                                candidate_cells1.push_back(CandidateCell::new(&i, &lower_digit, &"".to_string()));
-                                candidate_cells2.push_back(CandidateCell::new(&j, &upper_digit, &"".to_string()));
-                            }
-                        }
+                        candidate_cells1.push_back(CandidateCell::new(&i, &lower_digit, &"".to_string()));
+                        candidate_cells2.push_back(CandidateCell::new(&j, &upper_digit, &"".to_string()));
                     }
                 }
             }
@@ -747,7 +744,6 @@ fn play(mut rnglcg: PortableLCG) {
         if change_made  // print board and Code if we made a change
         {
             //#region Print the board as it looks after one change was made to it
-            // convert this to use state instead of board
             print_board(&board);
             let code: String = board.cells.iter()
                 .map(|cell| if cell.digit == 0 { ".".to_string() } else { cell.digit.to_string() })// convert all 0 to .
