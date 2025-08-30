@@ -952,14 +952,18 @@ fn handle_move(board_stack: &mut Vec<Board>) -> Commands {
         moved_to_digit += 1;
     }
 
+    print_digit_to_move(cell_to_move, digit_to_move, moved_to_digit);
+
+    let command = foo(board_stack, cell_to_move, digit_to_move, moved_to_digit);
+    return command;
+}
+
+fn print_digit_to_move(cell_to_move: usize, digit_to_move: i32, moved_to_digit: i32) {
     let row_to_move = index_to_row(cell_to_move);  // row_index_stack.last().unwrap();  // panic if empty which it should never be
     let col_to_move = index_to_col(cell_to_move);  // col_index_stack.last().unwrap();
     let row_to_write: usize = (row_to_move + row_to_move / 3 + 1) as usize;
     let col_to_write: usize = (col_to_move + col_to_move / 3 + 1) as usize;
     log(&format!("digitToMove:{0} movedToDigit:{1} rowToMove:{2} colToMove:{3} rowToWrite:{4} colToWrite:{5} currentStateIndex:{6}", digit_to_move, moved_to_digit, row_to_move, col_to_move, row_to_write, col_to_write, cell_to_move));
-
-    let command = foo(board_stack, cell_to_move, digit_to_move, moved_to_digit);
-    return command;
 }
 
 fn foo(board_stack: &mut Vec<Board>, cell_to_move: usize, digit_to_move: i32, moved_to_digit: i32) -> Commands {
