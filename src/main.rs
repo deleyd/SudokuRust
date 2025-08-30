@@ -251,146 +251,147 @@ fn play(mut rnglcg: PortableLCG) {
             //#region Try to find a number which can only appear in one place in a row/column/block
             // 38.
             // if there were no cells which could only be set to a single digit
-            if !change_made
+            if change_made {
+                continue;
+            }
+
+            let candidate_cells = generate_candidate_cells(&mut board_candidate_masks);
+
+            // 47
+            if candidate_cells.len() > 0
             {
-                let candidate_cells = generate_candidate_cells(&mut board_candidate_masks);
+                let random_cell_index = rnglcg.next_range(candidate_cells.len() as i32) as usize;
+                let random_candidate_cell = candidate_cells.get(random_cell_index).unwrap();
 
-                // 47
-                if candidate_cells.len() > 0
-                {
-                    let random_cell_index = rnglcg.next_range(candidate_cells.len() as i32) as usize;
-                    let random_candidate_cell = candidate_cells.get(random_cell_index).unwrap();
+                board[random_candidate_cell].digit = random_candidate_cell.digit;       // we can try digit in this cell
+                board_candidate_masks[random_candidate_cell.index] = 0;          // clear for this cell since we just set cell to a number
+                change_made = true;
 
-                    board[random_candidate_cell].digit = random_candidate_cell.digit;       // we can try digit in this cell
-                    board_candidate_masks[random_candidate_cell.index] = 0;          // clear for this cell since we just set cell to a number
-                    change_made = true;
-
-                    let message = format!("{} can contain {} only at ({}, {}).",
-                                          random_candidate_cell.description,
-                                          random_candidate_cell.digit,
-                                          random_candidate_cell.get_row() + 1,
-                                          random_candidate_cell.get_column() + 1);
-                    log(&message);
-                }
+                let message = format!("{} can contain {} only at ({}, {}).",
+                                      random_candidate_cell.description,
+                                      random_candidate_cell.digit,
+                                      random_candidate_cell.get_row() + 1,
+                                      random_candidate_cell.get_column() + 1);
+                log(&message);
             }
             //#endregion
 
             //#region Try to find pairs of digits in the same row/column/block and remove them from other colliding cells
             // 48.
-            if !change_made
+            if change_made {
+                continue;
+            }
+            //let two_digit_masks = candidate_masks.Where(mask => mask_to_ones_count[mask] == 2).Distinct().ToList();
+            // look for cells which have only 2 options for digits
+            let two_digit_masks: Vec<u32> = board_candidate_masks
+                .into_iter()
+                .filter(|&mask| mask_to_ones_count()[&mask] == 2)
+                .unique()
+                .collect();
+
+            // note every number here when expressed in biary uses only 2 bits, indicating there are two candidates for which? cells
+            log(&format!("two_digit_masks={:?}", two_digit_masks));
+
+            // 49.
+
+            let mut groups = Vec::new();
+
+            // Outer loop equivalent to SelectMany over twoDigitMasks
+            // for every
+            for mask in two_digit_masks
             {
-                //let two_digit_masks = candidate_masks.Where(mask => mask_to_ones_count[mask] == 2).Distinct().ToList();
-                // look for cells which have only 2 options for digits
-                let two_digit_masks: Vec<u32> = board_candidate_masks
-                    .into_iter()
-                    .filter(|&mask| mask_to_ones_count()[&mask] == 2)
-                    .unique()
-                    .collect();
-
-                // note every number here when expressed in biary uses only 2 bits, indicating there are two candidates for which? cells
-                log(&format!("two_digit_masks={:?}", two_digit_masks));
-
-                // 49.
-
-                let mut groups = Vec::new();
-
-                // Outer loop equivalent to SelectMany over twoDigitMasks
-                // for every
-                for mask in two_digit_masks
+                // Inner processing equivalent to the SelectMany lambda
+                for tuple_kvp in &cell_groups
                 {
-                    // Inner processing equivalent to the SelectMany lambda
-                    for tuple_kvp in &cell_groups
-                    {
-                        // First Where condition: group.Count(tuple => candidateMasks[tuple.Index] == mask) == 2
-                        let cell_list = tuple_kvp.1;
-                        let matching_count = cell_list.iter()
-                            .filter(|cell| board_candidate_masks[cell.index] == mask)
-                            .count();
+                    // First Where condition: group.Count(tuple => candidateMasks[tuple.Index] == mask) == 2
+                    let cell_list = tuple_kvp.1;
+                    let matching_count = cell_list.iter()
+                        .filter(|cell| board_candidate_masks[cell.index] == mask)
+                        .count();
 
-                        // we are hoping to find only 2 cells which can have these two digits
-                        if matching_count != 2 {
-                            continue;
-                        }
+                    // we are hoping to find only 2 cells which can have these two digits
+                    if matching_count != 2 {
+                        continue;
+                    }
 
-                        // only 2 cells confirmed for 2 digits in mask
-                        // Second Where condition: group.Any(tuple => candidateMasks[tuple.Index] != mask && (candidateMasks[tuple.Index] & mask) > 0)
-                        let has_overlapping_non_matching = cell_list.iter().any(|cell| {
-                            board_candidate_masks[cell.index] != mask && (board_candidate_masks[cell.index] & mask) > 0
-                        });
+                    // only 2 cells confirmed for 2 digits in mask
+                    // Second Where condition: group.Any(tuple => candidateMasks[tuple.Index] != mask && (candidateMasks[tuple.Index] & mask) > 0)
+                    let has_overlapping_non_matching = cell_list.iter().any(|cell| {
+                        board_candidate_masks[cell.index] != mask && (board_candidate_masks[cell.index] & mask) > 0
+                    });
 
-                        if !has_overlapping_non_matching {
-                            continue;
-                        }
-
-
-                        // Get first description from the group
-                        let description = cell_list.first().map(|cell| cell.description.clone()).unwrap_or_default();
-
-                        let cell_group = CellGroup1 {
-                            mask,
-                            discriminator: tuple_kvp.0.clone() as i32,
-                            description,
-                            cells: cell_list.clone(),
-                        };
-
-                        groups.push(cell_group);
+                    if !has_overlapping_non_matching {
+                        continue;
                     }
 
 
-                    // 50.
-                    if !groups.is_empty()
+                    // Get first description from the group
+                    let description = cell_list.first().map(|cell| cell.description.clone()).unwrap_or_default();
+
+                    let cell_group = CellGroup1 {
+                        mask,
+                        discriminator: tuple_kvp.0.clone() as i32,
+                        description,
+                        cells: cell_list.clone(),
+                    };
+
+                    groups.push(cell_group);
+                }
+
+
+                // 50.
+                if !groups.is_empty()
+                {
+                    //log("50. Groups is NOT empty".to_string());
+                    for group in groups.iter().sorted_by_key(|cell_group| cell_group.discriminator)
                     {
-                        //log("50. Groups is NOT empty".to_string());
-                        for group in groups.iter().sorted_by_key(|cell_group| cell_group.discriminator)
+                        // Translation of the original C# code
+                        let cells: Vec<_> = group.cells.iter()
+                            .filter(|cell| board_candidate_masks[cell.index] != group.mask && // not equal but overlaps group.mask
+                                (board_candidate_masks[cell.index] & group.mask) > 0)
+                            .sorted_by_key(|cell| cell.index)
+                            .collect::<Vec<_>>();
+
+                        let mask_cells: Vec<&Cell> = group.cells.iter()
+                            .filter(|cell| board_candidate_masks[cell.index] == group.mask) // equal to group.mask
+                            .map(|x| x)
+                            .collect();
+
+                        // 51.
+                        if !cells.is_empty()
                         {
-                            // Translation of the original C# code
-                            let cells: Vec<_> = group.cells.iter()
-                                .filter(|cell| board_candidate_masks[cell.index] != group.mask && // not equal but overlaps group.mask
-                                    (board_candidate_masks[cell.index] & group.mask) > 0)
-                                .sorted_by_key(|cell| cell.index)
-                                .collect::<Vec<_>>();
+                            // "Values {lower} and {upper} in {} are in cells ({mask_cells[0].row+1}, {mask_cells[0].col+1}) and ({mask_cells[1].row+1}, {mask_cells[1].col+1}).",
+                            // Find the upper two bits. upper & lower represent digits
+                            let (lower, upper) = top_two_digits(group.mask); // bits represent digits
 
-                            let mask_cells: Vec<&Cell> = group.cells.iter()
-                                .filter(|cell| board_candidate_masks[cell.index] == group.mask) // equal to group.mask
-                                .map(|x| x)
-                                .collect();
+                            let s = format!(
+                                "Values {} and {} in {} are in cells ({}, {}) and ({}, {}).",
+                                lower,
+                                upper,
+                                group.description,
+                                mask_cells[0].get_row() + 1,
+                                mask_cells[0].get_column() + 1,
+                                mask_cells[1].get_row() + 1,
+                                mask_cells[1].get_column() + 1
+                            );
+                            log(&s);
 
-                            // 51.
-                            if !cells.is_empty()
+                            // 52.
+                            for cell in &cells
                             {
-                                // "Values {lower} and {upper} in {} are in cells ({mask_cells[0].row+1}, {mask_cells[0].col+1}) and ({mask_cells[1].row+1}, {mask_cells[1].col+1}).",
-                                // Find the upper two bits. upper & lower represent digits
-                                let (lower, upper) = top_two_digits(group.mask); // bits represent digits
+                                let mask_to_remove = board_candidate_masks[cell.index] & group.mask;  // intersection
+                                let values_to_remove = mask_to_vec_digits(mask_to_remove);
 
-                                let s = format!(
-                                    "Values {} and {} in {} are in cells ({}, {}) and ({}, {}).",
-                                    lower,
-                                    upper,
-                                    group.description,
-                                    mask_cells[0].get_row() + 1,
-                                    mask_cells[0].get_column() + 1,
-                                    mask_cells[1].get_row() + 1,
-                                    mask_cells[1].get_column() + 1
-                                );
+                                //string valuesReport = string.Join(", ", values_to_remove.ToArray());
+                                let string_values_to_remove: Vec<String> = values_to_remove
+                                    .iter()
+                                    .map(|&num| num.to_string())
+                                    .collect();
+                                let values_report = string_values_to_remove.join(", ");
+                                let s = format!("{} cannot appear in ({}, {}).", values_report, cell.get_row() + 1, cell.get_column() + 1);
                                 log(&s);
-
-                                // 52.
-                                for cell in &cells
-                                {
-                                    let mask_to_remove = board_candidate_masks[cell.index] & group.mask;  // intersection
-                                    let values_to_remove = mask_to_vec_digits(mask_to_remove);
-
-                                    //string valuesReport = string.Join(", ", values_to_remove.ToArray());
-                                    let string_values_to_remove: Vec<String> = values_to_remove
-                                        .iter()
-                                        .map(|&num| num.to_string())
-                                        .collect();
-                                    let values_report = string_values_to_remove.join(", ");
-                                    let s = format!("{} cannot appear in ({}, {}).", values_report, cell.get_row() + 1, cell.get_column() + 1);
-                                    log(&s);
-                                    board_candidate_masks[cell.index] &= !group.mask;
-                                    step_change_made = true;
-                                }
+                                board_candidate_masks[cell.index] &= !group.mask;
+                                step_change_made = true;
                             }
                         }
                     }
@@ -402,85 +403,85 @@ fn play(mut rnglcg: PortableLCG) {
             // When a set of N digits only appears in N cells within row/column/block, then no other digit can appear in the same set of cells
             // All other candidates can then be removed from those cells
             // 53.
-            if !change_made && !step_change_made
-            {
-                let digit_masks: Vec<u32> = mask_to_ones_count().iter()
-                    .filter(|&(_, count)| *count > 1)
-                    .map(|(mask, _)| *mask)
-                    .collect();
-                let groups_with_n_masks : Vec<CellGroup2> = digit_masks
-                    .iter()
-                    .flat_map(|mask| {
-                        cell_groups
-                            .iter()
-                            .filter(|cell_group1| {
-                                cell_group1.1.iter().all(|cell| {
-                                    board[cell.index].digit == 0          // cell not being used
-                                        || (mask.clone() & convert_digit_to_mask(board[cell.index].digit)) == 0  // cell not using value
-                                })
+            if change_made || step_change_made {
+                continue;
+            }
+            let digit_masks: Vec<u32> = mask_to_ones_count().iter()
+                .filter(|&(_, count)| *count > 1)
+                .map(|(mask, _)| *mask)
+                .collect();
+            let groups_with_n_masks : Vec<CellGroup2> = digit_masks
+                .iter()
+                .flat_map(|mask| {
+                    cell_groups
+                        .iter()
+                        .filter(|cell_group1| {
+                            cell_group1.1.iter().all(|cell| {
+                                board[cell.index].digit == 0          // cell not being used
+                                    || (mask.clone() & convert_digit_to_mask(board[cell.index].digit)) == 0  // cell not using value
                             })
-                            .map(|cell_group2| {
-                                let cells_with_mask: Vec<Cell> = cell_group2.1
-                                    .iter()
-                                    .filter(|cell| {
-                                        board[cell.index].digit == 0  // cell unused
-                                            && (board_candidate_masks[cell.index] & mask.clone()) != 0  // candidate_mask overlaps mask
-                                    })
-                                    //.map(|&x| x)
-                                    .cloned()
-                                    .collect();
+                        })
+                        .map(|cell_group2| {
+                            let cells_with_mask: Vec<Cell> = cell_group2.1
+                                .iter()
+                                .filter(|cell| {
+                                    board[cell.index].digit == 0  // cell unused
+                                        && (board_candidate_masks[cell.index] & mask.clone()) != 0  // candidate_mask overlaps mask
+                                })
+                                //.map(|&x| x)
+                                .cloned()
+                                .collect();
 
-                                let cleanable_cells_count : u32 = cell_group2.1
-                                    .iter()
-                                    .filter(|cell| {
-                                        board[cell.index].digit == 0
-                                            && (board_candidate_masks[cell.index] & mask.clone()) != 0   // overlaps
-                                            && (board_candidate_masks[cell.index] & !mask.clone()) != 0  // but is not equal to
-                                    })
-                                    .count() as u32;
+                            let cleanable_cells_count : u32 = cell_group2.1
+                                .iter()
+                                .filter(|cell| {
+                                    board[cell.index].digit == 0
+                                        && (board_candidate_masks[cell.index] & mask.clone()) != 0   // overlaps
+                                        && (board_candidate_masks[cell.index] & !mask.clone()) != 0  // but is not equal to
+                                })
+                                .count() as u32;
 
-                                CellGroup2 {
-                                    mask: *mask,
-                                    description: cell_group2.1.iter().next().unwrap().description.clone(),
-                                    cell_group: cell_group2.clone(),
-                                    cells_with_mask,
-                                    cleanable_cells_count,
-                                }
-                            }) // .map
-                    })// .flat_map
-                    .filter(|group| group.cells_with_mask.len() == *mask_to_ones_count().get(&group.mask).unwrap())
-                    .collect();
+                            CellGroup2 {
+                                mask: *mask,
+                                description: cell_group2.1.iter().next().unwrap().description.clone(),
+                                cell_group: cell_group2.clone(),
+                                cells_with_mask,
+                                cleanable_cells_count,
+                            }
+                        }) // .map
+                })// .flat_map
+                .filter(|group| group.cells_with_mask.len() == *mask_to_ones_count().get(&group.mask).unwrap())
+                .collect();
 
-                // 54.
-                for group_with_n_masks in groups_with_n_masks
+            // 54.
+            for group_with_n_masks in groups_with_n_masks
+            {
+                let mask = group_with_n_masks.mask;
+
+                if group_with_n_masks.cell_group.1.iter().any(|cell| {
+                    let candidate_mask_for_cell = board_candidate_masks[cell.index];
+                    (candidate_mask_for_cell & mask) != 0 && (candidate_mask_for_cell & !mask) != 0  // there is some overlap
+                })
                 {
-                    let mask = group_with_n_masks.mask;
+                    log_group_with_n_masks_message(&group_with_n_masks, mask);
+                }
 
-                    if group_with_n_masks.cell_group.1.iter().any(|cell| {
-                        let candidate_mask_for_cell = board_candidate_masks[cell.index];
-                        (candidate_mask_for_cell & mask) != 0 && (candidate_mask_for_cell & !mask) != 0  // there is some overlap
-                    })
+                // 57.
+                for cell in group_with_n_masks.cells_with_mask
+                {
+                    let mask_to_clear = board_candidate_masks[cell.index] & !group_with_n_masks.mask;  // mask_to_clear is the intersection of
+                    if mask_to_clear == 0
                     {
-                        log_group_with_n_masks_message(&group_with_n_masks, mask);
+                        continue;
                     }
 
-                    // 57.
-                    for cell in group_with_n_masks.cells_with_mask
-                    {
-                        let mask_to_clear = board_candidate_masks[cell.index] & !group_with_n_masks.mask;  // mask_to_clear is the intersection of
-                        if mask_to_clear == 0
-                        {
-                            continue;
-                        }
+                    board_candidate_masks[cell.index] &= group_with_n_masks.mask;  // Add more candidate digits to this cell
+                    step_change_made = true;
 
-                        board_candidate_masks[cell.index] &= group_with_n_masks.mask;  // Add more candidate digits to this cell
-                        step_change_made = true;
+                    generate_and_log_mask_to_clear_message(mask_to_clear, cell);
 
-                        generate_and_log_mask_to_clear_message(mask_to_clear, cell);
+                    // 59.
 
-                        // 59.
-
-                    }
                 }
             }
             //#endregion
