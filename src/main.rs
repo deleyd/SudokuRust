@@ -652,19 +652,14 @@ fn play(mut rnglcg: PortableLCG) {
 
                             // 74.
                             bar(&mut board_stack, cell_to_move, digit_to_move);
-                            /*if digit_to_move > 0
-                            {
-                                //used_digits[digit_to_move as usize - 1] = false;
-                                board_stack.last_mut().unwrap().used_digits[digit_to_move as usize - 1] = false;
-                                board_stack.last_mut().unwrap()[current_cell_index].digit = 0;  // set cell to unused
-                            }*/
 
                             // 75.
                             if moved_to_digit <= 9 {
-                                board_stack.last_mut().unwrap().last_digit = moved_to_digit;
+                                update_board_state(&mut board_stack, current_cell_index, moved_to_digit);
+                                /*board_stack.last_mut().unwrap().last_digit = moved_to_digit;
                                 board_stack.last_mut().unwrap().used_digits[moved_to_digit as usize - 1] = true;
                                 board_stack.last_mut().unwrap()[current_cell_index].digit = moved_to_digit; // Array access is similar
-
+                                */
                                 command = if board_stack.last_mut().unwrap().cells.iter().any(|cell| cell.digit == 0) {
                                     Commands::Expand
                                 } else {
@@ -976,9 +971,7 @@ fn foo(board_stack: &mut Vec<Board>, cell_to_move: usize, digit_to_move: i32, mo
 
     if moved_to_digit <= 9 {
         log(&format!("19d. moved_to_digit: {:?}", moved_to_digit));
-        board_stack.last_mut().unwrap().last_digit = moved_to_digit;
-        board_stack.last_mut().unwrap().used_digits[moved_to_digit as usize - 1] = true;
-        board_stack.last_mut().unwrap()[cell_to_move].digit = moved_to_digit;
+        update_board_state(board_stack, cell_to_move, moved_to_digit);
 
         // Next possible digit was found at current position
         // Next step will be to expand the state
@@ -990,6 +983,12 @@ fn foo(board_stack: &mut Vec<Board>, cell_to_move: usize, digit_to_move: i32, mo
     board_stack.last_mut().unwrap().last_digit = 0;
     log(&format!("collapse. last_digit_stack.last():{}", board_stack.last_mut().unwrap().last_digit));
     Commands::Collapse
+}
+
+fn update_board_state(board_stack: &mut Vec<Board>, cell_to_move: usize, moved_to_digit: i32) {
+    board_stack.last_mut().unwrap().last_digit = moved_to_digit;
+    board_stack.last_mut().unwrap().used_digits[moved_to_digit as usize - 1] = true;
+    board_stack.last_mut().unwrap()[cell_to_move].digit = moved_to_digit;
 }
 
 fn bar(board_stack: &mut Vec<Board>, cell_to_move: usize, digit_to_move: i32) {
