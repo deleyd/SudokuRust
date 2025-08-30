@@ -947,7 +947,6 @@ fn construct_final_board(mut rnglcg: &mut PortableLCG) -> Board {
 
 fn handle_move(board_stack: &mut Vec<Board>) -> Commands {
     let stack_len = board_stack.len();
-    log(&format!("rowIndexStack Count={} ", stack_len));
     log(&format!("rowIndexStack Count={} rowToMove={}", stack_len, board_stack.last().unwrap().candidate_cell / 9));
     let cell_to_move: usize = board_stack.last_mut().unwrap().candidate_cell;
     let digit_to_move: i32 = board_stack.last_mut().unwrap().last_digit;
