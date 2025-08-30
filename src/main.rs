@@ -49,7 +49,7 @@ impl fmt::Display for Cell {
 struct Board {
     cells: Vec<Cell>,
     candidate_cell: usize,
-    used_digits: [bool; 9],
+    //used_digits: [bool; 9],
     used_digits_digits: Digits,
     last_digit: i32,
 }
@@ -61,7 +61,7 @@ impl Board {
         Board {
             cells,
             candidate_cell: 9999,
-            used_digits:  [false; 9],
+            //used_digits:  [false; 9],
             used_digits_digits: Digits::new(0),
             last_digit: -2,
         }
@@ -552,7 +552,7 @@ fn play(mut rnglcg: PortableLCG) {
                             };
 
                             let mut best_index: usize = 9999;                  // best will be cell with lowest number of candidate digits
-                            let mut best_used_digits_arr: [bool; 9] = [false; 9];  // corresponding candidate digits for best cell
+                            //let mut best_used_digits_arr: [bool; 9] = [false; 9];  // corresponding candidate digits for best cell
                             let mut best_used_digits: Digits = Digits::new(0);           // corresponding candidate digits for best cell
                             let mut best_candidates_count: i32 = -1;          // number of candidate digits for best cell
                             let mut best_random_value: i32 = -1;
@@ -585,7 +585,7 @@ fn play(mut rnglcg: PortableLCG) {
                                         (candidates_count == best_candidates_count && random_value < best_random_value)
                                     {
                                         best_index = index;                               // corresponding cell with lowest number of candidate digits
-                                        best_used_digits_arr = digit_used_array;              // the candidate digits for this cell
+                                        //best_used_digits_arr = digit_used_array;              // the candidate digits for this cell
                                         best_used_digits = used_digits;
                                         best_candidates_count = candidates_count as i32;  // best is lowest number of candidate digits for a cell
                                         best_random_value = random_value;
@@ -597,14 +597,9 @@ fn play(mut rnglcg: PortableLCG) {
                             if !contains_unsolvable_cells
                             {
                                 current_board.candidate_cell = best_index;
-                                current_board.used_digits = best_used_digits_arr;
                                 current_board.used_digits_digits = best_used_digits;
                                 current_board.last_digit = 0;
                                 board_stack.push(current_board);
-
-                                //cell_candidate_stack.push(best_index);      // CellCandidate is index of cell on Board
-                                //used_digits_stack.push(best_used_digits);   // corresponding digits already used for cell's row,col,block
-                                //last_digit_stack.push(0); // No digit was tried at this position. Last digit tried for this cell
                             }
 
                             // Always try to move after expand
@@ -952,7 +947,7 @@ fn handle_move(board_stack: &mut Vec<Board>) -> Commands {
     let digit_to_move: i32 = board_stack.last_mut().unwrap().last_digit;
     let mut moved_to_digit = digit_to_move + 1;
 
-    while moved_to_digit <= 9 && board_stack.last_mut().unwrap().used_digits[moved_to_digit as usize - 1]
+    while moved_to_digit <= 9 && board_stack.last_mut().unwrap().used_digits_digits.is_present(moved_to_digit)
     {
         moved_to_digit += 1;
     }
@@ -992,14 +987,14 @@ fn update_board_and_next_command(board_stack: &mut Vec<Board>, cell_to_move: usi
 
 fn update_board_state(board_stack: &mut Vec<Board>, cell_to_move: usize, moved_to_digit: i32) {
     board_stack.last_mut().unwrap().last_digit = moved_to_digit;
-    board_stack.last_mut().unwrap().used_digits[moved_to_digit as usize - 1] = true;
+    board_stack.last_mut().unwrap().used_digits_digits.set_digit(moved_to_digit); // as usize - 1] = true;
     board_stack.last_mut().unwrap()[cell_to_move].digit = moved_to_digit;
 }
 
 fn update_board(board_stack: &mut Vec<Board>, cell_to_move: usize, digit_to_move: i32, moved_to_digit: i32) {
     if digit_to_move > 0
     {
-        board_stack.last_mut().unwrap().used_digits[digit_to_move as usize - 1] = false;
+        board_stack.last_mut().unwrap().used_digits_digits.clear_digit(digit_to_move); // as usize - 1] = false;
         board_stack.last_mut().unwrap()[cell_to_move].digit = 0; // does this change last element of state_stack?
     }
     if moved_to_digit <= 9 {
@@ -1017,7 +1012,7 @@ fn handle_expand(rnglcg: &mut PortableLCG, board_stack: &mut Vec<Board>) {
 
     // input: current_state. output: contains_unsolvable_cells, best_row, best_col,
     let mut best_index: usize = 9999;
-    let mut best_used_digits: [bool; 9] = [false; 9];
+    //let mut best_used_digits: [bool; 9] = [false; 9];
     let mut best_digits_used: Digits = Digits::new(0);
     let mut best_candidates_count: i32 = -1;
     let mut best_random_value: i32 = -1;
@@ -1030,16 +1025,10 @@ fn handle_expand(rnglcg: &mut PortableLCG, board_stack: &mut Vec<Board>) {
         }
         // 11.  otherwise cell unused. Let's see what we can do with it
 
-        let (digits_used_array, digits_used) = get_row_col_block_used_digits(&current_board, index); // returns an array of 9 true/false values
+        let (_digits_used_array, digits_used) = get_row_col_block_used_digits(&current_board, index); // returns an array of 9 true/false values
 
         // 13.
         let candidates_count: i32 = 9 - digits_used.count();
-        /*let candidates_count1: i32 = digits_used_array
-            .iter() // Get an iterator over the elements
-            .filter(|&&value| !value) // count the 'false' values (filter out 'true' values)
-            .count() as i32; // Count the remaining elements */
-
-        //assert_eq!(candidates_count,candidates_count1);
         if candidates_count == 0  // 14.  if there are no candidates, then this cell has no options and Sudoku is unsolvable
         {
             contains_unsolvable_cells = true;
@@ -1055,7 +1044,7 @@ fn handle_expand(rnglcg: &mut PortableLCG, board_stack: &mut Vec<Board>) {
             (candidates_count == best_candidates_count && random_value < best_random_value) // if two cells both have the same number of candidates, randomly select one (this "random" looks not random)
         {
             best_index = index; // this cell becomes the best cell (saved as row,col. we could save index instead?)
-            best_used_digits = digits_used_array;
+            //best_used_digits = digits_used_array;
             best_digits_used = digits_used;
             best_candidates_count = candidates_count;  // candidates_count is a function of is_digit_used array
             best_random_value = random_value;
@@ -1066,7 +1055,6 @@ fn handle_expand(rnglcg: &mut PortableLCG, board_stack: &mut Vec<Board>) {
     {
         current_board.candidate_cell = best_index;
         current_board.used_digits_digits = best_digits_used;
-        current_board.used_digits = best_used_digits;
         current_board.last_digit = 0;
         board_stack.push(current_board);          // current state came from state_stack?
     }
