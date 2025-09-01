@@ -397,22 +397,8 @@ fn play(mut rnglcg: PortableLCG) {
                     log(&s);
 
                     // 52.
-                    for cell in &cells
-                    {
-                        let mask_to_remove = board_candidate_masks[cell.index] & group.mask;  // intersection
-                        let values_to_remove = mask_to_vec_digits(mask_to_remove);
-
-                        //string valuesReport = string.Join(", ", values_to_remove.ToArray());
-                        let string_values_to_remove: Vec<String> = values_to_remove
-                            .iter()
-                            .map(|&num| num.to_string())
-                            .collect();
-                        let values_report = string_values_to_remove.join(", ");
-                        let s = format!("{} cannot appear in ({}, {}).", values_report, cell.get_row() + 1, cell.get_column() + 1);
-                        log(&s);
-                        board_candidate_masks[cell.index] &= !group.mask;
-                        step_change_made = true;
-                    }
+                    let result = for_cell_in_cells(&mut board_candidate_masks, group, &cells);
+                    step_change_made = step_change_made || result;
                 }
             }
             //#endregion
@@ -557,17 +543,9 @@ fn play(mut rnglcg: PortableLCG) {
 
                         // 73.
                         Commands::Move => {
-                            /*let cell_to_move: Cell = board_stack.last_mut().unwrap().candidate_cell.clone();  // cell to move is identified by an index
-                            let digit_to_move = board_stack.last_mut().unwrap().last_digit;  // last digit tried
-                            let moved_to_digit = get_moved_to_digit(digit_to_move, board_stack.last_mut().unwrap().used_digits.clone());
-
-                            // 74.
-                            update_board(&mut board_stack, &cell_to_move, digit_to_move, moved_to_digit);
-                            */
                             let moved_to_digit = handle_move(&mut board_stack, false);
 
                             // 75.
-
                             if moved_to_digit <= 9 {
                                 command = if board_stack.last_mut().unwrap().cells.iter().any(|cell| cell.digit == 0) {
                                     Commands::Expand
@@ -623,6 +601,27 @@ fn play(mut rnglcg: PortableLCG) {
             //#endregion
     }//while change_made// 27
     log(&"BOARD SOLVED.".to_string())
+}
+
+fn for_cell_in_cells(board_candidate_masks: &mut [i32; 81], group: &CellGroup1, cells: &Vec<&Cell>) -> bool {
+    let mut step_change_made : bool = false;
+    for cell in cells
+    {
+        let mask_to_remove = board_candidate_masks[cell.index] & group.mask;  // intersection
+        let values_to_remove = mask_to_vec_digits(mask_to_remove);
+
+        //string valuesReport = string.Join(", ", values_to_remove.ToArray());
+        let string_values_to_remove: Vec<String> = values_to_remove
+            .iter()
+            .map(|&num| num.to_string())
+            .collect();
+        let values_report = string_values_to_remove.join(", ");
+        let s = format!("{} cannot appear in ({}, {}).", values_report, cell.get_row() + 1, cell.get_column() + 1);
+        log(&s);
+        board_candidate_masks[cell.index] &= !group.mask;
+        step_change_made = true;
+    }
+    step_change_made
 }
 
 fn get_alternate_board(final_board: &Board, board: &mut Board, candidate_cell1: &CandidateCell, candidate_cell2: &CandidateCell) -> Board {
