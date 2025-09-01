@@ -526,17 +526,7 @@ fn play(mut rnglcg: PortableLCG) {
                 let candidate_cell1 = candidate_cells1.pop_front().unwrap();
                 let candidate_cell2 = candidate_cells2.pop_front().unwrap();
 
-                let mut alternate_board : Board = board.clone();
-
-                // assign digit1, digit2, in the order opposite of final_board
-                if final_board[candidate_cell1.index].digit == candidate_cell1.digit
-                {
-                    alternate_board[&candidate_cell1].digit = candidate_cell2.digit;
-                    alternate_board[&candidate_cell2].digit = candidate_cell1.digit;
-                } else {
-                    alternate_board[candidate_cell1.index].digit = candidate_cell1.digit;
-                    alternate_board[candidate_cell2.index].digit = candidate_cell2.digit;
-                }
+                let alternate_board = get_alternate_board(&final_board, &mut board, &candidate_cell1, &candidate_cell2);
 
                 // 65.
                 // What follows below is a complete copy-paste of the solver which appears at the beginning of this method
@@ -633,7 +623,22 @@ fn play(mut rnglcg: PortableLCG) {
     log(&"BOARD SOLVED.".to_string())
 }
 
-fn get_candidate_cells(mut board_candidate_masks: &mut [i32; 81]) -> (VecDeque<CandidateCell>, VecDeque<CandidateCell>) {
+fn get_alternate_board(final_board: &Board, board: &mut Board, candidate_cell1: &CandidateCell, candidate_cell2: &CandidateCell) -> Board {
+    let mut alternate_board: Board = board.clone();
+
+    // assign digit1, digit2, in the order opposite of final_board
+    if final_board[candidate_cell1.index].digit == candidate_cell1.digit
+    {
+        alternate_board[candidate_cell1].digit = candidate_cell2.digit;
+        alternate_board[candidate_cell2].digit = candidate_cell1.digit;
+    } else {
+        alternate_board[candidate_cell1.index].digit = candidate_cell1.digit;
+        alternate_board[candidate_cell2.index].digit = candidate_cell2.digit;
+    }
+    alternate_board
+}
+
+fn get_candidate_cells(board_candidate_masks: &mut [i32; 81]) -> (VecDeque<CandidateCell>, VecDeque<CandidateCell>) {
     let mut candidate_cells1: VecDeque<CandidateCell> = VecDeque::new();
     let mut candidate_cells2: VecDeque<CandidateCell> = VecDeque::new();
 
