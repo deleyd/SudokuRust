@@ -310,7 +310,7 @@ fn play(mut rnglcg: PortableLCG) {
             log(&format!("two_digit_masks={:?}", two_digit_masks));
 
             // 49.
-
+            //step_change_made = step_change_made || handle_two_digit_masks(two_digit_masks, &cell_groups, board_candidate_masks);
             let mut groups = Vec::new();
 
             // Outer loop equivalent to SelectMany over twoDigitMasks
@@ -318,43 +318,7 @@ fn play(mut rnglcg: PortableLCG) {
             for mask in two_digit_masks
             {
                 // Inner processing equivalent to the SelectMany lambda
-                for tuple_kvp in &cell_groups
-                {
-                    // First Where condition: group.Count(tuple => candidateMasks[tuple.Index] == mask) == 2
-                    let cell_list = tuple_kvp.1;
-                    let matching_count = cell_list.iter()
-                        .filter(|cell| board_candidate_masks[cell.index] == mask)
-                        .count();
-
-                    // we are hoping to find only 2 cells which can have these two digits
-                    if matching_count != 2 {
-                        continue;
-                    }
-
-                    // only 2 cells confirmed for 2 digits in mask
-                    // Second Where condition: group.Any(tuple => candidateMasks[tuple.Index] != mask && (candidateMasks[tuple.Index] & mask) > 0)
-                    let has_overlapping_non_matching = cell_list.iter().any(|cell| {
-                        board_candidate_masks[cell.index] != mask && (board_candidate_masks[cell.index] & mask) > 0
-                    });
-
-                    if !has_overlapping_non_matching {
-                        continue;
-                    }
-
-
-                    // Get first description from the group
-                    let description = cell_list.first().map(|cell| cell.description.clone()).unwrap_or_default();
-
-                    let cell_group = CellGroup1 {
-                        mask,
-                        discriminator: tuple_kvp.0.clone() as i32,
-                        description,
-                        cells: cell_list.clone(),
-                    };
-
-                    groups.push(cell_group);
-                }
-
+                for_tuple_kvp_in_cell_groups(board_candidate_masks, &cell_groups, &mut groups, mask);
 
                 // 50.
                 if groups.is_empty() {
@@ -401,6 +365,7 @@ fn play(mut rnglcg: PortableLCG) {
                     step_change_made = step_change_made || result;
                 }
             }
+
             //#endregion
 
             //#region Try to find groups of digits of size N which only appear in N cells within row/column/block
@@ -602,6 +567,140 @@ fn play(mut rnglcg: PortableLCG) {
     }//while change_made// 27
     log(&"BOARD SOLVED.".to_string())
 }
+
+fn for_tuple_kvp_in_cell_groups(board_candidate_masks: [i32; 81], cell_groups: &BTreeMap<usize, Vec<Cell>>, groups: &mut Vec<CellGroup1>, mask: i32) {
+    for tuple_kvp in cell_groups
+    {
+        // First Where condition: group.Count(tuple => candidateMasks[tuple.Index] == mask) == 2
+        let cell_list = tuple_kvp.1;
+        let matching_count = cell_list.iter()
+            .filter(|cell| board_candidate_masks[cell.index] == mask)
+            .count();
+
+        // we are hoping to find only 2 cells which can have these two digits
+        if matching_count != 2 {
+            continue;
+        }
+
+        // only 2 cells confirmed for 2 digits in mask
+        // Second Where condition: group.Any(tuple => candidateMasks[tuple.Index] != mask && (candidateMasks[tuple.Index] & mask) > 0)
+        let has_overlapping_non_matching = cell_list.iter().any(|cell| {
+            board_candidate_masks[cell.index] != mask && (board_candidate_masks[cell.index] & mask) > 0
+        });
+
+        if !has_overlapping_non_matching {
+            continue;
+        }
+
+
+        // Get first description from the group
+        let description = cell_list.first().map(|cell| cell.description.clone()).unwrap_or_default();
+
+        let cell_group = CellGroup1 {
+            mask,
+            discriminator: tuple_kvp.0.clone() as i32,
+            description,
+            cells: cell_list.clone(),
+        };
+
+        groups.push(cell_group);
+    }
+}
+
+/*
+fn handle_two_digit_masks(two_digit_masks : Vec<i32>, cell_groups : &BTreeMap<usize, Vec< crate::Cell >>, mut board_candidate_masks: [i32; 81]) -> bool {
+    let mut groups = Vec::new();
+    let mut step_change_made = false;
+    // Outer loop equivalent to SelectMany over twoDigitMasks
+    // for every
+    for mask in two_digit_masks
+    {
+        // Inner processing equivalent to the SelectMany lambda
+        for tuple_kvp in cell_groups
+        {
+            // First Where condition: group.Count(tuple => candidateMasks[tuple.Index] == mask) == 2
+            let cell_list = tuple_kvp.1;
+            let matching_count = cell_list.iter()
+                .filter(|cell| board_candidate_masks[cell.index] == mask)
+                .count();
+
+            // we are hoping to find only 2 cells which can have these two digits
+            if matching_count != 2 {
+                continue;
+            }
+
+            // only 2 cells confirmed for 2 digits in mask
+            // Second Where condition: group.Any(tuple => candidateMasks[tuple.Index] != mask && (candidateMasks[tuple.Index] & mask) > 0)
+            let has_overlapping_non_matching = cell_list.iter().any(|cell| {
+                board_candidate_masks[cell.index] != mask && (board_candidate_masks[cell.index] & mask) > 0
+            });
+
+            if !has_overlapping_non_matching {
+                continue;
+            }
+
+
+            // Get first description from the group
+            let description = cell_list.first().map(|cell| cell.description.clone()).unwrap_or_default();
+
+            let cell_group = CellGroup1 {
+                mask,
+                discriminator: tuple_kvp.0.clone() as i32,
+                description,
+                cells: cell_list.clone(),
+            };
+
+            groups.push(cell_group);
+        }
+
+
+        // 50.
+        if groups.is_empty() {
+            continue;
+        }
+
+        //log("50. Groups is NOT empty".to_string());
+        for group in groups.iter().sorted_by_key(|cell_group| cell_group.discriminator)
+        {
+            // Translation of the original C# code
+            let cells: Vec<_> = group.cells.iter()
+                .filter(|cell| board_candidate_masks[cell.index] != group.mask && // not equal but overlaps group.mask
+                    (board_candidate_masks[cell.index] & group.mask) > 0)
+                .sorted_by_key(|cell| cell.index)
+                .collect::<Vec<_>>();
+
+            let mask_cells: Vec<&Cell> = group.cells.iter()
+                .filter(|cell| board_candidate_masks[cell.index] == group.mask) // equal to group.mask
+                .map(|x| x)
+                .collect();
+
+            // 51.
+            if cells.is_empty() {
+                continue;
+            }
+            // "Values {lower} and {upper} in {} are in cells ({mask_cells[0].row+1}, {mask_cells[0].col+1}) and ({mask_cells[1].row+1}, {mask_cells[1].col+1}).",
+            // Find the upper two bits. upper & lower represent digits
+            let (lower, upper) = top_two_digits(group.mask); // bits represent digits
+
+            let s = format!(
+                "Values {} and {} in {} are in cells ({}, {}) and ({}, {}).",
+                lower,
+                upper,
+                group.description,
+                mask_cells[0].get_row() + 1,
+                mask_cells[0].get_column() + 1,
+                mask_cells[1].get_row() + 1,
+                mask_cells[1].get_column() + 1
+            );
+            log(&s);
+
+            // 52.
+            let result = for_cell_in_cells(&mut board_candidate_masks, group, &cells);
+            step_change_made = step_change_made || result;
+        }
+    }
+    step_change_made
+}*/
 
 fn for_cell_in_cells(board_candidate_masks: &mut [i32; 81], group: &CellGroup1, cells: &Vec<&Cell>) -> bool {
     let mut step_change_made : bool = false;
