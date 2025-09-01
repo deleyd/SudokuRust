@@ -262,7 +262,7 @@ fn play(mut rnglcg: PortableLCG) {
 
             //#region Pick cells with only one candidate left
 
-            change_made = change_made || set_cell_with_only_one_candidate(&mut rnglcg, &mut board, &mut board_candidate_masks);
+            change_made = change_made || set_random_cell_with_only_one_candidate(&mut rnglcg, &mut board, &mut board_candidate_masks);
             //#endregion*
 
             //#region Try to find a number which can only appear in one place in a row/column/block
@@ -590,32 +590,32 @@ fn play(mut rnglcg: PortableLCG) {
                             // 67.
                             for cell in &current_board //index in 0..81
                             {
-                                if cell.digit == 0
+                                if cell.digit != 0 {
+                                    continue;
+                                }
+                                // 68.
+                                let (_digit_used_array, used_digits) = get_row_col_block_used_digits(&current_board, cell);
+
+                                let candidates_count: i32 = 9 - used_digits.count();
+                                if candidates_count == 0
                                 {
-                                    // 68.
-                                    let (_digit_used_array, used_digits) = get_row_col_block_used_digits(&current_board, cell);
+                                    contains_unsolvable_cells = true;
+                                    break;
+                                }
 
-                                    let candidates_count: i32 = 9 - used_digits.count();
-                                    if candidates_count == 0
-                                    {
-                                        contains_unsolvable_cells = true;
-                                        break;
-                                    }
+                                // 70.
+                                let random_value = rnglcg.next();
+                                //let random_value = rng.Next();
 
-                                    // 70.
-                                    let random_value = rnglcg.next();
-                                    //let random_value = rng.Next();
-
-                                    if best_candidates_count < 0 ||
-                                        candidates_count < best_candidates_count ||
-                                        (candidates_count == best_candidates_count && random_value < best_random_value)
-                                    {
-                                        best_cell = cell.clone();                               // corresponding cell with lowest number of candidate digits
-                                        //best_used_digits_arr = digit_used_array;              // the candidate digits for this cell
-                                        best_used_digits = used_digits;
-                                        best_candidates_count = candidates_count as i32;  // best is lowest number of candidate digits for a cell
-                                        best_random_value = random_value;
-                                    }
+                                if best_candidates_count < 0 ||
+                                    candidates_count < best_candidates_count ||
+                                    (candidates_count == best_candidates_count && random_value < best_random_value)
+                                {
+                                    best_cell = cell.clone();                               // corresponding cell with lowest number of candidate digits
+                                    //best_used_digits_arr = digit_used_array;              // the candidate digits for this cell
+                                    best_used_digits = used_digits;
+                                    best_candidates_count = candidates_count as i32;  // best is lowest number of candidate digits for a cell
+                                    best_random_value = random_value;
                                 }
                             } // for (index = 0..81)
 
@@ -646,8 +646,8 @@ fn play(mut rnglcg: PortableLCG) {
                         // 73.
                         Commands::Move => {
                             let cell_to_move: Cell = board_stack.last_mut().unwrap().candidate_cell.clone();  // cell to move is identified by an index
-                            let digit_to_move = board_stack.last_mut().unwrap().last_digit;  // pop here, push below
-                            let mut moved_to_digit = digit_to_move + 1;
+                            let digit_to_move = board_stack.last_mut().unwrap().last_digit;  // last digit tried
+                            let mut moved_to_digit = digit_to_move + 1;  // try next digit after last digit tried, next not already used digit
                             // Find next digit not used
                             while moved_to_digit <= 9 && board_stack.last_mut().unwrap().used_digits.is_present(moved_to_digit)
                             {
@@ -1007,8 +1007,11 @@ fn update_board_and_next_command(board_stack: &mut Vec<Board>, cell_to_move: &Ce
 }
 
 fn update_board_state(board_stack: &mut Vec<Board>, cell_to_move: &Cell, moved_to_digit: i32) {
+    //lastDigitStack.Push(movedToDigit);
+    //usedDigits[movedToDigit - 1] = true;
+    //currentState[currentStateIndex] = movedToDigit;
     board_stack.last_mut().unwrap().last_digit = moved_to_digit;
-    board_stack.last_mut().unwrap().used_digits.set_digit(moved_to_digit); // as usize - 1] = true;
+    board_stack.last_mut().unwrap().used_digits.set_digit(moved_to_digit);
     board_stack.last_mut().unwrap()[cell_to_move.index].digit = moved_to_digit;
 }
 
@@ -1034,7 +1037,7 @@ fn handle_expand(rnglcg: &mut PortableLCG, board_stack: &mut Vec<Board>) {
     // input: current_state. output: contains_unsolvable_cells, best_row, best_col,
     let mut best_cell = Cell::new(0,0);
     //let mut best_used_digits: [bool; 9] = [false; 9];
-    let mut best_digits_used: Digits = Digits::new(0);
+    let mut best_used_digits: Digits = Digits::new(0);
     let mut best_candidates_count: i32 = -1;
     let mut best_random_value: i32 = -1;
     let mut contains_unsolvable_cells: bool = false;
@@ -1066,8 +1069,8 @@ fn handle_expand(rnglcg: &mut PortableLCG, board_stack: &mut Vec<Board>) {
             (candidates_count == best_candidates_count && random_value < best_random_value) // if two cells both have the same number of candidates, randomly select one (this "random" looks not random)
         {
             best_cell = cell.clone(); // this cell becomes the best cell (saved as row,col. we could save index instead?)
-            best_digits_used = digits_used;
-            best_candidates_count = candidates_count;  // candidates_count is a function of digits_used array
+            best_used_digits = digits_used;
+            best_candidates_count = candidates_count;  // candidates_count is a function of digits_used array. We search for the smallest number of candidates
             best_random_value = random_value;
         }
     }
@@ -1075,7 +1078,7 @@ fn handle_expand(rnglcg: &mut PortableLCG, board_stack: &mut Vec<Board>) {
     if !contains_unsolvable_cells  // 16.
     {
         current_board.candidate_cell = best_cell;
-        current_board.used_digits = best_digits_used;
+        current_board.used_digits = best_used_digits;
         current_board.last_digit = 0;
         board_stack.push(current_board);          // current state came from state_stack?
     }
@@ -1112,7 +1115,7 @@ fn log_group_with_n_masks_message(group_with_n_masks: &CellGroup2, mask: i32) {
     log(&message);
 }
 
-fn set_cell_with_only_one_candidate(mut rnglcg: &mut PortableLCG, board: &mut Board, mut board_candidate_masks: &mut [i32; 81]) -> bool {
+fn set_random_cell_with_only_one_candidate(mut rnglcg: &mut PortableLCG, board: &mut Board, mut board_candidate_masks: &mut [i32; 81]) -> bool {
     // note mask_to_ones_count. Each bit represents a digit available for this cell.
     // We want to know how many digits to choose from we have. If only one digit, then use that digit.
     // 36.
@@ -1147,12 +1150,12 @@ fn get_random_single_candidate_cell(rnglcg: &mut PortableLCG, board_candidate_ma
     // randomly select one of the cells in single_candidate_cells list
     let random_single_candidate_index: usize = rnglcg.next_range(single_candidate_cells.len() as i32).try_into().unwrap();
     // single_candidate_index identifies the cell we are talking about
-    let board_random_single_candidate_cell = single_candidate_cells[random_single_candidate_index];
+    let board_random_single_candidate_cell_index = single_candidate_cells[random_single_candidate_index];
     // candidate_mask is the one candidate digit we can use in this cell
     // candidate is the one digit we can use in this cell 0-8 (add one to get digit)
-    let single_candidate_mask = board_candidate_masks[board_random_single_candidate_cell];  // candidate_mask has 1 bit set in range 0-8 indicating which digit 1-9 we can put in this cell
+    let single_candidate_mask = board_candidate_masks[board_random_single_candidate_cell_index];  // candidate_mask has 1 bit set in range 0-8 indicating which digit 1-9 we can put in this cell
     let digit = single_bitmask_to_digit()[&(single_candidate_mask as usize)]; // digit 1-9
-    (board_random_single_candidate_cell, digit)
+    (board_random_single_candidate_cell_index, digit)
 }
 
 // candidate_masks : list of 81, for each cell, the digits which are candidates (encoded as a bit mask)
