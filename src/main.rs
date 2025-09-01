@@ -967,17 +967,22 @@ fn handle_move(board_stack: &mut Vec<Board>) -> Commands {
     log(&format!("rowIndexStack Count={} rowToMove={}", stack_len, board_stack.last().unwrap().candidate_cell.get_row()));
     let cell_to_move: Cell = board_stack.last_mut().unwrap().candidate_cell.clone();
     let digit_to_move: i32 = board_stack.last_mut().unwrap().last_digit;
-    let mut moved_to_digit = digit_to_move + 1;
-
-    while moved_to_digit <= 9 && board_stack.last_mut().unwrap().used_digits.is_present(moved_to_digit)
-    {
-        moved_to_digit += 1;
-    }
+    let moved_to_digit = get_moved_to_digit(digit_to_move, board_stack.last_mut().unwrap().used_digits.clone());
 
     print_digit_to_move(&cell_to_move, digit_to_move, moved_to_digit);
 
     let command = update_board_and_next_command(board_stack, &cell_to_move, digit_to_move, moved_to_digit);
     return command;
+}
+
+fn get_moved_to_digit(digit_to_move: i32, used_digits: Digits) -> i32 {
+    let mut moved_to_digit = digit_to_move + 1;
+
+    while moved_to_digit <= 9 && used_digits.is_present(moved_to_digit)
+    {
+        moved_to_digit += 1;
+    }
+    moved_to_digit
 }
 
 fn print_digit_to_move(cell_to_move: &Cell, digit_to_move: i32, moved_to_digit: i32) {
