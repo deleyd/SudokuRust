@@ -237,6 +237,8 @@ fn play(mut rnglcg: PortableLCG) {
     let mut change_made: bool = true;
     while change_made// 27
     {
+        log(&"27. top of loop".to_string());
+
         change_made = false;
         let mut board_candidate_masks: [i32; 81] =  calculate_candidates(&board);
         //#region Build a collection (named cellGroups) which maps cell indices into distinct groups (rows/columns/blocks)
@@ -261,14 +263,16 @@ fn play(mut rnglcg: PortableLCG) {
             step_change_made = false;
 
             //#region Pick cells with only one candidate left
-
-            change_made = change_made || set_random_cell_with_only_one_candidate(&mut rnglcg, &mut board, &mut board_candidate_masks);
+            let result = set_random_cell_with_only_one_candidate(&mut rnglcg, &mut board, &mut board_candidate_masks);
+            change_made = change_made || result;
             //#endregion*
 
             //#region Try to find a number which can only appear in one place in a row/column/block
             // 38.
             // if there were no cells which could only be set to a single digit
+            log(&format!("38. change_made: {}", change_made).to_string());
             if change_made {
+                log(&format!("48. change_made: {}", change_made).to_string());
                 continue;
             }
 
@@ -295,6 +299,7 @@ fn play(mut rnglcg: PortableLCG) {
 
             //#region Try to find pairs of digits in the same row/column/block and remove them from other colliding cells
             // 48.
+            log(&format!("48. change_made: {}", change_made).to_string());
             if change_made {
                 continue;
             }
@@ -317,53 +322,21 @@ fn play(mut rnglcg: PortableLCG) {
             // for every
             for mask in two_digit_masks
             {
+                log(&format!("cellGroups.Count: {} mask: {}", cell_groups.len(), mask).to_string());
                 // Inner processing equivalent to the SelectMany lambda
                 for_tuple_kvp_in_cell_groups(board_candidate_masks, &cell_groups, &mut groups, mask);
 
                 // 50.
                 if groups.is_empty() {
+                    log(&"groups is empty".to_string());
                     continue;
                 }
-
+                //log(&"groups.Any()".to_string());
                 //log("50. Groups is NOT empty".to_string());
-                for group in groups.iter().sorted_by_key(|cell_group| cell_group.discriminator)
-                {
-                    // Translation of the original C# code
-                    let cells: Vec<_> = group.cells.iter()
-                        .filter(|cell| board_candidate_masks[cell.index] != group.mask && // not equal but overlaps group.mask
-                            (board_candidate_masks[cell.index] & group.mask) > 0)
-                        .sorted_by_key(|cell| cell.index)
-                        .collect::<Vec<_>>();
-
-                    let mask_cells: Vec<&Cell> = group.cells.iter()
-                        .filter(|cell| board_candidate_masks[cell.index] == group.mask) // equal to group.mask
-                        .map(|x| x)
-                        .collect();
-
-                    // 51.
-                    if cells.is_empty() {
-                        continue;
-                    }
-                    // "Values {lower} and {upper} in {} are in cells ({mask_cells[0].row+1}, {mask_cells[0].col+1}) and ({mask_cells[1].row+1}, {mask_cells[1].col+1}).",
-                    // Find the upper two bits. upper & lower represent digits
-                    let (lower, upper) = top_two_digits(group.mask); // bits represent digits
-
-                    let s = format!(
-                        "Values {} and {} in {} are in cells ({}, {}) and ({}, {}).",
-                        lower,
-                        upper,
-                        group.description,
-                        mask_cells[0].get_row() + 1,
-                        mask_cells[0].get_column() + 1,
-                        mask_cells[1].get_row() + 1,
-                        mask_cells[1].get_column() + 1
-                    );
-                    log(&s);
-
-                    // 52.
-                    let result = for_cell_in_cells(&mut board_candidate_masks, group, &cells);
-                    step_change_made = step_change_made || result;
-                }
+                //log(&format!("groups.Count()={}", groups.len()));
+                let result = for_group_in_groups(&mut board_candidate_masks, &mut groups);
+                step_change_made = step_change_made || result;
+                log(&format!("step_change_made={}",step_change_made))
             }
 
             //#endregion
@@ -568,6 +541,54 @@ fn play(mut rnglcg: PortableLCG) {
     log(&"BOARD SOLVED.".to_string())
 }
 
+fn for_group_in_groups(mut board_candidate_masks: &mut [i32; 81], groups: &mut Vec<CellGroup1>) -> bool {
+    log(&format!("groups.Count()={}", groups.len()));
+    let mut step_change_made: bool = false;
+    for group in groups.iter().sorted_by_key(|cell_group| cell_group.discriminator)
+    {
+        log(&format!("group={}", group.description));
+        // Translation of the original C# code
+        let cells: Vec<_> = group.cells.iter()
+            .filter(|cell| board_candidate_masks[cell.index] != group.mask && // not equal but overlaps group.mask
+                (board_candidate_masks[cell.index] & group.mask) > 0)
+            .sorted_by_key(|cell| cell.index)
+            .collect::<Vec<_>>();
+
+        let mask_cells: Vec<&Cell> = group.cells.iter()
+            .filter(|cell| board_candidate_masks[cell.index] == group.mask) // equal to group.mask
+            .map(|x| x)
+            .collect();
+
+        // 51.
+        if cells.is_empty() {
+            log(&"Cells is empty 51".to_string());
+            continue;
+        }
+        log(&format!("cells.len()={}", cells.len()).to_string());
+        // "Values {lower} and {upper} in {} are in cells ({mask_cells[0].row+1}, {mask_cells[0].col+1}) and ({mask_cells[1].row+1}, {mask_cells[1].col+1}).",
+        // Find the upper two bits. upper & lower represent digits
+        log(&"cells.Any()".to_string());
+        let (lower, upper) = top_two_digits(group.mask); // bits represent digits
+
+        let s = format!(
+            "Values {} and {} in {} are in cells ({}, {}) and ({}, {}).",
+            lower,
+            upper,
+            group.description,
+            mask_cells[0].get_row() + 1,
+            mask_cells[0].get_column() + 1,
+            mask_cells[1].get_row() + 1,
+            mask_cells[1].get_column() + 1
+        );
+        log(&s);
+
+        // 52.
+        let result = for_cell_in_cells(&mut board_candidate_masks, group, &cells);
+        step_change_made = step_change_made || result;
+    }
+    step_change_made
+}
+
 fn for_tuple_kvp_in_cell_groups(board_candidate_masks: [i32; 81], cell_groups: &BTreeMap<usize, Vec<Cell>>, groups: &mut Vec<CellGroup1>, mask: i32) {
     for tuple_kvp in cell_groups
     {
@@ -717,6 +738,9 @@ fn for_cell_in_cells(board_candidate_masks: &mut [i32; 81], group: &CellGroup1, 
         let values_report = string_values_to_remove.join(", ");
         let s = format!("{} cannot appear in ({}, {}).", values_report, cell.get_row() + 1, cell.get_column() + 1);
         log(&s);
+        if values_report == "2" && cell.get_row() + 1 == 5 && cell.get_column() + 1 == 9 {
+            println!("Found it");
+        }
         board_candidate_masks[cell.index] &= !group.mask;
         step_change_made = true;
     }
