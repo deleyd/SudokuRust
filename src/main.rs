@@ -902,7 +902,10 @@ fn construct_final_board(mut rnglcg: &mut PortableLCG) -> Board {
                 command = Commands::Move;   // Always try to move after collapse
             }
             Commands::Move => {
-                command = handle_move(&mut board_stack);
+                let stack_len = board_stack.len();
+                log(&format!("rowIndexStack Count={} rowToMove={}", stack_len, board_stack.last().unwrap().candidate_cell.get_row()));
+                let moved_to_digit = handle_move(&mut board_stack);
+                command = and_next_command(&mut board_stack, moved_to_digit);
             }
             _ => {
                 // should never get here
@@ -913,9 +916,7 @@ fn construct_final_board(mut rnglcg: &mut PortableLCG) -> Board {
     board_stack.last().unwrap().clone()
 }
 
-fn handle_move(board_stack: &mut Vec<Board>) -> Commands {
-    let stack_len = board_stack.len();
-    log(&format!("rowIndexStack Count={} rowToMove={}", stack_len, board_stack.last().unwrap().candidate_cell.get_row()));
+fn handle_move(board_stack: &mut Vec<Board>) -> i32 {
     let cell_to_move: Cell = board_stack.last_mut().unwrap().candidate_cell.clone();
     let digit_to_move: i32 = board_stack.last_mut().unwrap().last_digit;
     let moved_to_digit = get_moved_to_digit(digit_to_move, board_stack.last_mut().unwrap().used_digits.clone());
@@ -923,8 +924,7 @@ fn handle_move(board_stack: &mut Vec<Board>) -> Commands {
     print_digit_to_move(&cell_to_move, digit_to_move, moved_to_digit);
 
     update_board(board_stack, &cell_to_move, digit_to_move, moved_to_digit);
-    let command = and_next_command(board_stack, moved_to_digit);
-    return command;
+    moved_to_digit
 }
 
 fn get_moved_to_digit(digit_to_move: i32, used_digits: Digits) -> i32 {
