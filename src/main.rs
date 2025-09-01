@@ -922,6 +922,7 @@ fn handle_move(board_stack: &mut Vec<Board>) -> Commands {
 
     print_digit_to_move(&cell_to_move, digit_to_move, moved_to_digit);
 
+    update_board(board_stack, &cell_to_move, digit_to_move, moved_to_digit);
     let command = update_board_and_next_command(board_stack, &cell_to_move, digit_to_move, moved_to_digit);
     return command;
 }
@@ -945,8 +946,6 @@ fn print_digit_to_move(cell_to_move: &Cell, digit_to_move: i32, moved_to_digit: 
 }
 
 fn update_board_and_next_command(board_stack: &mut Vec<Board>, cell_to_move: &Cell, digit_to_move: i32, moved_to_digit: i32) -> Commands {
-    update_board(board_stack, cell_to_move, digit_to_move, moved_to_digit);
-
     if moved_to_digit <= 9 {
         //update_board_state(board_stack, cell_to_move, moved_to_digit);
         log(&format!("19d. moved_to_digit: {:?}", moved_to_digit));
