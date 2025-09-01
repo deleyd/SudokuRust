@@ -557,12 +557,14 @@ fn play(mut rnglcg: PortableLCG) {
 
                         // 73.
                         Commands::Move => {
-                            let cell_to_move: Cell = board_stack.last_mut().unwrap().candidate_cell.clone();  // cell to move is identified by an index
+                            /*let cell_to_move: Cell = board_stack.last_mut().unwrap().candidate_cell.clone();  // cell to move is identified by an index
                             let digit_to_move = board_stack.last_mut().unwrap().last_digit;  // last digit tried
                             let moved_to_digit = get_moved_to_digit(digit_to_move, board_stack.last_mut().unwrap().used_digits.clone());
 
                             // 74.
                             update_board(&mut board_stack, &cell_to_move, digit_to_move, moved_to_digit);
+                            */
+                            let moved_to_digit = handle_move(&mut board_stack, false);
 
                             // 75.
 
@@ -904,7 +906,7 @@ fn construct_final_board(mut rnglcg: &mut PortableLCG) -> Board {
             Commands::Move => {
                 let stack_len = board_stack.len();
                 log(&format!("rowIndexStack Count={} rowToMove={}", stack_len, board_stack.last().unwrap().candidate_cell.get_row()));
-                let moved_to_digit = handle_move(&mut board_stack);
+                let moved_to_digit = handle_move(&mut board_stack, true);
                 command = and_next_command(&mut board_stack, moved_to_digit);
             }
             _ => {
@@ -916,12 +918,14 @@ fn construct_final_board(mut rnglcg: &mut PortableLCG) -> Board {
     board_stack.last().unwrap().clone()
 }
 
-fn handle_move(board_stack: &mut Vec<Board>) -> i32 {
+fn handle_move(board_stack: &mut Vec<Board>, pr: bool) -> i32 {
     let cell_to_move: Cell = board_stack.last_mut().unwrap().candidate_cell.clone();
     let digit_to_move: i32 = board_stack.last_mut().unwrap().last_digit;
     let moved_to_digit = get_moved_to_digit(digit_to_move, board_stack.last_mut().unwrap().used_digits.clone());
 
-    print_digit_to_move(&cell_to_move, digit_to_move, moved_to_digit);
+    if pr {
+        print_digit_to_move(&cell_to_move, digit_to_move, moved_to_digit);
+    }
 
     update_board(board_stack, &cell_to_move, digit_to_move, moved_to_digit);
     moved_to_digit
