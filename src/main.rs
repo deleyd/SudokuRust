@@ -648,12 +648,7 @@ fn play(mut rnglcg: PortableLCG) {
                         Commands::Move => {
                             let cell_to_move: Cell = board_stack.last_mut().unwrap().candidate_cell.clone();  // cell to move is identified by an index
                             let digit_to_move = board_stack.last_mut().unwrap().last_digit;  // last digit tried
-                            let mut moved_to_digit = digit_to_move + 1;  // try next digit after last digit tried, next not already used digit
-                            // Find next digit not used
-                            while moved_to_digit <= 9 && board_stack.last_mut().unwrap().used_digits.is_present(moved_to_digit)
-                            {
-                                moved_to_digit += 1;
-                            }
+                            let moved_to_digit = get_moved_to_digit(digit_to_move, board_stack.last_mut().unwrap().used_digits.clone());
 
                             // 74.
                             update_board(&mut board_stack, &cell_to_move, digit_to_move, moved_to_digit);
