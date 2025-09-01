@@ -592,7 +592,7 @@ fn play(mut rnglcg: PortableLCG) {
                                 if cell.digit == 0
                                 {
                                     // 68.
-                                    let (_digit_used_array, used_digits) = gather_digits(&current_board, cell);
+                                    let (_digit_used_array, used_digits) = get_row_col_block_used_digits(&current_board, cell);
 
                                     let candidates_count: i32 = 9 - used_digits.count();
                                     if candidates_count == 0
@@ -1363,12 +1363,8 @@ fn top_two_digits(value: i32) -> (i32, i32) {
     (lower, upper)
 }
 
-fn get_row_col_block_used_digits(current_state: &Board, cell : &Cell) -> ([bool; 9], Digits) {
+fn get_row_col_block_used_digits(current_state: &Board, target_cell : &Cell) -> ([bool; 9], Digits) {
     // gather all digits used in cell's row, column, and block. output is_digit_used. input: current_state, row, col, block_row, block_col
-    return gather_digits(&current_state, &cell);
-}
-
-fn gather_digits(current_state: &Board, target_cell: &Cell) -> ([bool; 9], Digits)  {
     let row = target_cell.get_row();
     let col = target_cell.get_column();
     let block_row = row / 3;
@@ -1400,7 +1396,6 @@ fn gather_digits(current_state: &Board, target_cell: &Cell) -> ([bool; 9], Digit
         {
             is_digit_used[block_digit as usize - 1] = true;
             used_digits.set_digit(block_digit);
-
         }
     } // for (i = 0..8)
     for i in 0..9 {
