@@ -179,6 +179,7 @@ impl Digits {
 
     fn is_present(&self, digit: i32) -> bool {
         let i: i32 = digit - 1;
+        //println!("is_present digit: {} i: {}", digit, i);
         let m: i32 = 1 << i;
         (self.mask & m) != 0
     }
@@ -1372,7 +1373,7 @@ fn gather_digits(current_state: &Board, target_cell: &Cell) -> ([bool; 9], Digit
     let col = target_cell.get_column();
     let block_row = row / 3;
     let block_col = col / 3;
-    let is_digit_used: [bool; 9] = [false; 9];
+    let mut is_digit_used: [bool; 9] = [false; 9];
     let mut used_digits = Digits::new(0);
 
     for i in 0..9  // 12.
@@ -1381,7 +1382,7 @@ fn gather_digits(current_state: &Board, target_cell: &Cell) -> ([bool; 9], Digit
         let row_digit = cell.digit;
         if row_digit > 0
         {
-           //is_digit_used[row_digit as usize - 1] = true;
+            is_digit_used[row_digit as usize - 1] = true;
             used_digits.set_digit(row_digit);
         }
 
@@ -1389,7 +1390,7 @@ fn gather_digits(current_state: &Board, target_cell: &Cell) -> ([bool; 9], Digit
         let col_digit = cell.digit;
         if col_digit > 0
         {
-            //is_digit_used[col_digit as usize - 1] = true;
+            is_digit_used[col_digit as usize - 1] = true;
             used_digits.set_digit(col_digit);
         }
 
@@ -1397,11 +1398,14 @@ fn gather_digits(current_state: &Board, target_cell: &Cell) -> ([bool; 9], Digit
         let block_digit = cell.digit;
         if block_digit > 0
         {
-            //is_digit_used[block_digit as usize - 1] = true;
+            is_digit_used[block_digit as usize - 1] = true;
             used_digits.set_digit(block_digit);
 
         }
     } // for (i = 0..8)
+    for i in 0..9 {
+        assert_eq!(is_digit_used[i], used_digits.is_present((i+1) as i32));
+    }
     (is_digit_used, used_digits)
 }
 
