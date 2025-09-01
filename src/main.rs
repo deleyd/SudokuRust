@@ -511,32 +511,8 @@ fn play(mut rnglcg: PortableLCG) {
 
             // Try to see if there are pairs of values that can be exchanged arbitrarily
             // This happens when board has more than one valid solution
-            let mut candidate_cells1: VecDeque<CandidateCell> = VecDeque::new();
-            let mut candidate_cells2: VecDeque<CandidateCell> = VecDeque::new();
 
-            // 61.
-            // index i goes from 0 to 80, index j goes from i+1 to 81. Gives us two cells, i & j, to compare candidate digits
-            for i in 0..80  // stop at 80 because j looks at i+1 cell
-            {
-                // 62.
-                if count_candidates(&board_candidate_masks[i]) != 2 {
-                    continue;
-                }   // if this cell candidate i has exactly 2 digits
-                let (lower_digit, upper_digit) = top_two_digits(board_candidate_masks[i]); // we already determined that this candidate has exactly 2 digits
-
-                // 63.
-                for j in i + 1..81
-                {
-                    if board_candidate_masks[j] != board_candidate_masks[i] {
-                        continue;
-                    }    // if candidate digits for cells[i] & cells[j] are identical set,
-                    if row_or_column_or_block_overlap(i,j)
-                    {
-                        candidate_cells1.push_back(CandidateCell::new(i, lower_digit, &"".to_string()));
-                        candidate_cells2.push_back(CandidateCell::new(j, upper_digit, &"".to_string()));
-                    }
-                }
-            }
+            let (mut candidate_cells1, mut candidate_cells2) = get_candidate_cells(&mut board_candidate_masks);
 
             // At this point we have the lists with pairs of cells that might pick one of two digits each
             // Now we have to check whether that is really true - does the board have two solutions?
@@ -575,62 +551,7 @@ fn play(mut rnglcg: PortableLCG) {
                     match command {
                         Commands::Expand => {
                             handle_expand(&mut rnglcg, &mut board_stack, alternate_board.clone());
-                            /*let mut current_board: Board = if !board_stack.is_empty() {
-                                board_stack.last_mut().unwrap().clone()
-                            } else {
-                                alternate_board.clone()
-                            };
-
-                            let mut best_cell = Cell::new(0,0);                  // best will be cell with lowest number of candidate digits
-                            //let mut best_used_digits_arr: [bool; 9] = [false; 9];  // corresponding candidate digits for best cell
-                            let mut best_used_digits: Digits = Digits::new(0);           // corresponding candidate digits for best cell
-                            let mut best_candidates_count: i32 = -1;          // number of candidate digits for best cell
-                            let mut best_random_value: i32 = -1;
-                            let mut contains_unsolvable_cells: bool = false;
-
-                            // 67.
-                            for cell in &current_board //index in 0..81
-                            {
-                                if cell.digit != 0 {
-                                    continue;
-                                }
-                                // 68.
-                                let (_digit_used_array, used_digits) = get_row_col_block_used_digits(&current_board, cell);
-
-                                let candidates_count: i32 = 9 - used_digits.count();
-                                if candidates_count == 0
-                                {
-                                    contains_unsolvable_cells = true;
-                                    break;
-                                }
-
-                                // 70.
-                                let random_value = rnglcg.next();
-                                //let random_value = rng.Next();
-
-                                if best_candidates_count < 0 ||
-                                    candidates_count < best_candidates_count ||
-                                    (candidates_count == best_candidates_count && random_value < best_random_value)
-                                {
-                                    best_cell = cell.clone();                               // corresponding cell with lowest number of candidate digits
-                                    //best_used_digits_arr = digit_used_array;              // the candidate digits for this cell
-                                    best_used_digits = used_digits;
-                                    best_candidates_count = candidates_count as i32;  // best is lowest number of candidate digits for a cell
-                                    best_random_value = random_value;
-                                }
-                            } // for (index = 0..81)
-
-                            // 71.
-                            if !contains_unsolvable_cells
-                            {
-                                current_board.candidate_cell = best_cell;
-                                current_board.used_digits = best_used_digits;
-                                current_board.last_digit = 0;
-                                board_stack.push(current_board);
-                            }*/
-
-                            // Always try to move after expand
-                            command = Commands::Move;
+                            command = Commands::Move;  // Always try to move after expand
                         } // match Commands::Expand
 
                         // 72.
@@ -710,6 +631,36 @@ fn play(mut rnglcg: PortableLCG) {
             //#endregion
     }//while change_made// 27
     log(&"BOARD SOLVED.".to_string())
+}
+
+fn get_candidate_cells(mut board_candidate_masks: &mut [i32; 81]) -> (VecDeque<CandidateCell>, VecDeque<CandidateCell>) {
+    let mut candidate_cells1: VecDeque<CandidateCell> = VecDeque::new();
+    let mut candidate_cells2: VecDeque<CandidateCell> = VecDeque::new();
+
+    // 61.
+    // index i goes from 0 to 80, index j goes from i+1 to 81. Gives us two cells, i & j, to compare candidate digits
+    for i in 0..80  // stop at 80 because j looks at i+1 cell
+    {
+        // 62.
+        if count_candidates(&board_candidate_masks[i]) != 2 {
+            continue;
+        }   // if this cell candidate i has exactly 2 digits
+        let (lower_digit, upper_digit) = top_two_digits(board_candidate_masks[i]); // we already determined that this candidate has exactly 2 digits
+
+        // 63.
+        for j in i + 1..81
+        {
+            if board_candidate_masks[j] != board_candidate_masks[i] {
+                continue;
+            }    // if candidate digits for cells[i] & cells[j] are identical set,
+            if row_or_column_or_block_overlap(i, j)
+            {
+                candidate_cells1.push_back(CandidateCell::new(i, lower_digit, &"".to_string()));
+                candidate_cells2.push_back(CandidateCell::new(j, upper_digit, &"".to_string()));
+            }
+        }
+    }
+    (candidate_cells1, candidate_cells2)
 }
 
 fn print_starting_board(board: &mut Board) {
