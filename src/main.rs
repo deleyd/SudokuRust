@@ -1550,7 +1550,7 @@ fn main()
     *GLOBAL_FILE.lock().unwrap() = Some(file.expect("REASON"));
 
     // MAIN LOOP
-    for seed in 1..25
+    for seed in 1..50
     {
         let my_rng = PortableLCG::new(seed);
         log(&format!("RUN {}", seed));
