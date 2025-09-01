@@ -17,12 +17,13 @@ use std::fmt;
 static GLOBAL_FILE: Mutex<Option<File>> = Mutex::new(None);
 
 // Cell should have a value
-#[derive(Debug, Clone)]
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct Cell {
-    //discriminator: usize,
     description: String,
     index: usize,
     digit: i32,
+    candidate_digits: Digits,
 }
 impl Cell {
     pub fn new(i:usize, v:i32) -> Cell {
@@ -30,6 +31,7 @@ impl Cell {
             description: "".to_string(),
             index: i,
             digit: v,
+            candidate_digits: Digits::new(0),
         }
     }
     fn get_row(&self) -> usize {
@@ -164,7 +166,7 @@ impl CandidateCell {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct Digits {
     mask: i32,
 }
@@ -1176,6 +1178,7 @@ fn get_indices() -> BTreeMap<usize, Vec<Cell>> {
                 description: format!("row #{}", discriminator + 1),
                 index,
                 digit: 0,
+                candidate_digits: Digits::new(0),
             })
         })
         .fold(BTreeMap::new(), |mut acc, (key, cell)| {
@@ -1193,6 +1196,7 @@ fn get_indices() -> BTreeMap<usize, Vec<Cell>> {
                 description: format!("column #{}", index_to_col(index) + 1),
                 index,
                 digit: 0,
+                candidate_digits: Digits::new(0),
             })
         })
         .fold(BTreeMap::new(), |mut acc, (key, cell)| {
@@ -1208,6 +1212,7 @@ fn get_indices() -> BTreeMap<usize, Vec<Cell>> {
             description: format!("block ({}, {})", index_to_block_row(index) + 1, index_to_block_col(index) + 1),
             index,
             digit: 0,
+            candidate_digits: Digits::new(0),
         };
         temp_map.entry(discriminator).or_insert_with(Vec::new).push(cell);
         temp_map
