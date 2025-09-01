@@ -574,7 +574,8 @@ fn play(mut rnglcg: PortableLCG) {
                 {
                     match command {
                         Commands::Expand => {
-                            let mut current_board: Board = if !board_stack.is_empty() {
+                            handle_expand(&mut rnglcg, &mut board_stack, alternate_board.clone());
+                            /*let mut current_board: Board = if !board_stack.is_empty() {
                                 board_stack.last_mut().unwrap().clone()
                             } else {
                                 alternate_board.clone()
@@ -626,7 +627,7 @@ fn play(mut rnglcg: PortableLCG) {
                                 current_board.used_digits = best_used_digits;
                                 current_board.last_digit = 0;
                                 board_stack.push(current_board);
-                            }
+                            }*/
 
                             // Always try to move after expand
                             command = Commands::Move;
@@ -942,7 +943,7 @@ fn construct_final_board(mut rnglcg: &mut PortableLCG) -> Board {
     {
         match command {
             Commands::Expand => {
-                handle_expand(&mut rnglcg, &mut board_stack);
+                handle_expand(&mut rnglcg, &mut board_stack, Board::new());
                 command = Commands::Move;  // 17. // Always try to move after expand
             }
             Commands::Collapse => {
@@ -1026,12 +1027,12 @@ fn update_board(board_stack: &mut Vec<Board>, cell_to_move: &Cell, digit_to_move
     }
 }
 
-fn handle_expand(rnglcg: &mut PortableLCG, board_stack: &mut Vec<Board>) {
+fn handle_expand(rnglcg: &mut PortableLCG, board_stack: &mut Vec<Board>, alt_board: Board) {
     let mut current_board: Board = if !board_stack.is_empty()   // 9.
     {
         board_stack.last_mut().unwrap().clone()
     } else {
-        Board::new()
+        alt_board
     };
 
     // input: current_state. output: contains_unsolvable_cells, best_row, best_col,
@@ -1050,10 +1051,10 @@ fn handle_expand(rnglcg: &mut PortableLCG, board_stack: &mut Vec<Board>) {
         }
         // 11.  otherwise cell unused. Let's see what we can do with it
 
-        let (_digits_used_array, digits_used) = get_row_col_block_used_digits(&current_board, cell); // returns an array of 9 true/false values
+        let (_digits_used_array, used_digits) = get_row_col_block_used_digits(&current_board, cell); // returns an array of 9 true/false values
 
         // 13.
-        let candidates_count: i32 = 9 - digits_used.count();
+        let candidates_count: i32 = 9 - used_digits.count();
         if candidates_count == 0  // 14.  if there are no candidates, then this cell has no options and Sudoku is unsolvable
         {
             contains_unsolvable_cells = true;
@@ -1069,7 +1070,7 @@ fn handle_expand(rnglcg: &mut PortableLCG, board_stack: &mut Vec<Board>) {
             (candidates_count == best_candidates_count && random_value < best_random_value) // if two cells both have the same number of candidates, randomly select one (this "random" looks not random)
         {
             best_cell = cell.clone(); // this cell becomes the best cell (saved as row,col. we could save index instead?)
-            best_used_digits = digits_used;
+            best_used_digits = used_digits;
             best_candidates_count = candidates_count;  // candidates_count is a function of digits_used array. We search for the smallest number of candidates
             best_random_value = random_value;
         }
