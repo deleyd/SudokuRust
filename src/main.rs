@@ -193,7 +193,8 @@ impl Digits {
         self.mask &= !(1 << i);
     }
     fn count(&self) -> i32 {
-        let count = mask_to_ones_count().get(&self.mask).copied().unwrap_or(0);
+        //let count = mask_to_ones_count().get(&self.mask).copied().unwrap_or(0);
+        let count = count_candidates(&self.mask);
         return count as i32;
     }
 }
@@ -301,7 +302,7 @@ fn play(mut rnglcg: PortableLCG) {
             // look for cells which have only 2 options for digits
             let two_digit_masks: Vec<i32> = board_candidate_masks
                 .into_iter()
-                .filter(|&mask| mask_to_ones_count()[&mask] == 2)
+                .filter(|&mask| count_candidates(&mask) == 2)
                 .unique()
                 .collect();
 
@@ -467,7 +468,7 @@ fn play(mut rnglcg: PortableLCG) {
                             }
                         }) // .map
                 })// .flat_map
-                .filter(|group| group.cells_with_mask.len() == *mask_to_ones_count().get(&group.mask).unwrap())
+                .filter(|group| group.cells_with_mask.len() == count_candidates(&group.mask) as usize)
                 .collect();
 
             // 54.
@@ -518,7 +519,7 @@ fn play(mut rnglcg: PortableLCG) {
             for i in 0..80  // stop at 80 because j looks at i+1 cell
             {
                 // 62.
-                if mask_to_ones_count()[&(board_candidate_masks[i])] != 2 {
+                if count_candidates(&board_candidate_masks[i]) != 2 {
                     continue;
                 }   // if this cell candidate i has exactly 2 digits
                 let (lower_digit, upper_digit) = top_two_digits(board_candidate_masks[i]); // we already determined that this candidate has exactly 2 digits
@@ -1150,7 +1151,7 @@ fn get_random_single_candidate_cell(rnglcg: &mut PortableLCG, board_candidate_ma
     // candidate_mask is the one candidate digit we can use in this cell
     // candidate is the one digit we can use in this cell 0-8 (add one to get digit)
     let single_candidate_mask = board_candidate_masks[board_random_single_candidate_cell];  // candidate_mask has 1 bit set in range 0-8 indicating which digit 1-9 we can put in this cell
-    let digit = get_single_bitmask_to_digit()[&(single_candidate_mask as usize)]; // digit 1-9
+    let digit = single_bitmask_to_digit()[&(single_candidate_mask as usize)]; // digit 1-9
     (board_random_single_candidate_cell, digit)
 }
 
@@ -1159,9 +1160,9 @@ fn get_single_candidate_indices(candidate_masks: &mut [i32; 81]) -> Vec<usize> {
     let single_candidate_indices: Vec<usize> = candidate_masks
         .iter()
         .enumerate()
-        .filter_map(|(index, &mask)| {
-            let candidates_count = mask_to_ones_count().get(&mask).copied().unwrap_or(0);
-            if candidates_count == 1 {  // when there's only one digit that will work for this cell
+        .filter_map(|(index, &candidate_mask)| {
+            let candidates_count = count_candidates(&candidate_mask);
+            if candidates_count == 1 {  // when there's only one digit that will work for this cell then return the index otherwise return Null
                 Some(index)
             } else {
                 None
@@ -1281,6 +1282,11 @@ fn convert_digit_to_mask(digit: i32) -> i32 {
     1 << (digit - 1)
 }
 
+fn count_candidates(mask: &i32) -> i32 {
+    let candidates_count = mask_to_ones_count().get(&mask).copied().unwrap_or(0);
+    candidates_count as i32
+}
+
 // lazy calculate
 //Dictionary<int, int> maskToOnesCount = new Dictionary<int, int>();
 // Key is 0-511, value is number of binary bits in binary representation of key
@@ -1317,7 +1323,7 @@ fn mask_to_ones_count() -> &'static BTreeMap<i32, usize> {
 // key: 256  value: 8
 
 static SINGLE_BIT_TO_INDEX: OnceLock<HashMap<usize, i32> > = OnceLock::new();
-fn get_single_bitmask_to_digit() -> &'static HashMap<usize, i32> {
+fn single_bitmask_to_digit() -> &'static HashMap<usize, i32> {
     SINGLE_BIT_TO_INDEX.get_or_init(|| {
         let mut single_bit_to_index: HashMap<usize, i32> = HashMap::new();
         for i in 0..9
