@@ -277,24 +277,8 @@ fn play(mut rnglcg: PortableLCG) {
             }
 
             let candidate_cells = generate_candidate_cells(&mut board_candidate_masks);
-
             // 47
-            if candidate_cells.len() > 0
-            {
-                let random_cell_index = rnglcg.next_range(candidate_cells.len() as i32) as usize;
-                let random_candidate_cell = candidate_cells.get(random_cell_index).unwrap();
-
-                board[random_candidate_cell].digit = random_candidate_cell.digit;       // we can try digit in this cell
-                board_candidate_masks[random_candidate_cell.index] = 0;          // clear for this cell since we just set cell to a number
-                change_made = true;
-
-                let message = format!("{} can contain {} only at ({}, {}).",
-                                      random_candidate_cell.description,
-                                      random_candidate_cell.digit,
-                                      random_candidate_cell.get_row() + 1,
-                                      random_candidate_cell.get_column() + 1);
-                log(&message);
-            }
+            if_candidate_cells(&mut rnglcg, &mut board, &mut change_made, board_candidate_masks, candidate_cells);
             //#endregion
 
             //#region Try to find pairs of digits in the same row/column/block and remove them from other colliding cells
@@ -539,6 +523,25 @@ fn play(mut rnglcg: PortableLCG) {
             //#endregion
     }//while change_made// 27
     log(&"BOARD SOLVED.".to_string())
+}
+
+fn if_candidate_cells(rnglcg: &mut PortableLCG, board: &mut Board, change_made: &mut bool, mut board_candidate_masks: [i32; 81], candidate_cells: Vec<CandidateCell>) {
+    if candidate_cells.len() > 0
+    {
+        let random_cell_index = rnglcg.next_range(candidate_cells.len() as i32) as usize;
+        let random_candidate_cell = candidate_cells.get(random_cell_index).unwrap();
+
+        board[random_candidate_cell].digit = random_candidate_cell.digit;       // we can try digit in this cell
+        board_candidate_masks[random_candidate_cell.index] = 0;          // clear for this cell since we just set cell to a number
+        *change_made = true;
+
+        let message = format!("{} can contain {} only at ({}, {}).",
+                              random_candidate_cell.description,
+                              random_candidate_cell.digit,
+                              random_candidate_cell.get_row() + 1,
+                              random_candidate_cell.get_column() + 1);
+        log(&message);
+    }
 }
 
 fn for_group_in_groups(mut board_candidate_masks: &mut [i32; 81], groups: &mut Vec<CellGroup1>) -> bool {
