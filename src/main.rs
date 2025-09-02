@@ -277,8 +277,7 @@ fn play(mut rnglcg: PortableLCG) {
             }
 
             let candidate_cells = generate_candidate_cells(&mut board_candidate_masks);
-            // 47
-            if_candidate_cells(&mut rnglcg, &mut board, &mut change_made, board_candidate_masks, candidate_cells);
+            if_candidate_cells(&mut rnglcg, &mut board, &mut change_made, board_candidate_masks, candidate_cells);  // 47
             //#endregion
 
             //#region Try to find pairs of digits in the same row/column/block and remove them from other colliding cells
@@ -300,29 +299,9 @@ fn play(mut rnglcg: PortableLCG) {
 
             // 49.
             //step_change_made = step_change_made || handle_two_digit_masks(two_digit_masks, &cell_groups, board_candidate_masks);
-            let mut groups = Vec::new();
 
-            // Outer loop equivalent to SelectMany over twoDigitMasks
-            // for every
-            for mask in two_digit_masks
-            {
-                log(&format!("cellGroups.Count: {} mask: {}", cell_groups.len(), mask).to_string());
-                // Inner processing equivalent to the SelectMany lambda
-                for_tuple_kvp_in_cell_groups(board_candidate_masks, &cell_groups, &mut groups, mask);
-
-                // 50.
-                if groups.is_empty() {
-                    log(&"groups is empty".to_string());
-                    continue;
-                }
-                //log(&"groups.Any()".to_string());
-                //log("50. Groups is NOT empty".to_string());
-                //log(&format!("groups.Count()={}", groups.len()));
-                let result = for_group_in_groups(&mut board_candidate_masks, &mut groups);
-                step_change_made = step_change_made || result;
-                log(&format!("step_change_made={}",step_change_made))
-            }
-
+            let result = handle_two_digit_masks(&mut board_candidate_masks, &cell_groups, two_digit_masks);
+            step_change_made = step_change_made || result;
             //#endregion
 
             //#region Try to find groups of digits of size N which only appear in N cells within row/column/block
@@ -525,6 +504,32 @@ fn play(mut rnglcg: PortableLCG) {
     log(&"BOARD SOLVED.".to_string())
 }
 
+fn handle_two_digit_masks(mut board_candidate_masks: &mut [i32; 81], cell_groups: &BTreeMap<usize, Vec<Cell>>, two_digit_masks: Vec<i32>) -> bool {
+    let mut groups = Vec::new();
+    let mut step_change_made = false;
+    // Outer loop equivalent to SelectMany over twoDigitMasks
+    // for every
+    for mask in two_digit_masks
+    {
+        log(&format!("cellGroups.Count: {} mask: {}", cell_groups.len(), mask).to_string());
+        // Inner processing equivalent to the SelectMany lambda
+        for_tuple_kvp_in_cell_groups(&mut board_candidate_masks, &cell_groups, &mut groups, mask);
+
+        // 50.
+        if groups.is_empty() {
+            log(&"groups is empty".to_string());
+            continue;
+        }
+        //log(&"groups.Any()".to_string());
+        //log("50. Groups is NOT empty".to_string());
+        //log(&format!("groups.Count()={}", groups.len()));
+        let result = for_group_in_groups(&mut board_candidate_masks, &mut groups);
+        step_change_made = step_change_made || result;
+        log(&format!("step_change_made={}", step_change_made))
+    }
+    step_change_made
+}
+
 fn if_candidate_cells(rnglcg: &mut PortableLCG, board: &mut Board, change_made: &mut bool, mut board_candidate_masks: [i32; 81], candidate_cells: Vec<CandidateCell>) {
     if candidate_cells.len() > 0
     {
@@ -592,7 +597,7 @@ fn for_group_in_groups(mut board_candidate_masks: &mut [i32; 81], groups: &mut V
     step_change_made
 }
 
-fn for_tuple_kvp_in_cell_groups(board_candidate_masks: [i32; 81], cell_groups: &BTreeMap<usize, Vec<Cell>>, groups: &mut Vec<CellGroup1>, mask: i32) {
+fn for_tuple_kvp_in_cell_groups(&mut board_candidate_masks: &mut[i32; 81], cell_groups: &BTreeMap<usize, Vec<Cell>>, groups: &mut Vec<CellGroup1>, mask: i32) {
     for tuple_kvp in cell_groups
     {
         // First Where condition: group.Count(tuple => candidateMasks[tuple.Index] == mask) == 2
