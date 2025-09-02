@@ -264,8 +264,8 @@ fn play(mut rnglcg: PortableLCG) {
                 continue;
             }
 
-            let candidate_cells = generate_candidate_cells(&mut board_candidate_masks);
-            if_candidate_cells(&mut rnglcg, &mut board, &mut change_made, board_candidate_masks, candidate_cells);  // 47
+            let candidate_cells = generate_candidate_cells(&board_candidate_masks);
+            if_candidate_cells(&mut rnglcg, &mut board, &mut change_made, &mut board_candidate_masks, candidate_cells);  // 47
             //#endregion
 
             //#region Try to find pairs of digits in the same row/column/block and remove them from other colliding cells
@@ -518,7 +518,7 @@ fn handle_two_digit_masks(mut board_candidate_masks: &mut [i32; 81], cell_groups
     step_change_made
 }
 
-fn if_candidate_cells(rnglcg: &mut PortableLCG, board: &mut Board, change_made: &mut bool, mut board_candidate_masks: [i32; 81], candidate_cells: Vec<CandidateCell>) {
+fn if_candidate_cells(rnglcg: &mut PortableLCG, board: &mut Board, change_made: &mut bool, board_candidate_masks: &mut [i32; 81], candidate_cells: Vec<CandidateCell>) {
     if candidate_cells.len() > 0
     {
         let random_cell_index = rnglcg.next_range(candidate_cells.len() as i32) as usize;
@@ -898,7 +898,7 @@ fn row_or_column_or_block_overlap(i:usize, j:usize) -> bool {
     return row_i == row_j || col_i == col_j || block_i == block_j
 }
 
-fn generate_candidate_cells(board_candidate_masks: &mut [i32; 81]) -> Vec<CandidateCell> {
+fn generate_candidate_cells(board_candidate_masks: &[i32; 81]) -> Vec<CandidateCell> {
     let mut candidate_cells: Vec<CandidateCell> = Vec::new();
     // 39.
     // candidate_masks is input
@@ -1197,7 +1197,7 @@ fn set_random_cell_with_only_one_candidate(rnglcg: &mut PortableLCG, board: &mut
     // note mask_to_ones_count. Each bit represents a digit available for this cell.
     // We want to know how many digits to choose from we have. If only one digit, then use that digit.
     // 36.
-    let single_candidate_indices = get_single_candidate_indices(board_candidate_masks);
+    let single_candidate_indices = get_single_candidate_indices(&board_candidate_masks);
 
     // 37.
     // if we have any cells with only one option digit we can put there, then put it there.
@@ -1209,7 +1209,7 @@ fn set_random_cell_with_only_one_candidate(rnglcg: &mut PortableLCG, board: &mut
     {
         // randomly pick a cell which has only one digit possibility
         // candidate is 0-8, representing digits 1-9
-        let (board_single_candidate_index, digit) = get_random_single_candidate_cell(rnglcg, &board_candidate_masks, single_candidate_indices);
+        let (board_single_candidate_index, digit) = get_random_single_candidate_cell(rnglcg, &board_candidate_masks, &single_candidate_indices);
         board[board_single_candidate_index].digit = digit;  // Set cell to the one digit it can be. Here's the +1 to convert to a digit 1-9
 
         board_candidate_masks[board_single_candidate_index] = 0; // clear candidates for this cell now that we've set cell to a digit
@@ -1224,7 +1224,7 @@ fn set_random_cell_with_only_one_candidate(rnglcg: &mut PortableLCG, board: &mut
 }
 
 // return a cell which can be set to only one number
-fn get_random_single_candidate_cell(rnglcg: &mut PortableLCG, board_candidate_masks: &[i32; 81], single_candidate_cells: Vec<usize>) -> (usize, i32) {
+fn get_random_single_candidate_cell(rnglcg: &mut PortableLCG, board_candidate_masks: &[i32; 81], single_candidate_cells: &Vec<usize>) -> (usize, i32) {
     // randomly select one of the cells in single_candidate_cells list
     let random_single_candidate_index: usize = rnglcg.next_range(single_candidate_cells.len() as i32).try_into().unwrap();
     // single_candidate_index identifies the cell we are talking about
