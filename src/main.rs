@@ -511,7 +511,7 @@ fn handle_two_digit_masks(board_candidate_masks: &mut [i32; 81], cell_groups: &B
         //log(&"groups.Any()".to_string());
         //log("50. Groups is NOT empty".to_string());
         //log(&format!("groups.Count()={}", groups.len()));
-        let result = for_group_in_groups(&mut board_candidate_masks, &mut groups);
+        let result = for_group_in_groups(board_candidate_masks, &mut groups);
         step_change_made = step_change_made || result;
         log(&format!("step_change_made={}", step_change_made))
     }
@@ -537,7 +537,7 @@ fn if_candidate_cells(rnglcg: &mut PortableLCG, board: &mut Board, change_made: 
     }
 }
 
-fn for_group_in_groups(mut board_candidate_masks: &mut [i32; 81], groups: &mut Vec<CellGroup1>) -> bool {
+fn for_group_in_groups(board_candidate_masks: &mut [i32; 81], groups: &mut Vec<CellGroup1>) -> bool {
     log(&format!("groups.Count()={}", groups.len()));
     let mut step_change_made: bool = false;
     for group in groups.iter().sorted_by_key(|cell_group| cell_group.discriminator)
@@ -579,7 +579,7 @@ fn for_group_in_groups(mut board_candidate_masks: &mut [i32; 81], groups: &mut V
         log(&s);
 
         // 52.
-        let result = for_cell_in_cells(&mut board_candidate_masks, group, &cells);
+        let result = for_cell_in_cells(board_candidate_masks, group, &cells);
         step_change_made = step_change_made || result;
     }
     step_change_made
