@@ -194,7 +194,7 @@ impl Digits {
     }
     fn count(&self) -> i32 {
         //let count = mask_to_ones_count().get(&self.mask).copied().unwrap_or(0);
-        let count = count_candidates(&self.mask);
+        let count = count_candidates(self.mask);
         return count as i32;
     }
 }
@@ -279,7 +279,7 @@ fn play(mut rnglcg: PortableLCG) {
             // look for cells which have only 2 options for digits
             let two_digit_masks: Vec<i32> = board_candidate_masks
                 .into_iter()
-                .filter(|&mask| count_candidates(&mask) == 2)
+                .filter(|&mask| count_candidates(mask) == 2)
                 .unique()
                 .collect();
 
@@ -287,8 +287,6 @@ fn play(mut rnglcg: PortableLCG) {
             log(&format!("two_digit_masks={:?}", &two_digit_masks));
 
             // 49.
-            //step_change_made = step_change_made || handle_two_digit_masks(two_digit_masks, &cell_groups, board_candidate_masks);
-
             let result = handle_two_digit_masks(&mut board_candidate_masks, &cell_groups, &two_digit_masks);
             step_change_made = step_change_made || result;
             //#endregion
@@ -344,7 +342,7 @@ fn play(mut rnglcg: PortableLCG) {
                             }
                         }) // .map
                 })// .flat_map
-                .filter(|group| group.cells_with_mask.len() == count_candidates(&group.mask) as usize)
+                .filter(|group| group.cells_with_mask.len() == count_candidates(group.mask) as usize)
                 .collect();
 
             // 54.
@@ -770,7 +768,7 @@ fn get_candidate_cells(board_candidate_masks: &mut [i32; 81]) -> (VecDeque<Candi
     for i in 0..80  // stop at 80 because j looks at i+1 cell
     {
         // 62.
-        if count_candidates(&board_candidate_masks[i]) != 2 {
+        if count_candidates(board_candidate_masks[i]) != 2 {
             continue;
         }   // if this cell candidate i has exactly 2 digits
         let (lower_digit, upper_digit) = top_two_digits(board_candidate_masks[i]); // we already determined that this candidate has exactly 2 digits
@@ -1245,7 +1243,7 @@ fn get_single_candidate_indices(candidate_masks: &[i32; 81]) -> Vec<usize> {
         .iter()
         .enumerate()
         .filter_map(|(index, &candidate_mask)| {
-            let candidates_count = count_candidates(&candidate_mask);
+            let candidates_count = count_candidates(candidate_mask);
             if candidates_count == 1 {  // when there's only one digit that will work for this cell then return the index otherwise return Null
                 Some(index)
             } else {
@@ -1375,7 +1373,7 @@ fn convert_digit_to_mask(digit: i32) -> i32 {
     1 << (digit - 1)
 }
 
-fn count_candidates(mask: &i32) -> i32 {
+fn count_candidates(mask: i32) -> i32 {
     let candidates_count = mask_to_ones_count().get(&mask).copied().unwrap_or(0);
     candidates_count as i32
 }
