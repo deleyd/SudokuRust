@@ -265,7 +265,8 @@ fn play(mut rnglcg: PortableLCG) {
             }
 
             let candidate_cells = generate_candidate_cells(&board_candidate_masks);
-            if_candidate_cells(&mut rnglcg, &mut board, &mut change_made, &mut board_candidate_masks, candidate_cells);  // 47
+            let result = if_candidate_cells(&mut rnglcg, &mut board, &mut board_candidate_masks, candidate_cells);  // 47
+            change_made = change_made || result;
             //#endregion
 
             //#region Try to find pairs of digits in the same row/column/block and remove them from other colliding cells
@@ -518,7 +519,8 @@ fn handle_two_digit_masks(board_candidate_masks: &mut [i32; 81], cell_groups: &B
     step_change_made
 }
 
-fn if_candidate_cells(rnglcg: &mut PortableLCG, board: &mut Board, change_made: &mut bool, board_candidate_masks: &mut [i32; 81], candidate_cells: Vec<CandidateCell>) {
+fn if_candidate_cells(rnglcg: &mut PortableLCG, board: &mut Board, board_candidate_masks: &mut [i32; 81], candidate_cells: Vec<CandidateCell>) -> bool {
+    let mut change_made = false;
     if candidate_cells.len() > 0
     {
         let random_cell_index = rnglcg.next_range(candidate_cells.len() as i32) as usize;
@@ -526,7 +528,7 @@ fn if_candidate_cells(rnglcg: &mut PortableLCG, board: &mut Board, change_made: 
 
         board[random_candidate_cell].digit = random_candidate_cell.digit;       // we can try digit in this cell
         board_candidate_masks[random_candidate_cell.index] = 0;          // clear for this cell since we just set cell to a number
-        *change_made = true;
+        change_made = true;
 
         let message = format!("{} can contain {} only at ({}, {}).",
                               random_candidate_cell.description,
@@ -535,6 +537,7 @@ fn if_candidate_cells(rnglcg: &mut PortableLCG, board: &mut Board, change_made: 
                               random_candidate_cell.get_column() + 1);
         log(&message);
     }
+    change_made
 }
 
 fn for_group_in_groups(board_candidate_masks: &mut [i32; 81], groups: &mut Vec<CellGroup1>) -> bool {
