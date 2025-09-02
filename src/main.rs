@@ -241,19 +241,7 @@ fn play(mut rnglcg: PortableLCG) {
 
         change_made = false;
         let mut board_candidate_masks: [i32; 81] =  calculate_candidates(&board);
-        //#region Build a collection (named cellGroups) which maps cell indices into distinct groups (rows/columns/blocks)
-        // 29.
-        // generate cell_groups which is a BTreeMap<int, Vec<Cell>>
-        // int is the Cell discriminator. 0-8 is row this cell is in, 9-17 is column, 18-27 is block
-        // for discriminator in range 9-17, subtract 9 to get column
-        // for discriminator in range 18-27, subtract 18 to get block
-        // Group by rows
-        // 30.
-        // Group elements by row
         let cell_groups : BTreeMap<usize, Vec< crate::Cell >> = get_indices();
-
-        //#endregion
-
 
         // cell_groups has 3x 81 cells. 81 for rows, 81 for columns, 81 for blocks
         // 34.
@@ -1205,11 +1193,11 @@ fn log_group_with_n_masks_message(group_with_n_masks: &CellGroup2, mask: i32) {
     log(&message);
 }
 
-fn set_random_cell_with_only_one_candidate(mut rnglcg: &mut PortableLCG, board: &mut Board, mut board_candidate_masks: &mut [i32; 81]) -> bool {
+fn set_random_cell_with_only_one_candidate(rnglcg: &mut PortableLCG, board: &mut Board, board_candidate_masks: &mut [i32; 81]) -> bool {
     // note mask_to_ones_count. Each bit represents a digit available for this cell.
     // We want to know how many digits to choose from we have. If only one digit, then use that digit.
     // 36.
-    let single_candidate_indices = get_single_candidate_indices(&mut board_candidate_masks);
+    let single_candidate_indices = get_single_candidate_indices(board_candidate_masks);
 
     // 37.
     // if we have any cells with only one option digit we can put there, then put it there.
@@ -1221,7 +1209,7 @@ fn set_random_cell_with_only_one_candidate(mut rnglcg: &mut PortableLCG, board: 
     {
         // randomly pick a cell which has only one digit possibility
         // candidate is 0-8, representing digits 1-9
-        let (board_single_candidate_index, digit) = get_random_single_candidate_cell(&mut rnglcg, &board_candidate_masks, single_candidate_indices);
+        let (board_single_candidate_index, digit) = get_random_single_candidate_cell(rnglcg, &board_candidate_masks, single_candidate_indices);
         board[board_single_candidate_index].digit = digit;  // Set cell to the one digit it can be. Here's the +1 to convert to a digit 1-9
 
         board_candidate_masks[board_single_candidate_index] = 0; // clear candidates for this cell now that we've set cell to a digit
@@ -1249,7 +1237,7 @@ fn get_random_single_candidate_cell(rnglcg: &mut PortableLCG, board_candidate_ma
 }
 
 // candidate_masks : list of 81, for each cell, the digits which are candidates (encoded as a bit mask)
-fn get_single_candidate_indices(candidate_masks: &mut [i32; 81]) -> Vec<usize> {
+fn get_single_candidate_indices(candidate_masks: &[i32; 81]) -> Vec<usize> {
     let single_candidate_indices: Vec<usize> = candidate_masks
         .iter()
         .enumerate()
@@ -1265,7 +1253,16 @@ fn get_single_candidate_indices(candidate_masks: &mut [i32; 81]) -> Vec<usize> {
     single_candidate_indices
 }
 
+//#region Build a collection (named cellGroups) which maps cell indices into distinct groups (rows/columns/blocks)
+// 29.
+// generate cell_groups which is a BTreeMap<int, Vec<Cell>>
+// int is the Cell discriminator. 0-8 is row this cell is in, 9-17 is column, 18-27 is block
+// for discriminator in range 9-17, subtract 9 to get column
+// for discriminator in range 18-27, subtract 18 to get block
 fn get_indices() -> BTreeMap<usize, Vec<Cell>> {
+    // 30.
+    // Group by rows
+    // Group elements by row
     let row_indices: BTreeMap<usize, Vec<Cell>> = (0..81)
         .map(|index| {
             let discriminator = index_to_row(index);
