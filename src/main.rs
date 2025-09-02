@@ -283,12 +283,12 @@ fn play(mut rnglcg: PortableLCG) {
                 .collect();
 
             // note every number here when expressed in biary uses only 2 bits, indicating there are two candidates for which? cells
-            log(&format!("two_digit_masks={:?}", two_digit_masks));
+            log(&format!("two_digit_masks={:?}", &two_digit_masks));
 
             // 49.
             //step_change_made = step_change_made || handle_two_digit_masks(two_digit_masks, &cell_groups, board_candidate_masks);
 
-            let result = handle_two_digit_masks(&mut board_candidate_masks, &cell_groups, two_digit_masks);
+            let result = handle_two_digit_masks(&mut board_candidate_masks, &cell_groups, &two_digit_masks);
             step_change_made = step_change_made || result;
             //#endregion
 
@@ -492,7 +492,7 @@ fn play(mut rnglcg: PortableLCG) {
     log(&"BOARD SOLVED.".to_string())
 }
 
-fn handle_two_digit_masks(mut board_candidate_masks: &mut [i32; 81], cell_groups: &BTreeMap<usize, Vec<Cell>>, two_digit_masks: Vec<i32>) -> bool {
+fn handle_two_digit_masks(board_candidate_masks: &mut [i32; 81], cell_groups: &BTreeMap<usize, Vec<Cell>>, two_digit_masks: &Vec<i32>) -> bool {
     let mut groups = Vec::new();
     let mut step_change_made = false;
     // Outer loop equivalent to SelectMany over twoDigitMasks
@@ -501,7 +501,7 @@ fn handle_two_digit_masks(mut board_candidate_masks: &mut [i32; 81], cell_groups
     {
         log(&format!("cellGroups.Count: {} mask: {}", cell_groups.len(), mask).to_string());
         // Inner processing equivalent to the SelectMany lambda
-        for_tuple_kvp_in_cell_groups(&mut board_candidate_masks, &cell_groups, &mut groups, mask);
+        for_tuple_kvp_in_cell_groups(board_candidate_masks, &cell_groups, &mut groups, mask.clone());
 
         // 50.
         if groups.is_empty() {
