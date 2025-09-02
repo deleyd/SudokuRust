@@ -277,11 +277,7 @@ fn play(mut rnglcg: PortableLCG) {
             }
             //let two_digit_masks = candidate_masks.Where(mask => mask_to_ones_count[mask] == 2).Distinct().ToList();
             // look for cells which have only 2 options for digits
-            let two_digit_masks: Vec<i32> = board_candidate_masks
-                .into_iter()
-                .filter(|&mask| count_candidates(mask) == 2)
-                .unique()
-                .collect();
+            let two_digit_masks: Vec<i32> = get_two_digit_masks(board_candidate_masks);
 
             // note every number here when expressed in biary uses only 2 bits, indicating there are two candidates for which? cells
             log(&format!("two_digit_masks={:?}", &two_digit_masks));
@@ -298,52 +294,8 @@ fn play(mut rnglcg: PortableLCG) {
             if change_made || step_change_made {
                 continue;
             }
-            let digit_masks: Vec<i32> = mask_to_ones_count().iter()
-                .filter(|&(_, count)| *count > 1)
-                .map(|(mask, _)| *mask)
-                .collect();
-            let groups_with_n_masks : Vec<CellGroup2> = digit_masks
-                .iter()
-                .flat_map(|mask| {
-                    cell_groups
-                        .iter()
-                        .filter(|cell_group1| {
-                            cell_group1.1.iter().all(|cell| {
-                                board[cell.index].digit == 0          // cell not being used
-                                    || (mask.clone() & convert_digit_to_mask(board[cell.index].digit)) == 0  // cell not using value
-                            })
-                        })
-                        .map(|cell_group2| {
-                            let cells_with_mask: Vec<Cell> = cell_group2.1
-                                .iter()
-                                .filter(|cell| {
-                                    board[cell.index].digit == 0  // cell unused
-                                        && (board_candidate_masks[cell.index] & mask.clone()) != 0  // candidate_mask overlaps mask
-                                })
-                                //.map(|&x| x)
-                                .cloned()
-                                .collect();
 
-                            let cleanable_cells_count : u32 = cell_group2.1
-                                .iter()
-                                .filter(|cell| {
-                                    board[cell.index].digit == 0
-                                        && (board_candidate_masks[cell.index] & mask.clone()) != 0   // overlaps
-                                        && (board_candidate_masks[cell.index] & !mask.clone()) != 0  // but is not equal to
-                                })
-                                .count() as u32;
-
-                            CellGroup2 {
-                                mask: *mask,
-                                description: cell_group2.1.iter().next().unwrap().description.clone(),
-                                cell_group: cell_group2.clone(),
-                                cells_with_mask,
-                                cleanable_cells_count,
-                            }
-                        }) // .map
-                })// .flat_map
-                .filter(|group| group.cells_with_mask.len() == count_candidates(group.mask) as usize)
-                .collect();
+            let groups_with_n_masks = get_groups_with_n_masks(&board, &board_candidate_masks, &cell_groups);
 
             // 54.
             for group_with_n_masks in groups_with_n_masks
@@ -489,6 +441,66 @@ fn play(mut rnglcg: PortableLCG) {
             //#endregion
     }//while change_made// 27
     log(&"BOARD SOLVED.".to_string())
+}
+
+fn get_groups_with_n_masks<'a>(board: &Board, board_candidate_masks: &[i32; 81], cell_groups: &'a BTreeMap<usize, Vec<Cell>>) -> Vec<CellGroup2<'a>> {
+    let two_or_more_bit_digit_masks: Vec<i32> = mask_to_ones_count().iter()
+        .filter(|&(_, count)| *count > 1)  // filter out all masks with only one or zero bits set
+        .map(|(mask, _)| *mask)
+        .collect();
+
+    let groups_with_n_masks: Vec<CellGroup2> = two_or_more_bit_digit_masks
+        .iter()
+        .flat_map(|mask| {
+            cell_groups
+                .iter()
+                .filter(|cell_group1| {
+                    cell_group1.1.iter().all(|cell| {
+                        board[cell.index].digit == 0          // cell not being used
+                            || (mask.clone() & convert_digit_to_mask(board[cell.index].digit)) == 0  // cell not using value
+                    })
+                })
+                .map(|cell_group2| {
+                    let cells_with_mask: Vec<Cell> = cell_group2.1
+                        .iter()
+                        .filter(|cell| {
+                            board[cell.index].digit == 0  // cell unused
+                                && (board_candidate_masks[cell.index] & mask.clone()) != 0  // candidate_mask overlaps mask
+                        })
+                        //.map(|&x| x)
+                        .cloned()
+                        .collect();
+
+                    let cleanable_cells_count: u32 = cell_group2.1
+                        .iter()
+                        .filter(|cell| {
+                            board[cell.index].digit == 0
+                                && (board_candidate_masks[cell.index] & mask.clone()) != 0   // overlaps
+                                && (board_candidate_masks[cell.index] & !mask.clone()) != 0  // but is not equal to
+                        })
+                        .count() as u32;
+
+                    CellGroup2 {
+                        mask: *mask,
+                        description: cell_group2.1.iter().next().unwrap().description.clone(),
+                        cell_group: cell_group2.clone(),
+                        cells_with_mask,
+                        cleanable_cells_count,
+                    }
+                }) // .map
+        }) // .flat_map
+        .filter(|group| group.cells_with_mask.len() == count_candidates(group.mask) as usize)
+        .collect();
+    groups_with_n_masks
+}
+
+fn get_two_digit_masks(board_candidate_masks: [i32; 81]) -> Vec<i32> {
+    let two_digit_masks: Vec<i32> = board_candidate_masks
+        .into_iter()
+        .filter(|&mask| count_candidates(mask) == 2)
+        .unique()
+        .collect();
+    two_digit_masks
 }
 
 fn handle_two_digit_masks(board_candidate_masks: &mut [i32; 81], cell_groups: &BTreeMap<usize, Vec<Cell>>, two_digit_masks: &Vec<i32>) -> bool {
@@ -1392,11 +1404,11 @@ fn mask_to_ones_count() -> &'static BTreeMap<i32, usize> {
     MASK_TO_ONES_COUNT.get_or_init(|| {
         let mut answers = BTreeMap::new();
         answers.insert(0, 0);
-        for i in 1..(1 << 9) {                              // 1 << 9 = 512. Thus goes from 1 to 511
-            let half: i32 = i >> 1;                                 // half = i >> 1 (i/2). Shift to a number we have already solved and stored in answers
-            let lowbit: usize = (i & 1) as usize;                   // lowbit is lowest bit of i. Either 0 or 1
-            let new_result = answers[&half] + lowbit;        // bits set in i is bits set in i >> 1 (answers[half]) + lowest bit of i (lowbit)
-            answers.insert(i, new_result);                   // store the value. i, new_result=number of bits set in i
+        for i in 1..(1 << 9) {                          // 1 << 9 = 512. Thus goes from 1 to 511
+            let half: i32 = i >> 1;                             // half = i >> 1 (i/2). Shift to a number we have already solved and stored in answers
+            let lowbit: usize = (i & 1) as usize;               // lowbit is lowest bit of i. Either 0 or 1
+            let new_result = answers[&half] + lowbit;     // bits set in i is bits set in i >> 1 (answers[half]) + lowest bit of i (lowbit)
+            answers.insert(i, new_result);                // store the value. i, new_result=number of bits set in i
         }
         answers
     })
