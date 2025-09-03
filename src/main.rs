@@ -195,7 +195,7 @@ impl Digits {
     fn count(&self) -> i32 {
         //let count = mask_to_ones_count().get(&self.mask).copied().unwrap_or(0);
         let count = count_candidates(self.mask);
-        return count as i32;
+        return count;
     }
 }
 
@@ -234,14 +234,15 @@ fn play(mut rnglcg: PortableLCG) {
     let mut board = generate_initial_board(&mut rnglcg, &final_board);  // Generate initial board from the completely solved one
     print_starting_board(&mut board);
 
+    // Now solve the board
     let mut change_made: bool = true;
     while change_made// 27
     {
         log(&"27. top of loop".to_string());
 
         change_made = false;
-        let mut board_candidate_masks: [i32; 81] =  calculate_candidates(&board);
-        let cell_groups : BTreeMap<usize, Vec< crate::Cell >> = get_indices();
+        let mut board_candidate_masks: [i32; 81] =  calculate_candidates(&mut board);  // calculates all the options for every cell on board
+        let cell_groups : BTreeMap<usize, Vec<Cell >> = get_indices();
 
         // cell_groups has 3x 81 cells. 81 for rows, 81 for columns, 81 for blocks
         // 34.
@@ -251,7 +252,6 @@ fn play(mut rnglcg: PortableLCG) {
             step_change_made = false;
 
             //#region Pick cells with only one candidate left
-            log(&format!("#region Pick bcm77={}", board_candidate_masks[77]));
             let result = set_random_cell_with_only_one_candidate(&mut rnglcg, &mut board, &mut board_candidate_masks);
             change_made = change_made || result;
             //#endregion*
@@ -369,10 +369,7 @@ fn play(mut rnglcg: PortableLCG) {
                                     Commands::Complete
                                 };
                             } else {
-                                // 76.
-                                // No viable candidate was found at current position - pop it in the next iteration
-                                // Why bother if we immediately pop it off the stack in the next step?
-                                //board_stack.last_mut().unwrap().last_digit = 0;
+                                // 76. No viable candidate was found at current position - pop it in the next iteration
                                 command = Commands::Collapse;
                             }
                         } // match command::move
@@ -1009,7 +1006,7 @@ fn and_next_command(board_stack: &mut Vec<Board>, moved_to_digit: i32) -> Comman
         // Next possible digit was found at current position
         // Next step will be to expand the state
         // Next step will be to expand the state/ 9
-        return Commands::Expand
+        Commands::Expand
     } else {
         // No viable candidate was found at current position - pop it in the next iteration
         board_stack.last_mut().unwrap().last_digit = 0;
@@ -1030,7 +1027,7 @@ fn update_board_state(board_stack: &mut Vec<Board>, cell_to_move: &Cell, moved_t
 fn update_board(board_stack: &mut Vec<Board>, cell_to_move: &Cell, digit_to_move: i32, moved_to_digit: i32) {
     if digit_to_move > 0
     {
-        board_stack.last_mut().unwrap().used_digits.clear_digit(digit_to_move); // as usize - 1] = false;
+        board_stack.last_mut().unwrap().used_digits.clear_digit(digit_to_move);
         board_stack.last_mut().unwrap()[cell_to_move.index].digit = 0; // does this change last element of state_stack?
     }
     if moved_to_digit <= 9 {
@@ -1254,9 +1251,12 @@ fn get_indices() -> BTreeMap<usize, Vec<Cell>> {
     cell_groups
 }
 
-fn calculate_candidates(board: &Board) -> [i32; 81] {
+fn calculate_candidates(board: &mut Board) -> [i32; 81] {
     //#region Calculate candidates for current state of the board
     let mut candidate_masks: [i32; 81] = [0; 81];
+    for i in 0..81 {
+        board[i].candidate_digits.mask = 0;
+    }
 
     // go through every cell of board, calculcate candicate numbers for each cell that does not already have a number in it.
     // candidate numbers are any digit 1-9 not already in that cell's row, column, and block
@@ -1295,8 +1295,13 @@ fn calculate_candidates(board: &Board) -> [i32; 81] {
             // candidate_mask is all numbers available to put in cell[i] of board (state)
             // all the not "already used" numbers
             let all_ones: i32 = (1 << 9) - 1;
-            candidate_masks[i] = all_ones & !colliding_numbers; // mask indicating what numbers are available for this cell.
+            let m = all_ones & !colliding_numbers;
+            candidate_masks[i] = m; // mask indicating what numbers are available for this cell.
+            board[i].candidate_digits.mask = m;
         }
+    }
+    for i in 0..81 {
+        assert_eq!(candidate_masks[i], board[i].candidate_digits.mask);
     }
     //#endregion
     candidate_masks
@@ -1480,7 +1485,7 @@ fn write_from_function(content: &str) -> io::Result<()> {
     } else {
         // Handle the case where the file is not yet initialized (e.g., error or not set up).
         eprintln!("Error: File not initialized in GLOBAL_FILE.");
-        return Err(io::Error::new(io::ErrorKind::Other, "File not initialized"));
+        return Err(io::Error::new(ErrorKind::Other, "File not initialized"));
     }
     Ok(())
 }
