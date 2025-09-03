@@ -251,6 +251,7 @@ fn play(mut rnglcg: PortableLCG) {
             step_change_made = false;
 
             //#region Pick cells with only one candidate left
+            log(&format!("#region Pick bcm77={}", board_candidate_masks[77]));
             let result = set_random_cell_with_only_one_candidate(&mut rnglcg, &mut board, &mut board_candidate_masks);
             change_made = change_made || result;
             //#endregion*
@@ -265,7 +266,9 @@ fn play(mut rnglcg: PortableLCG) {
             }
 
             let candidate_cells = generate_candidate_cells(&board_candidate_masks);
+            //log(&format!("let bcm77={}", board_candidate_masks[77]));
             let result = if_candidate_cells(&mut rnglcg, &mut board, &mut board_candidate_masks, candidate_cells);  // 47
+            //log(&format!("result bcm77={}", board_candidate_masks[77]));
             change_made = change_made || result;
             //#endregion
 
@@ -298,33 +301,9 @@ fn play(mut rnglcg: PortableLCG) {
             let groups_with_n_masks = get_groups_with_n_masks(&board, &board_candidate_masks, &cell_groups);
 
             // 54.
-            for group_with_n_masks in groups_with_n_masks
-            {
-                let mask = group_with_n_masks.mask;
-
-                if group_with_n_masks.cell_group.1.iter().any(|cell| {
-                    let candidate_mask_for_cell = board_candidate_masks[cell.index];
-                    (candidate_mask_for_cell & mask) != 0 && (candidate_mask_for_cell & !mask) != 0  // there is some overlap
-                })
-                {
-                    log_group_with_n_masks_message(&group_with_n_masks, mask);
-                }
-
-                // 57.
-                for cell in group_with_n_masks.cells_with_mask
-                {
-                    let mask_to_clear = board_candidate_masks[cell.index] & !group_with_n_masks.mask;  // mask_to_clear is the intersection of
-                    if mask_to_clear == 0 {
-                        continue;
-                    }
-
-                    board_candidate_masks[cell.index] &= group_with_n_masks.mask;  // Add more candidate digits to this cell
-                    step_change_made = true;
-
-                    generate_and_log_mask_to_clear_message(mask_to_clear, cell);
-                    // 59.
-                }
-            }
+            let result = for_group_with_n_masks(&mut board_candidate_masks, groups_with_n_masks);
+            //log(&format!("on return 1  bcm77={0}", board_candidate_masks[77]));
+            step_change_made = step_change_made || result;
             //#endregion
         } // end while
 
@@ -441,6 +420,41 @@ fn play(mut rnglcg: PortableLCG) {
             //#endregion
     }//while change_made// 27
     log(&"BOARD SOLVED.".to_string())
+}
+
+fn for_group_with_n_masks(board_candidate_masks: &mut [i32; 81], groups_with_n_masks: Vec<CellGroup2>) -> bool {
+    let mut step_change_made = false;
+    for group_with_n_masks in groups_with_n_masks
+    {
+        let mask = group_with_n_masks.mask;
+
+        if group_with_n_masks.cell_group.1.iter().any(|cell| {
+            let candidate_mask_for_cell = board_candidate_masks[cell.index];
+            (candidate_mask_for_cell & mask) != 0 && (candidate_mask_for_cell & !mask) != 0  // there is some overlap
+        })
+        {
+            log_group_with_n_masks_message(&group_with_n_masks, mask);
+        }
+
+        // 57.
+        for cell in group_with_n_masks.cells_with_mask
+        {
+            let mask_to_clear = board_candidate_masks[cell.index] & !group_with_n_masks.mask;  // mask_to_clear is the intersection of
+            if mask_to_clear == 0 {
+                continue;
+            }
+
+            //log(&format!("before &= bcm77={0} group_with_n_masks.mask={1} cell.index={2}, q={3}", board_candidate_masks[77], group_with_n_masks.mask, cell.index, q));
+            board_candidate_masks[cell.index] &= group_with_n_masks.mask;  // Add more candidate digits to this cell
+            //log(&format!("if (candidateMasks[77] ==  bcm77={0}", board_candidate_masks[77]));
+            step_change_made = true;
+
+            generate_and_log_mask_to_clear_message(mask_to_clear, cell);
+            // 59.
+        }
+    }
+    //log(&format!("before return ==  bcm77={0}", board_candidate_masks[77]));
+    step_change_made
 }
 
 fn get_groups_with_n_masks<'a>(board: &Board, board_candidate_masks: &[i32; 81], cell_groups: &'a BTreeMap<usize, Vec<Cell>>) -> Vec<CellGroup2<'a>> {
@@ -876,6 +890,9 @@ fn generate_and_log_mask_to_clear_message(mask_to_clear: i32, cell: Cell) {
         value_to_clear += 1;
     }
     message.push_str(&format!(" cannot appear in cell ({}, {}).", cell.get_row() + 1, cell.get_column() + 1));
+    if cell.get_row() + 1 == 9 && cell.get_column() + 1 == 6 {
+        println!("Found It!");
+    }
     log(&message);
 }
 
