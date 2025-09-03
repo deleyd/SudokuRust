@@ -278,9 +278,7 @@ fn play(mut rnglcg: PortableLCG) {
             }
 
             let candidate_cells = generate_candidate_cells(&board_candidate_masks);
-            //log(&format!("let bcm77={}", board_candidate_masks[77]));
             let result = if_candidate_cells(&mut rnglcg, &mut board, &mut board_candidate_masks, candidate_cells);  // 47
-            //log(&format!("result bcm77={}", board_candidate_masks[77]));
             change_made = change_made || result;
             //#endregion
 
@@ -324,7 +322,6 @@ fn play(mut rnglcg: PortableLCG) {
             }
             // 54.
             let result = for_group_with_n_masks(&mut board_candidate_masks, &mut board, groups_with_n_masks);
-            //log(&format!("on return 1  bcm77={0}", board_candidate_masks[77]));
             step_change_made = step_change_made || result;
             //#endregion
             for i in 0..81 {
@@ -424,6 +421,8 @@ fn play(mut rnglcg: PortableLCG) {
                 board[candidate_cell2].digit = final_board[candidate_cell2].digit;
                 board_candidate_masks[candidate_cell1.index] = 0;
                 board_candidate_masks[candidate_cell2.index] = 0;
+                board[candidate_cell1.index].candidate_digits.mask = 0;
+                board[candidate_cell2.index].candidate_digits.mask = 0;
                 change_made = true;
 
                 // 79.
