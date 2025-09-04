@@ -628,7 +628,7 @@ fn for_group_in_groups(board_candidate_masks: &mut [i32; 81], board: &mut Board,
         let (lower, upper) = top_two_digits(cell_group2.mask); // bits represent digits
 
         let s = format!(
-            "Values {} and {} in {} are in cells ({}, {}) and ({}, {}). [index {} and {}]",
+            "Values {} and {} in {} go in cells ({}, {}) and ({}, {}). [index {} and {}]",
             lower,
             upper,
             cell_group2.description,

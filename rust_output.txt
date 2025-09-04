@@ -845,7 +845,7 @@ cell_group2s.Count()=1
 cell_group2=row #7
 cells.len()=1
 cells.Any()
-Values 7 and 9 in row #7 are in cells (7, 4) and (7, 6).
+Values 7 and 9 in row #7 go in cells (7, 4) and (7, 6). [index 57 and 59]
 7 cannot appear in (7, 7).
 step_change_made=true
 cellGroups.Count: 27 mask: 6
@@ -948,7 +948,7 @@ cell_group2s.Count()=1
 cell_group2=row #7
 cells.len()=1
 cells.Any()
-Values 7 and 9 in row #7 are in cells (7, 4) and (7, 6).
+Values 7 and 9 in row #7 go in cells (7, 4) and (7, 6). [index 57 and 59]
 7 cannot appear in (7, 7).
 step_change_made=true
 cellGroups.Count: 27 mask: 6
@@ -1095,7 +1095,7 @@ cell_group2s.Count()=1
 cell_group2=row #7
 cells.len()=1
 cells.Any()
-Values 7 and 9 in row #7 are in cells (7, 4) and (7, 6).
+Values 7 and 9 in row #7 go in cells (7, 4) and (7, 6). [index 57 and 59]
 7 cannot appear in (7, 7).
 step_change_made=true
 cellGroups.Count: 27 mask: 6
@@ -3386,7 +3386,7 @@ cell_group2s.Count()=1
 cell_group2=column #1
 cells.len()=2
 cells.Any()
-Values 3 and 5 in column #1 are in cells (6, 1) and (8, 1).
+Values 3 and 5 in column #1 go in cells (6, 1) and (8, 1). [index 45 and 63]
 3, 5 cannot appear in (2, 1).
 3 cannot appear in (7, 1).
 step_change_made=true
@@ -4749,7 +4749,7 @@ cell_group2s.Count()=1
 cell_group2=column #3
 cells.len()=2
 cells.Any()
-Values 1 and 3 in column #3 are in cells (4, 3) and (5, 3).
+Values 1 and 3 in column #3 go in cells (4, 3) and (5, 3). [index 29 and 38]
 1 cannot appear in (1, 3).
 3 cannot appear in (8, 3).
 step_change_made=true
@@ -4979,7 +4979,7 @@ cell_group2s.Count()=1
 cell_group2=block (3, 2)
 cells.len()=1
 cells.Any()
-Values 5 and 7 in block (3, 2) are in cells (7, 5) and (8, 5).
+Values 5 and 7 in block (3, 2) go in cells (7, 5) and (8, 5). [index 58 and 67]
 7 cannot appear in (7, 4).
 step_change_made=true
 38. change_made: false
@@ -4994,7 +4994,7 @@ cell_group2s.Count()=1
 cell_group2=row #7
 cells.len()=1
 cells.Any()
-Values 1 and 2 in row #7 are in cells (7, 4) and (7, 6).
+Values 1 and 2 in row #7 go in cells (7, 4) and (7, 6). [index 57 and 59]
 2 cannot appear in (7, 2).
 step_change_made=true
 cellGroups.Count: 27 mask: 80
@@ -5719,7 +5719,7 @@ cell_group2s.Count()=1
 cell_group2=block (2, 1)
 cells.len()=4
 cells.Any()
-Values 5 and 9 in block (2, 1) are in cells (5, 1) and (6, 1).
+Values 5 and 9 in block (2, 1) go in cells (5, 1) and (6, 1). [index 36 and 45]
 5 cannot appear in (4, 2).
 5 cannot appear in (4, 3).
 5 cannot appear in (5, 2).
@@ -7205,13 +7205,13 @@ cell_group2s.Count()=2
 cell_group2=row #9
 cells.len()=2
 cells.Any()
-Values 3 and 7 in row #9 are in cells (9, 1) and (9, 9).
+Values 3 and 7 in row #9 go in cells (9, 1) and (9, 9). [index 72 and 80]
 3 cannot appear in (9, 2).
 3 cannot appear in (9, 5).
 cell_group2=block (3, 1)
 cells.len()=1
 cells.Any()
-Values 3 and 7 in block (3, 1) are in cells (7, 1) and (9, 1).
+Values 3 and 7 in block (3, 1) go in cells (7, 1) and (9, 1). [index 54 and 72]
 3 cannot appear in (7, 2).
 step_change_made=true
 cellGroups.Count: 27 mask: 132
@@ -8661,7 +8661,7 @@ cell_group2s.Count()=1
 cell_group2=column #4
 cells.len()=2
 cells.Any()
-Values 2 and 3 in column #4 are in cells (2, 4) and (3, 4).
+Values 2 and 3 in column #4 go in cells (2, 4) and (3, 4). [index 12 and 21]
 3 cannot appear in (6, 4).
 2 cannot appear in (7, 4).
 step_change_made=true
@@ -9596,7 +9596,7 @@ cell_group2s.Count()=1
 cell_group2=row #5
 cells.len()=2
 cells.Any()
-Values 1 and 2 in row #5 are in cells (5, 1) and (5, 2).
+Values 1 and 2 in row #5 go in cells (5, 1) and (5, 2). [index 36 and 37]
 2 cannot appear in (5, 7).
 2 cannot appear in (5, 9).
 step_change_made=true
@@ -9612,7 +9612,7 @@ Cells is empty 51
 cell_group2=block (2, 3)
 cells.len()=1
 cells.Any()
-Values 2 and 4 in block (2, 3) are in cells (6, 7) and (6, 9).
+Values 2 and 4 in block (2, 3) go in cells (6, 7) and (6, 9). [index 51 and 53]
 4 cannot appear in (4, 7).
 step_change_made=true
 cellGroups.Count: 27 mask: 9
@@ -9622,7 +9622,7 @@ Cells is empty 51
 cell_group2=column #5
 cells.len()=2
 cells.Any()
-Values 1 and 4 in column #5 are in cells (7, 5) and (9, 5).
+Values 1 and 4 in column #5 go in cells (7, 5) and (9, 5). [index 58 and 76]
 4 cannot appear in (1, 5).
 4 cannot appear in (3, 5).
 cell_group2=block (2, 3)
@@ -9630,7 +9630,7 @@ Cells is empty 51
 cell_group2=block (3, 2)
 cells.len()=3
 cells.Any()
-Values 1 and 4 in block (3, 2) are in cells (7, 5) and (9, 5).
+Values 1 and 4 in block (3, 2) go in cells (7, 5) and (9, 5). [index 58 and 76]
 4 cannot appear in (7, 4).
 4 cannot appear in (7, 6).
 4 cannot appear in (9, 4).
@@ -9742,7 +9742,7 @@ cell_group2s.Count()=1
 cell_group2=row #5
 cells.len()=2
 cells.Any()
-Values 1 and 2 in row #5 are in cells (5, 1) and (5, 2).
+Values 1 and 2 in row #5 go in cells (5, 1) and (5, 2). [index 36 and 37]
 2 cannot appear in (5, 7).
 2 cannot appear in (5, 9).
 step_change_made=true
@@ -9758,7 +9758,7 @@ Cells is empty 51
 cell_group2=block (2, 3)
 cells.len()=1
 cells.Any()
-Values 2 and 4 in block (2, 3) are in cells (6, 7) and (6, 9).
+Values 2 and 4 in block (2, 3) go in cells (6, 7) and (6, 9). [index 51 and 53]
 4 cannot appear in (4, 7).
 step_change_made=true
 cellGroups.Count: 27 mask: 9
@@ -9768,7 +9768,7 @@ Cells is empty 51
 cell_group2=column #5
 cells.len()=2
 cells.Any()
-Values 1 and 4 in column #5 are in cells (7, 5) and (9, 5).
+Values 1 and 4 in column #5 go in cells (7, 5) and (9, 5). [index 58 and 76]
 4 cannot appear in (1, 5).
 4 cannot appear in (3, 5).
 cell_group2=block (2, 3)
@@ -9776,7 +9776,7 @@ Cells is empty 51
 cell_group2=block (3, 2)
 cells.len()=3
 cells.Any()
-Values 1 and 4 in block (3, 2) are in cells (7, 5) and (9, 5).
+Values 1 and 4 in block (3, 2) go in cells (7, 5) and (9, 5). [index 58 and 76]
 4 cannot appear in (7, 4).
 4 cannot appear in (7, 6).
 4 cannot appear in (9, 4).
@@ -9975,7 +9975,7 @@ cell_group2s.Count()=1
 cell_group2=column #4
 cells.len()=2
 cells.Any()
-Values 4 and 7 in column #4 are in cells (3, 4) and (4, 4).
+Values 4 and 7 in column #4 go in cells (3, 4) and (4, 4). [index 21 and 30]
 4, 7 cannot appear in (1, 4).
 7 cannot appear in (5, 4).
 step_change_made=true
@@ -10001,7 +10001,7 @@ Cells is empty 51
 cell_group2=block (2, 3)
 cells.len()=1
 cells.Any()
-Values 2 and 4 in block (2, 3) are in cells (6, 7) and (6, 9).
+Values 2 and 4 in block (2, 3) go in cells (6, 7) and (6, 9). [index 51 and 53]
 4 cannot appear in (4, 7).
 step_change_made=true
 cellGroups.Count: 27 mask: 260
@@ -10090,7 +10090,7 @@ cell_group2s.Count()=1
 cell_group2=column #4
 cells.len()=2
 cells.Any()
-Values 4 and 7 in column #4 are in cells (3, 4) and (4, 4).
+Values 4 and 7 in column #4 go in cells (3, 4) and (4, 4). [index 21 and 30]
 4, 7 cannot appear in (1, 4).
 7 cannot appear in (5, 4).
 step_change_made=true
@@ -12673,7 +12673,7 @@ cell_group2s.Count()=2
 cell_group2=row #1
 cells.len()=1
 cells.Any()
-Values 4 and 7 in row #1 are in cells (1, 2) and (1, 9).
+Values 4 and 7 in row #1 go in cells (1, 2) and (1, 9). [index 1 and 8]
 4, 7 cannot appear in (1, 1).
 cell_group2=block (1, 1)
 Cells is empty 51
@@ -12713,7 +12713,7 @@ Cells is empty 51
 cell_group2=column #1
 cells.len()=2
 cells.Any()
-Values 4 and 6 in column #1 are in cells (7, 1) and (9, 1).
+Values 4 and 6 in column #1 go in cells (7, 1) and (9, 1). [index 54 and 72]
 6 cannot appear in (4, 1).
 6 cannot appear in (5, 1).
 cell_group2=block (1, 1)
@@ -12780,7 +12780,7 @@ cell_group2s.Count()=2
 cell_group2=row #1
 cells.len()=1
 cells.Any()
-Values 4 and 7 in row #1 are in cells (1, 2) and (1, 9).
+Values 4 and 7 in row #1 go in cells (1, 2) and (1, 9). [index 1 and 8]
 7 cannot appear in (1, 1).
 cell_group2=block (1, 1)
 Cells is empty 51
@@ -13032,7 +13032,7 @@ cell_group2s.Count()=1
 cell_group2=block (2, 2)
 cells.len()=2
 cells.Any()
-Values 1 and 5 in block (2, 2) are in cells (6, 4) and (6, 6).
+Values 1 and 5 in block (2, 2) go in cells (6, 4) and (6, 6). [index 48 and 50]
 1 cannot appear in (4, 4).
 1 cannot appear in (4, 6).
 step_change_made=true
@@ -13075,7 +13075,7 @@ cell_group2s.Count()=1
 cell_group2=row #4
 cells.len()=1
 cells.Any()
-Values 3 and 8 in row #4 are in cells (4, 4) and (4, 6).
+Values 3 and 8 in row #4 go in cells (4, 4) and (4, 6). [index 30 and 32]
 8 cannot appear in (4, 8).
 step_change_made=true
 cellGroups.Count: 27 mask: 17
@@ -14395,7 +14395,7 @@ cell_group2s.Count()=1
 cell_group2=column #6
 cells.len()=1
 cells.Any()
-Values 3 and 5 in column #6 are in cells (1, 6) and (2, 6).
+Values 3 and 5 in column #6 go in cells (1, 6) and (2, 6). [index 5 and 14]
 3, 5 cannot appear in (9, 6).
 step_change_made=true
 cellGroups.Count: 27 mask: 384
@@ -14403,7 +14403,7 @@ cell_group2s.Count()=2
 cell_group2=row #9
 cells.len()=2
 cells.Any()
-Values 8 and 9 in row #9 are in cells (9, 2) and (9, 6).
+Values 8 and 9 in row #9 go in cells (9, 2) and (9, 6). [index 73 and 77]
 9 cannot appear in (9, 4).
 9 cannot appear in (9, 9).
 cell_group2=column #6
@@ -14515,7 +14515,7 @@ cell_group2s.Count()=1
 cell_group2=row #9
 cells.len()=2
 cells.Any()
-Values 8 and 9 in row #9 are in cells (9, 2) and (9, 6).
+Values 8 and 9 in row #9 go in cells (9, 2) and (9, 6). [index 73 and 77]
 9 cannot appear in (9, 4).
 9 cannot appear in (9, 9).
 step_change_made=true
@@ -16529,7 +16529,7 @@ cell_group2s.Count()=1
 cell_group2=row #7
 cells.len()=2
 cells.Any()
-Values 4 and 8 in row #7 are in cells (7, 6) and (7, 8).
+Values 4 and 8 in row #7 go in cells (7, 6) and (7, 8). [index 59 and 61]
 4, 8 cannot appear in (7, 2).
 4 cannot appear in (7, 4).
 step_change_made=true
@@ -16668,7 +16668,7 @@ cell_group2s.Count()=1
 cell_group2=row #1
 cells.len()=2
 cells.Any()
-Values 2 and 8 in row #1 are in cells (1, 5) and (1, 6).
+Values 2 and 8 in row #1 go in cells (1, 5) and (1, 6). [index 4 and 5]
 2, 8 cannot appear in (1, 1).
 8 cannot appear in (1, 2).
 step_change_made=true
@@ -16714,7 +16714,7 @@ Cells is empty 51
 cell_group2=row #7
 cells.len()=2
 cells.Any()
-Values 4 and 8 in row #7 are in cells (7, 6) and (7, 8).
+Values 4 and 8 in row #7 go in cells (7, 6) and (7, 8). [index 59 and 61]
 4, 8 cannot appear in (7, 2).
 4 cannot appear in (7, 4).
 step_change_made=true
@@ -16727,7 +16727,7 @@ Cells is empty 51
 cell_group2=row #9
 cells.len()=3
 cells.Any()
-Values 5 and 8 in row #9 are in cells (9, 1) and (9, 5).
+Values 5 and 8 in row #9 go in cells (9, 1) and (9, 5). [index 72 and 76]
 5, 8 cannot appear in (9, 2).
 8 cannot appear in (9, 7).
 8 cannot appear in (9, 8).
@@ -16759,7 +16759,7 @@ cell_group2s.Count()=1
 cell_group2=row #1
 cells.len()=2
 cells.Any()
-Values 2 and 8 in row #1 are in cells (1, 5) and (1, 6).
+Values 2 and 8 in row #1 go in cells (1, 5) and (1, 6). [index 4 and 5]
 2, 8 cannot appear in (1, 1).
 8 cannot appear in (1, 2).
 step_change_made=true
@@ -16805,7 +16805,7 @@ Cells is empty 51
 cell_group2=row #7
 cells.len()=2
 cells.Any()
-Values 4 and 8 in row #7 are in cells (7, 6) and (7, 8).
+Values 4 and 8 in row #7 go in cells (7, 6) and (7, 8). [index 59 and 61]
 8 cannot appear in (7, 2).
 4 cannot appear in (7, 4).
 step_change_made=true
@@ -16825,7 +16825,7 @@ Cells is empty 51
 cell_group2=row #9
 cells.len()=2
 cells.Any()
-Values 5 and 8 in row #9 are in cells (9, 1) and (9, 5).
+Values 5 and 8 in row #9 go in cells (9, 1) and (9, 5). [index 72 and 76]
 8 cannot appear in (9, 7).
 8 cannot appear in (9, 8).
 step_change_made=true
@@ -18154,7 +18154,7 @@ cell_group2s.Count()=1
 cell_group2=block (3, 3)
 cells.len()=2
 cells.Any()
-Values 3 and 6 in block (3, 3) are in cells (7, 9) and (9, 9).
+Values 3 and 6 in block (3, 3) go in cells (7, 9) and (9, 9). [index 62 and 80]
 3 cannot appear in (7, 8).
 3 cannot appear in (8, 8).
 step_change_made=true
@@ -19677,7 +19677,7 @@ cell_group2s.Count()=1
 cell_group2=column #9
 cells.len()=1
 cells.Any()
-Values 3 and 4 in column #9 are in cells (7, 9) and (8, 9).
+Values 3 and 4 in column #9 go in cells (7, 9) and (8, 9). [index 62 and 71]
 4 cannot appear in (5, 9).
 step_change_made=true
 38. change_made: false
@@ -19745,7 +19745,7 @@ cell_group2s.Count()=1
 cell_group2=column #9
 cells.len()=1
 cells.Any()
-Values 3 and 4 in column #9 are in cells (7, 9) and (8, 9).
+Values 3 and 4 in column #9 go in cells (7, 9) and (8, 9). [index 62 and 71]
 4 cannot appear in (5, 9).
 step_change_made=true
 38. change_made: false
@@ -20576,7 +20576,7 @@ cell_group2s.Count()=1
 cell_group2=column #1
 cells.len()=4
 cells.Any()
-Values 2 and 4 in column #1 are in cells (8, 1) and (9, 1).
+Values 2 and 4 in column #1 go in cells (8, 1) and (9, 1). [index 63 and 72]
 2, 4 cannot appear in (2, 1).
 2, 4 cannot appear in (3, 1).
 2 cannot appear in (5, 1).
@@ -20629,7 +20629,7 @@ cell_group2s.Count()=1
 cell_group2=column #7
 cells.len()=2
 cells.Any()
-Values 4 and 8 in column #7 are in cells (8, 7) and (9, 7).
+Values 4 and 8 in column #7 go in cells (8, 7) and (9, 7). [index 69 and 78]
 4 cannot appear in (1, 7).
 4 cannot appear in (3, 7).
 step_change_made=true
@@ -20665,7 +20665,7 @@ cell_group2s.Count()=1
 cell_group2=column #1
 cells.len()=4
 cells.Any()
-Values 2 and 4 in column #1 are in cells (8, 1) and (9, 1).
+Values 2 and 4 in column #1 go in cells (8, 1) and (9, 1). [index 63 and 72]
 2, 4 cannot appear in (2, 1).
 2 cannot appear in (3, 1).
 2 cannot appear in (5, 1).
@@ -20729,7 +20729,7 @@ cell_group2s.Count()=1
 cell_group2=column #7
 cells.len()=1
 cells.Any()
-Values 4 and 8 in column #7 are in cells (8, 7) and (9, 7).
+Values 4 and 8 in column #7 go in cells (8, 7) and (9, 7). [index 69 and 78]
 4 cannot appear in (1, 7).
 step_change_made=true
 38. change_made: false
@@ -20767,7 +20767,7 @@ cell_group2s.Count()=1
 cell_group2=column #1
 cells.len()=4
 cells.Any()
-Values 2 and 4 in column #1 are in cells (8, 1) and (9, 1).
+Values 2 and 4 in column #1 go in cells (8, 1) and (9, 1). [index 63 and 72]
 2 cannot appear in (2, 1).
 2 cannot appear in (3, 1).
 2 cannot appear in (5, 1).
@@ -21975,7 +21975,7 @@ cell_group2s.Count()=1
 cell_group2=column #4
 cells.len()=2
 cells.Any()
-Values 1 and 6 in column #4 are in cells (4, 4) and (8, 4).
+Values 1 and 6 in column #4 go in cells (4, 4) and (8, 4). [index 30 and 66]
 1, 6 cannot appear in (5, 4).
 1, 6 cannot appear in (9, 4).
 step_change_made=true
@@ -22125,13 +22125,13 @@ cell_group2s.Count()=2
 cell_group2=row #8
 cells.len()=2
 cells.Any()
-Values 2 and 6 in row #8 are in cells (8, 5) and (8, 6).
+Values 2 and 6 in row #8 go in cells (8, 5) and (8, 6). [index 67 and 68]
 2, 6 cannot appear in (8, 1).
 2, 6 cannot appear in (8, 3).
 cell_group2=block (3, 2)
 cells.len()=1
 cells.Any()
-Values 2 and 6 in block (3, 2) are in cells (8, 5) and (8, 6).
+Values 2 and 6 in block (3, 2) go in cells (8, 5) and (8, 6). [index 67 and 68]
 2, 6 cannot appear in (9, 6).
 step_change_made=true
 cellGroups.Count: 27 mask: 33
@@ -22210,7 +22210,7 @@ cell_group2s.Count()=1
 cell_group2=row #8
 cells.len()=2
 cells.Any()
-Values 2 and 6 in row #8 are in cells (8, 5) and (8, 6).
+Values 2 and 6 in row #8 go in cells (8, 5) and (8, 6). [index 67 and 68]
 2, 6 cannot appear in (8, 1).
 2, 6 cannot appear in (8, 3).
 step_change_made=true
@@ -22313,7 +22313,7 @@ cell_group2s.Count()=1
 cell_group2=row #8
 cells.len()=2
 cells.Any()
-Values 2 and 6 in row #8 are in cells (8, 5) and (8, 6).
+Values 2 and 6 in row #8 go in cells (8, 5) and (8, 6). [index 67 and 68]
 2, 6 cannot appear in (8, 1).
 2, 6 cannot appear in (8, 3).
 step_change_made=true
@@ -23298,18 +23298,18 @@ cell_group2s.Count()=3
 cell_group2=row #8
 cells.len()=2
 cells.Any()
-Values 3 and 7 in row #8 are in cells (8, 3) and (8, 4).
+Values 3 and 7 in row #8 go in cells (8, 3) and (8, 4). [index 65 and 66]
 3 cannot appear in (8, 5).
 3, 7 cannot appear in (8, 7).
 cell_group2=block (3, 2)
 cells.len()=1
 cells.Any()
-Values 3 and 7 in block (3, 2) are in cells (8, 4) and (9, 4).
+Values 3 and 7 in block (3, 2) go in cells (8, 4) and (9, 4). [index 66 and 75]
 3 cannot appear in (9, 5).
 cell_group2=block (3, 3)
 cells.len()=1
 cells.Any()
-Values 3 and 7 in block (3, 3) are in cells (7, 7) and (7, 9).
+Values 3 and 7 in block (3, 3) go in cells (7, 7) and (7, 9). [index 60 and 62]
 3, 7 cannot appear in (9, 7).
 step_change_made=true
 cellGroups.Count: 27 mask: 136
@@ -24281,7 +24281,7 @@ cell_group2s.Count()=1
 cell_group2=column #1
 cells.len()=2
 cells.Any()
-Values 5 and 7 in column #1 are in cells (4, 1) and (5, 1).
+Values 5 and 7 in column #1 go in cells (4, 1) and (5, 1). [index 27 and 36]
 7 cannot appear in (8, 1).
 7 cannot appear in (9, 1).
 step_change_made=true
@@ -24337,7 +24337,7 @@ cell_group2s.Count()=1
 cell_group2=column #1
 cells.len()=2
 cells.Any()
-Values 5 and 7 in column #1 are in cells (4, 1) and (5, 1).
+Values 5 and 7 in column #1 go in cells (4, 1) and (5, 1). [index 27 and 36]
 7 cannot appear in (8, 1).
 7 cannot appear in (9, 1).
 step_change_made=true
@@ -24427,7 +24427,7 @@ cell_group2s.Count()=1
 cell_group2=column #6
 cells.len()=4
 cells.Any()
-Values 5 and 6 in column #6 are in cells (6, 6) and (9, 6).
+Values 5 and 6 in column #6 go in cells (6, 6) and (9, 6). [index 50 and 77]
 6 cannot appear in (3, 6).
 5 cannot appear in (4, 6).
 5, 6 cannot appear in (5, 6).
@@ -26032,7 +26032,7 @@ cell_group2s.Count()=1
 cell_group2=column #8
 cells.len()=2
 cells.Any()
-Values 5 and 9 in column #8 are in cells (1, 8) and (3, 8).
+Values 5 and 9 in column #8 go in cells (1, 8) and (3, 8). [index 7 and 25]
 9 cannot appear in (4, 8).
 5, 9 cannot appear in (9, 8).
 step_change_made=true
@@ -26897,13 +26897,13 @@ cell_group2s.Count()=2
 cell_group2=column #8
 cells.len()=2
 cells.Any()
-Values 1 and 8 in column #8 are in cells (3, 8) and (4, 8).
+Values 1 and 8 in column #8 go in cells (3, 8) and (4, 8). [index 25 and 34]
 1, 8 cannot appear in (7, 8).
 8 cannot appear in (8, 8).
 cell_group2=block (2, 3)
 cells.len()=3
 cells.Any()
-Values 1 and 8 in block (2, 3) are in cells (4, 8) and (4, 9).
+Values 1 and 8 in block (2, 3) go in cells (4, 8) and (4, 9). [index 34 and 35]
 1, 8 cannot appear in (5, 7).
 1, 8 cannot appear in (5, 9).
 1 cannot appear in (6, 9).
@@ -26945,7 +26945,7 @@ cell_group2s.Count()=1
 cell_group2=block (3, 3)
 cells.len()=1
 cells.Any()
-Values 3 and 4 in block (3, 3) are in cells (7, 8) and (8, 8).
+Values 3 and 4 in block (3, 3) go in cells (7, 8) and (8, 8). [index 61 and 70]
 4 cannot appear in (8, 9).
 step_change_made=true
 cellGroups.Count: 27 mask: 130
@@ -26953,7 +26953,7 @@ cell_group2s.Count()=3
 cell_group2=row #8
 cells.len()=2
 cells.Any()
-Values 2 and 8 in row #8 are in cells (8, 7) and (8, 9).
+Values 2 and 8 in row #8 go in cells (8, 7) and (8, 9). [index 69 and 71]
 8 cannot appear in (8, 3).
 8 cannot appear in (8, 5).
 cell_group2=block (3, 3)
@@ -26961,7 +26961,7 @@ Cells is empty 51
 cell_group2=block (3, 3)
 cells.len()=2
 cells.Any()
-Values 2 and 8 in block (3, 3) are in cells (8, 7) and (8, 9).
+Values 2 and 8 in block (3, 3) go in cells (8, 7) and (8, 9). [index 69 and 71]
 8 cannot appear in (7, 7).
 8 cannot appear in (9, 7).
 step_change_made=true
@@ -26972,12 +26972,12 @@ Cells is empty 51
 cell_group2=row #9
 cells.len()=1
 cells.Any()
-Values 1 and 9 in row #9 are in cells (9, 2) and (9, 7).
+Values 1 and 9 in row #9 go in cells (9, 2) and (9, 7). [index 73 and 78]
 1, 9 cannot appear in (9, 1).
 cell_group2=column #7
 cells.len()=1
 cells.Any()
-Values 1 and 9 in column #7 are in cells (7, 7) and (9, 7).
+Values 1 and 9 in column #7 go in cells (7, 7) and (9, 7). [index 60 and 78]
 9 cannot appear in (5, 7).
 cell_group2=block (3, 3)
 Cells is empty 51
@@ -27146,12 +27146,12 @@ cell_group2s.Count()=2
 cell_group2=column #8
 cells.len()=1
 cells.Any()
-Values 1 and 8 in column #8 are in cells (3, 8) and (4, 8).
+Values 1 and 8 in column #8 go in cells (3, 8) and (4, 8). [index 25 and 34]
 1 cannot appear in (7, 8).
 cell_group2=block (2, 3)
 cells.len()=2
 cells.Any()
-Values 1 and 8 in block (2, 3) are in cells (4, 8) and (4, 9).
+Values 1 and 8 in block (2, 3) go in cells (4, 8) and (4, 9). [index 34 and 35]
 1 cannot appear in (5, 9).
 1 cannot appear in (6, 9).
 step_change_made=true
@@ -27256,7 +27256,7 @@ cell_group2s.Count()=1
 cell_group2=column #2
 cells.len()=2
 cells.Any()
-Values 1 and 9 in column #2 are in cells (5, 2) and (9, 2).
+Values 1 and 9 in column #2 go in cells (5, 2) and (9, 2). [index 37 and 73]
 1 cannot appear in (6, 2).
 1, 9 cannot appear in (7, 2).
 step_change_made=true
@@ -29307,14 +29307,14 @@ cell_group2s.Count()=2
 cell_group2=column #1
 cells.len()=3
 cells.Any()
-Values 6 and 7 in column #1 are in cells (2, 1) and (3, 1).
+Values 6 and 7 in column #1 go in cells (2, 1) and (3, 1). [index 9 and 18]
 6, 7 cannot appear in (5, 1).
 6, 7 cannot appear in (6, 1).
 6, 7 cannot appear in (9, 1).
 cell_group2=block (1, 1)
 cells.len()=2
 cells.Any()
-Values 6 and 7 in block (1, 1) are in cells (2, 1) and (3, 1).
+Values 6 and 7 in block (1, 1) go in cells (2, 1) and (3, 1). [index 9 and 18]
 6 cannot appear in (1, 3).
 6, 7 cannot appear in (2, 3).
 step_change_made=true
@@ -29359,13 +29359,13 @@ cell_group2s.Count()=2
 cell_group2=column #1
 cells.len()=2
 cells.Any()
-Values 6 and 7 in column #1 are in cells (2, 1) and (3, 1).
+Values 6 and 7 in column #1 go in cells (2, 1) and (3, 1). [index 9 and 18]
 6, 7 cannot appear in (5, 1).
 6, 7 cannot appear in (9, 1).
 cell_group2=block (1, 1)
 cells.len()=2
 cells.Any()
-Values 6 and 7 in block (1, 1) are in cells (2, 1) and (3, 1).
+Values 6 and 7 in block (1, 1) go in cells (2, 1) and (3, 1). [index 9 and 18]
 6 cannot appear in (1, 3).
 6, 7 cannot appear in (2, 3).
 step_change_made=true
@@ -29515,7 +29515,7 @@ cell_group2s.Count()=2
 cell_group2=column #3
 cells.len()=2
 cells.Any()
-Values 6 and 7 in column #3 are in cells (5, 3) and (6, 3).
+Values 6 and 7 in column #3 go in cells (5, 3) and (6, 3). [index 38 and 47]
 6 cannot appear in (1, 3).
 6, 7 cannot appear in (2, 3).
 cell_group2=block (1, 1)
@@ -29727,7 +29727,7 @@ cell_group2s.Count()=1
 cell_group2=column #7
 cells.len()=1
 cells.Any()
-Values 5 and 7 in column #7 are in cells (4, 7) and (5, 7).
+Values 5 and 7 in column #7 go in cells (4, 7) and (5, 7). [index 33 and 42]
 7 cannot appear in (9, 7).
 step_change_made=true
 cellGroups.Count: 27 mask: 33
@@ -29737,7 +29737,7 @@ Cells is empty 51
 cell_group2=block (3, 3)
 cells.len()=2
 cells.Any()
-Values 1 and 6 in block (3, 3) are in cells (7, 9) and (9, 9).
+Values 1 and 6 in block (3, 3) go in cells (7, 9) and (9, 9). [index 62 and 80]
 6 cannot appear in (8, 8).
 6 cannot appear in (9, 8).
 step_change_made=true
@@ -29789,7 +29789,7 @@ cell_group2s.Count()=1
 cell_group2=block (3, 3)
 cells.len()=1
 cells.Any()
-Values 1 and 6 in block (3, 3) are in cells (7, 9) and (9, 9).
+Values 1 and 6 in block (3, 3) go in cells (7, 9) and (9, 9). [index 62 and 80]
 6 cannot appear in (9, 8).
 step_change_made=true
 38. change_made: false
@@ -29802,7 +29802,7 @@ cell_group2s.Count()=1
 cell_group2=row #9
 cells.len()=3
 cells.Any()
-Values 4 and 9 in row #9 are in cells (9, 7) and (9, 8).
+Values 4 and 9 in row #9 go in cells (9, 7) and (9, 8). [index 78 and 79]
 4 cannot appear in (9, 4).
 4 cannot appear in (9, 5).
 4 cannot appear in (9, 6).
@@ -32431,7 +32431,7 @@ cell_group2s.Count()=1
 cell_group2=row #3
 cells.len()=1
 cells.Any()
-Values 4 and 6 in row #3 are in cells (3, 4) and (3, 6).
+Values 4 and 6 in row #3 go in cells (3, 4) and (3, 6). [index 21 and 23]
 4 cannot appear in (3, 1).
 step_change_made=true
 cellGroups.Count: 27 mask: 288
@@ -32451,7 +32451,7 @@ Cells is empty 51
 cell_group2=row #7
 cells.len()=1
 cells.Any()
-Values 6 and 7 in row #7 are in cells (7, 1) and (7, 2).
+Values 6 and 7 in row #7 go in cells (7, 1) and (7, 2). [index 54 and 55]
 6 cannot appear in (7, 4).
 step_change_made=true
 cellGroups.Count: 27 mask: 9
@@ -32589,7 +32589,7 @@ cell_group2s.Count()=1
 cell_group2=row #3
 cells.len()=1
 cells.Any()
-Values 4 and 6 in row #3 are in cells (3, 4) and (3, 6).
+Values 4 and 6 in row #3 go in cells (3, 4) and (3, 6). [index 21 and 23]
 4 cannot appear in (3, 1).
 step_change_made=true
 cellGroups.Count: 27 mask: 10
@@ -33477,7 +33477,7 @@ cell_group2s.Count()=1
 cell_group2=block (3, 1)
 cells.len()=2
 cells.Any()
-Values 6 and 7 in block (3, 1) are in cells (8, 2) and (9, 3).
+Values 6 and 7 in block (3, 1) go in cells (8, 2) and (9, 3). [index 64 and 74]
 6, 7 cannot appear in (7, 1).
 6, 7 cannot appear in (7, 3).
 step_change_made=true
@@ -33546,7 +33546,7 @@ cell_group2s.Count()=1
 cell_group2=block (3, 1)
 cells.len()=2
 cells.Any()
-Values 6 and 7 in block (3, 1) are in cells (8, 2) and (9, 3).
+Values 6 and 7 in block (3, 1) go in cells (8, 2) and (9, 3). [index 64 and 74]
 6, 7 cannot appear in (7, 1).
 6, 7 cannot appear in (7, 3).
 step_change_made=true
@@ -33625,7 +33625,7 @@ cell_group2s.Count()=1
 cell_group2=column #3
 cells.len()=1
 cells.Any()
-Values 1 and 4 in column #3 are in cells (4, 3) and (5, 3).
+Values 1 and 4 in column #3 go in cells (4, 3) and (5, 3). [index 29 and 38]
 4 cannot appear in (2, 3).
 step_change_made=true
 cellGroups.Count: 27 mask: 40
@@ -33716,12 +33716,12 @@ cell_group2s.Count()=2
 cell_group2=column #7
 cells.len()=1
 cells.Any()
-Values 4 and 9 in column #7 are in cells (1, 7) and (2, 7).
+Values 4 and 9 in column #7 go in cells (1, 7) and (2, 7). [index 6 and 15]
 4 cannot appear in (4, 7).
 cell_group2=block (1, 3)
 cells.len()=2
 cells.Any()
-Values 4 and 9 in block (1, 3) are in cells (1, 7) and (2, 7).
+Values 4 and 9 in block (1, 3) go in cells (1, 7) and (2, 7). [index 6 and 15]
 4 cannot appear in (1, 8).
 4 cannot appear in (2, 8).
 step_change_made=true
@@ -33843,7 +33843,7 @@ cell_group2s.Count()=1
 cell_group2=block (1, 3)
 cells.len()=2
 cells.Any()
-Values 4 and 9 in block (1, 3) are in cells (1, 7) and (2, 7).
+Values 4 and 9 in block (1, 3) go in cells (1, 7) and (2, 7). [index 6 and 15]
 4 cannot appear in (1, 8).
 4 cannot appear in (2, 8).
 step_change_made=true
@@ -37501,7 +37501,7 @@ cell_group2s.Count()=1
 cell_group2=block (2, 1)
 cells.len()=1
 cells.Any()
-Values 4 and 9 in block (2, 1) are in cells (4, 3) and (6, 3).
+Values 4 and 9 in block (2, 1) go in cells (4, 3) and (6, 3). [index 29 and 47]
 4, 9 cannot appear in (6, 1).
 step_change_made=true
 cellGroups.Count: 27 mask: 257
@@ -37511,7 +37511,7 @@ Cells is empty 51
 cell_group2=block (2, 3)
 cells.len()=1
 cells.Any()
-Values 1 and 9 in block (2, 3) are in cells (4, 8) and (6, 8).
+Values 1 and 9 in block (2, 3) go in cells (4, 8) and (6, 8). [index 34 and 52]
 9 cannot appear in (6, 9).
 step_change_made=true
 cellGroups.Count: 27 mask: 18
@@ -37519,7 +37519,7 @@ cell_group2s.Count()=3
 cell_group2=row #6
 cells.len()=2
 cells.Any()
-Values 2 and 5 in row #6 are in cells (6, 1) and (6, 9).
+Values 2 and 5 in row #6 go in cells (6, 1) and (6, 9). [index 45 and 53]
 2 cannot appear in (6, 5).
 2 cannot appear in (6, 6).
 cell_group2=block (2, 1)
@@ -37538,7 +37538,7 @@ Cells is empty 51
 cell_group2=block (3, 2)
 cells.len()=3
 cells.Any()
-Values 4 and 6 in block (3, 2) are in cells (8, 4) and (9, 4).
+Values 4 and 6 in block (3, 2) go in cells (8, 4) and (9, 4). [index 66 and 75]
 4 cannot appear in (8, 6).
 4 cannot appear in (9, 5).
 4 cannot appear in (9, 6).
@@ -37581,7 +37581,7 @@ cell_group2s.Count()=1
 cell_group2=block (2, 1)
 cells.len()=1
 cells.Any()
-Values 4 and 9 in block (2, 1) are in cells (4, 3) and (6, 3).
+Values 4 and 9 in block (2, 1) go in cells (4, 3) and (6, 3). [index 29 and 47]
 9 cannot appear in (6, 1).
 step_change_made=true
 cellGroups.Count: 27 mask: 257
@@ -37589,7 +37589,7 @@ cell_group2s.Count()=2
 cell_group2=column #2
 cells.len()=3
 cells.Any()
-Values 1 and 9 in column #2 are in cells (8, 2) and (9, 2).
+Values 1 and 9 in column #2 go in cells (8, 2) and (9, 2). [index 64 and 73]
 9 cannot appear in (1, 2).
 9 cannot appear in (2, 2).
 9 cannot appear in (3, 2).
@@ -37601,7 +37601,7 @@ cell_group2s.Count()=3
 cell_group2=row #6
 cells.len()=2
 cells.Any()
-Values 2 and 5 in row #6 are in cells (6, 1) and (6, 9).
+Values 2 and 5 in row #6 go in cells (6, 1) and (6, 9). [index 45 and 53]
 2 cannot appear in (6, 5).
 2 cannot appear in (6, 6).
 cell_group2=column #2
@@ -37620,7 +37620,7 @@ Cells is empty 51
 cell_group2=block (3, 2)
 cells.len()=3
 cells.Any()
-Values 4 and 6 in block (3, 2) are in cells (8, 4) and (9, 4).
+Values 4 and 6 in block (3, 2) go in cells (8, 4) and (9, 4). [index 66 and 75]
 4 cannot appear in (8, 6).
 4 cannot appear in (9, 5).
 4 cannot appear in (9, 6).
@@ -37735,7 +37735,7 @@ cell_group2s.Count()=1
 cell_group2=block (2, 2)
 cells.len()=2
 cells.Any()
-Values 1 and 2 in block (2, 2) are in cells (4, 5) and (4, 6).
+Values 1 and 2 in block (2, 2) go in cells (4, 5) and (4, 6). [index 31 and 32]
 2 cannot appear in (6, 5).
 2 cannot appear in (6, 6).
 step_change_made=true
@@ -37749,7 +37749,7 @@ cell_group2s.Count()=2
 cell_group2=column #2
 cells.len()=3
 cells.Any()
-Values 1 and 9 in column #2 are in cells (8, 2) and (9, 2).
+Values 1 and 9 in column #2 go in cells (8, 2) and (9, 2). [index 64 and 73]
 9 cannot appear in (1, 2).
 9 cannot appear in (2, 2).
 9 cannot appear in (3, 2).
@@ -37765,7 +37765,7 @@ Cells is empty 51
 cell_group2=block (3, 2)
 cells.len()=3
 cells.Any()
-Values 4 and 6 in block (3, 2) are in cells (8, 4) and (9, 4).
+Values 4 and 6 in block (3, 2) go in cells (8, 4) and (9, 4). [index 66 and 75]
 4 cannot appear in (8, 6).
 4 cannot appear in (9, 5).
 4 cannot appear in (9, 6).
@@ -37890,7 +37890,7 @@ cell_group2s.Count()=1
 cell_group2=block (1, 1)
 cells.len()=2
 cells.Any()
-Values 5 and 9 in block (1, 1) are in cells (2, 1) and (3, 1).
+Values 5 and 9 in block (1, 1) go in cells (2, 1) and (3, 1). [index 9 and 18]
 9 cannot appear in (1, 2).
 9 cannot appear in (3, 2).
 step_change_made=true
@@ -37921,7 +37921,7 @@ Cells is empty 51
 cell_group2=block (3, 2)
 cells.len()=3
 cells.Any()
-Values 4 and 6 in block (3, 2) are in cells (8, 4) and (9, 4).
+Values 4 and 6 in block (3, 2) go in cells (8, 4) and (9, 4). [index 66 and 75]
 4 cannot appear in (8, 6).
 4 cannot appear in (9, 5).
 4 cannot appear in (9, 6).
@@ -38008,12 +38008,12 @@ cell_group2s.Count()=2
 cell_group2=column #5
 cells.len()=1
 cells.Any()
-Values 7 and 9 in column #5 are in cells (1, 5) and (3, 5).
+Values 7 and 9 in column #5 go in cells (1, 5) and (3, 5). [index 4 and 22]
 9 cannot appear in (9, 5).
 cell_group2=block (1, 2)
 cells.len()=3
 cells.Any()
-Values 7 and 9 in block (1, 2) are in cells (1, 5) and (3, 5).
+Values 7 and 9 in block (1, 2) go in cells (1, 5) and (3, 5). [index 4 and 22]
 9 cannot appear in (1, 6).
 9 cannot appear in (2, 6).
 9 cannot appear in (3, 6).
@@ -38032,7 +38032,7 @@ Cells is empty 51
 cell_group2=block (1, 1)
 cells.len()=2
 cells.Any()
-Values 5 and 9 in block (1, 1) are in cells (2, 1) and (3, 1).
+Values 5 and 9 in block (1, 1) go in cells (2, 1) and (3, 1). [index 9 and 18]
 9 cannot appear in (1, 2).
 9 cannot appear in (3, 2).
 cell_group2=block (1, 2)
@@ -38076,7 +38076,7 @@ Cells is empty 51
 cell_group2=block (3, 2)
 cells.len()=2
 cells.Any()
-Values 4 and 6 in block (3, 2) are in cells (8, 4) and (9, 4).
+Values 4 and 6 in block (3, 2) go in cells (8, 4) and (9, 4). [index 66 and 75]
 4 cannot appear in (8, 6).
 4 cannot appear in (9, 6).
 step_change_made=true
@@ -38185,7 +38185,7 @@ cell_group2s.Count()=1
 cell_group2=block (1, 2)
 cells.len()=3
 cells.Any()
-Values 7 and 9 in block (1, 2) are in cells (1, 5) and (3, 5).
+Values 7 and 9 in block (1, 2) go in cells (1, 5) and (3, 5). [index 4 and 22]
 9 cannot appear in (1, 6).
 9 cannot appear in (2, 6).
 9 cannot appear in (3, 6).
@@ -38200,7 +38200,7 @@ cell_group2s.Count()=2
 cell_group2=block (1, 1)
 cells.len()=2
 cells.Any()
-Values 5 and 9 in block (1, 1) are in cells (2, 1) and (3, 1).
+Values 5 and 9 in block (1, 1) go in cells (2, 1) and (3, 1). [index 9 and 18]
 9 cannot appear in (1, 2).
 9 cannot appear in (3, 2).
 cell_group2=block (1, 2)
@@ -38225,7 +38225,7 @@ cell_group2s.Count()=4
 cell_group2=row #9
 cells.len()=1
 cells.Any()
-Values 4 and 6 in row #9 are in cells (9, 4) and (9, 9).
+Values 4 and 6 in row #9 go in cells (9, 4) and (9, 9). [index 75 and 80]
 4 cannot appear in (9, 6).
 cell_group2=block (1, 1)
 Cells is empty 51
@@ -38234,7 +38234,7 @@ Cells is empty 51
 cell_group2=block (3, 2)
 cells.len()=1
 cells.Any()
-Values 4 and 6 in block (3, 2) are in cells (8, 4) and (9, 4).
+Values 4 and 6 in block (3, 2) go in cells (8, 4) and (9, 4). [index 66 and 75]
 4 cannot appear in (8, 6).
 step_change_made=true
 cellGroups.Count: 27 mask: 10
@@ -38344,12 +38344,12 @@ cell_group2s.Count()=2
 cell_group2=row #9
 cells.len()=1
 cells.Any()
-Values 4 and 6 in row #9 are in cells (9, 4) and (9, 9).
+Values 4 and 6 in row #9 go in cells (9, 4) and (9, 9). [index 75 and 80]
 4 cannot appear in (9, 6).
 cell_group2=block (3, 2)
 cells.len()=1
 cells.Any()
-Values 4 and 6 in block (3, 2) are in cells (8, 4) and (9, 4).
+Values 4 and 6 in block (3, 2) go in cells (8, 4) and (9, 4). [index 66 and 75]
 4 cannot appear in (8, 6).
 step_change_made=true
 cellGroups.Count: 27 mask: 10
@@ -39478,7 +39478,7 @@ cell_group2s.Count()=1
 cell_group2=column #6
 cells.len()=1
 cells.Any()
-Values 1 and 9 in column #6 are in cells (4, 6) and (6, 6).
+Values 1 and 9 in column #6 go in cells (4, 6) and (6, 6). [index 32 and 50]
 9 cannot appear in (1, 6).
 step_change_made=true
 cellGroups.Count: 27 mask: 320
@@ -41883,13 +41883,13 @@ cell_group2s.Count()=2
 cell_group2=column #2
 cells.len()=2
 cells.Any()
-Values 2 and 6 in column #2 are in cells (7, 2) and (8, 2).
+Values 2 and 6 in column #2 go in cells (7, 2) and (8, 2). [index 55 and 64]
 2, 6 cannot appear in (4, 2).
 2 cannot appear in (6, 2).
 cell_group2=block (1, 1)
 cells.len()=2
 cells.Any()
-Values 2 and 6 in block (1, 1) are in cells (1, 3) and (2, 3).
+Values 2 and 6 in block (1, 1) go in cells (1, 3) and (2, 3). [index 2 and 11]
 2, 6 cannot appear in (2, 1).
 2 cannot appear in (3, 1).
 step_change_made=true
@@ -41941,13 +41941,13 @@ cell_group2s.Count()=2
 cell_group2=column #2
 cells.len()=2
 cells.Any()
-Values 2 and 6 in column #2 are in cells (7, 2) and (8, 2).
+Values 2 and 6 in column #2 go in cells (7, 2) and (8, 2). [index 55 and 64]
 2 cannot appear in (4, 2).
 2 cannot appear in (6, 2).
 cell_group2=block (1, 1)
 cells.len()=2
 cells.Any()
-Values 2 and 6 in block (1, 1) are in cells (1, 3) and (2, 3).
+Values 2 and 6 in block (1, 1) go in cells (1, 3) and (2, 3). [index 2 and 11]
 2 cannot appear in (2, 1).
 2 cannot appear in (3, 1).
 step_change_made=true
@@ -44552,7 +44552,7 @@ cell_group2s.Count()=1
 cell_group2=column #3
 cells.len()=2
 cells.Any()
-Values 5 and 7 in column #3 are in cells (2, 3) and (3, 3).
+Values 5 and 7 in column #3 go in cells (2, 3) and (3, 3). [index 11 and 20]
 7 cannot appear in (5, 3).
 7 cannot appear in (6, 3).
 step_change_made=true
@@ -44573,7 +44573,7 @@ Cells is empty 51
 cell_group2=column #7
 cells.len()=2
 cells.Any()
-Values 7 and 9 in column #7 are in cells (5, 7) and (6, 7).
+Values 7 and 9 in column #7 go in cells (5, 7) and (6, 7). [index 42 and 51]
 7 cannot appear in (2, 7).
 9 cannot appear in (9, 7).
 step_change_made=true
@@ -44750,7 +44750,7 @@ cell_group2s.Count()=1
 cell_group2=block (1, 3)
 cells.len()=1
 cells.Any()
-Values 1 and 9 in block (1, 3) are in cells (3, 8) and (3, 9).
+Values 1 and 9 in block (1, 3) go in cells (3, 8) and (3, 9). [index 25 and 26]
 9 cannot appear in (1, 9).
 step_change_made=true
 cellGroups.Count: 27 mask: 320
@@ -44758,7 +44758,7 @@ cell_group2s.Count()=2
 cell_group2=column #7
 cells.len()=1
 cells.Any()
-Values 7 and 9 in column #7 are in cells (5, 7) and (6, 7).
+Values 7 and 9 in column #7 go in cells (5, 7) and (6, 7). [index 42 and 51]
 9 cannot appear in (9, 7).
 cell_group2=block (1, 3)
 Cells is empty 51
@@ -45517,7 +45517,7 @@ cell_group2s.Count()=1
 cell_group2=block (3, 3)
 cells.len()=2
 cells.Any()
-Values 3 and 4 in block (3, 3) are in cells (9, 8) and (9, 9).
+Values 3 and 4 in block (3, 3) go in cells (9, 8) and (9, 9). [index 79 and 80]
 3, 4 cannot appear in (7, 8).
 4 cannot appear in (8, 9).
 step_change_made=true
@@ -48816,7 +48816,7 @@ cell_group2s.Count()=1
 cell_group2=block (1, 1)
 cells.len()=2
 cells.Any()
-Values 5 and 8 in block (1, 1) are in cells (2, 1) and (2, 2).
+Values 5 and 8 in block (1, 1) go in cells (2, 1) and (2, 2). [index 9 and 10]
 8 cannot appear in (1, 2).
 8 cannot appear in (3, 2).
 step_change_made=true
@@ -49972,7 +49972,7 @@ cell_group2s.Count()=1
 cell_group2=block (3, 3)
 cells.len()=4
 cells.Any()
-Values 3 and 9 in block (3, 3) are in cells (8, 7) and (8, 8).
+Values 3 and 9 in block (3, 3) go in cells (8, 7) and (8, 8). [index 69 and 70]
 3 cannot appear in (7, 7).
 3 cannot appear in (7, 9).
 3, 9 cannot appear in (9, 7).
@@ -51235,7 +51235,7 @@ cell_group2s.Count()=1
 cell_group2=block (2, 2)
 cells.len()=3
 cells.Any()
-Values 6 and 7 in block (2, 2) are in cells (5, 5) and (6, 5).
+Values 6 and 7 in block (2, 2) go in cells (5, 5) and (6, 5). [index 40 and 49]
 6, 7 cannot appear in (4, 4).
 7 cannot appear in (4, 6).
 6, 7 cannot appear in (6, 4).
@@ -51692,7 +51692,7 @@ cell_group2s.Count()=1
 cell_group2=row #2
 cells.len()=1
 cells.Any()
-Values 5 and 9 in row #2 are in cells (2, 2) and (2, 9).
+Values 5 and 9 in row #2 go in cells (2, 2) and (2, 9). [index 10 and 17]
 5 cannot appear in (2, 3).
 step_change_made=true
 cellGroups.Count: 27 mask: 264
@@ -52456,7 +52456,7 @@ cell_group2s.Count()=1
 cell_group2=row #9
 cells.len()=2
 cells.Any()
-Values 2 and 4 in row #9 are in cells (9, 1) and (9, 3).
+Values 2 and 4 in row #9 go in cells (9, 1) and (9, 3). [index 72 and 74]
 2 cannot appear in (9, 4).
 2 cannot appear in (9, 6).
 step_change_made=true
@@ -52529,7 +52529,7 @@ cell_group2s.Count()=2
 cell_group2=row #4
 cells.len()=4
 cells.Any()
-Values 4 and 9 in row #4 are in cells (4, 4) and (4, 7).
+Values 4 and 9 in row #4 go in cells (4, 4) and (4, 7). [index 30 and 33]
 4 cannot appear in (4, 1).
 4, 9 cannot appear in (4, 5).
 4 cannot appear in (4, 8).
@@ -52537,7 +52537,7 @@ Values 4 and 9 in row #4 are in cells (4, 4) and (4, 7).
 cell_group2=block (2, 2)
 cells.len()=1
 cells.Any()
-Values 4 and 9 in block (2, 2) are in cells (4, 4) and (6, 4).
+Values 4 and 9 in block (2, 2) go in cells (4, 4) and (6, 4). [index 30 and 48]
 4, 9 cannot appear in (6, 5).
 step_change_made=true
 cellGroups.Count: 27 mask: 258
@@ -55574,7 +55574,7 @@ cell_group2s.Count()=1
 cell_group2=block (2, 2)
 cells.len()=2
 cells.Any()
-Values 8 and 9 in block (2, 2) are in cells (5, 5) and (6, 6).
+Values 8 and 9 in block (2, 2) go in cells (5, 5) and (6, 6). [index 40 and 50]
 8 cannot appear in (4, 5).
 8, 9 cannot appear in (6, 5).
 step_change_made=true
@@ -55608,7 +55608,7 @@ cell_group2s.Count()=1
 cell_group2=column #5
 cells.len()=1
 cells.Any()
-Values 3 and 5 in column #5 are in cells (4, 5) and (6, 5).
+Values 3 and 5 in column #5 go in cells (4, 5) and (6, 5). [index 31 and 49]
 5 cannot appear in (8, 5).
 step_change_made=true
 cellGroups.Count: 27 mask: 17
@@ -59181,7 +59181,7 @@ cell_group2s.Count()=1
 cell_group2=block (2, 2)
 cells.len()=2
 cells.Any()
-Values 2 and 9 in block (2, 2) are in cells (4, 4) and (4, 6).
+Values 2 and 9 in block (2, 2) go in cells (4, 4) and (4, 6). [index 30 and 32]
 2, 9 cannot appear in (6, 4).
 2, 9 cannot appear in (6, 6).
 step_change_made=true
