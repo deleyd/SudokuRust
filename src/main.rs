@@ -550,7 +550,8 @@ fn handle_two_digit_masks(board_candidate_masks: &mut [i32; 81], board : &mut Bo
         }
         log(&format!("cellGroups.Count: {} mask: {}", cell_groups.len(), two_digit_mask).to_string());
         // Inner processing equivalent to the SelectMany lambda
-        for_cell_group_in_cell_groups(*board_candidate_masks, &cell_groups, &mut cell_group2s, *two_digit_mask);
+        let more_cell_group2s = for_cell_group_in_cell_groups(*board_candidate_masks, &cell_groups, *two_digit_mask);
+        cell_group2s.extend(more_cell_group2s);
         for i in 0..81 {
             assert_eq!(board_candidate_masks[i], board[i].candidate_digits.mask);
         }
@@ -648,8 +649,9 @@ fn for_group_in_groups(board_candidate_masks: &mut [i32; 81], board: &mut Board,
     step_change_made
 }
 
-fn for_cell_group_in_cell_groups(board_candidate_masks: [i32; 81], cell_groups: &BTreeMap<usize, Vec<Cell>>, cell_group2s : &mut Vec<CellGroup2>, two_digit_mask: i32) {
+fn for_cell_group_in_cell_groups(board_candidate_masks: [i32; 81], cell_groups: &BTreeMap<usize, Vec<Cell>>, two_digit_mask: i32) -> Vec<CellGroup2>  {
     // cell_groups is a fixed list of cell rows, cell columns, and cell blocks
+    let mut cell_group2s : Vec<CellGroup2> = Vec::new();
         for cell_group in cell_groups
     {
         // First Where condition: group.Count(tuple => candidateMasks[tuple.Index] == mask) == 2
@@ -686,6 +688,7 @@ fn for_cell_group_in_cell_groups(board_candidate_masks: [i32; 81], cell_groups: 
 
         cell_group2s.push(cell_group2);
     }
+    cell_group2s
 }
 
 
