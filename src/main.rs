@@ -549,8 +549,10 @@ fn handle_two_digit_masks(board_candidate_masks: &mut [i32; 81], board : &mut Bo
             assert_eq!(board_candidate_masks[i], board[i].candidate_digits.mask);
         }
         log(&format!("cellGroups.Count: {} mask: {}", cell_groups.len(), two_digit_mask).to_string());
-        // Inner processing equivalent to the SelectMany lambda
-        let more_cell_group2s = for_cell_group_in_cell_groups(*board_candidate_masks, &cell_groups, *two_digit_mask);
+
+        // return groups (rows, cols, blocks) which have exactly 2 cells with the same 2 candidate digits (we don't say which 2 cells these are)
+        let more_cell_group2s = get_cells_with_two_candidate_digits(*board_candidate_masks, &cell_groups, *two_digit_mask);
+
         cell_group2s.extend(more_cell_group2s);
         for i in 0..81 {
             assert_eq!(board_candidate_masks[i], board[i].candidate_digits.mask);
@@ -564,6 +566,7 @@ fn handle_two_digit_masks(board_candidate_masks: &mut [i32; 81], board : &mut Bo
         //log("50. Groups is NOT empty".to_string());
         //log(&format!("groups.Count()={}", groups.len()));
         let result = for_group_in_groups(board_candidate_masks, board, &mut cell_group2s);
+
         for i in 0..81 {
             assert_eq!(board_candidate_masks[i], board[i].candidate_digits.mask);
         }
@@ -625,14 +628,16 @@ fn for_group_in_groups(board_candidate_masks: &mut [i32; 81], board: &mut Board,
         let (lower, upper) = top_two_digits(cell_group2.mask); // bits represent digits
 
         let s = format!(
-            "Values {} and {} in {} are in cells ({}, {}) and ({}, {}).",
+            "Values {} and {} in {} are in cells ({}, {}) and ({}, {}). [index {} and {}]",
             lower,
             upper,
             cell_group2.description,
             mask_cells[0].get_row() + 1,
             mask_cells[0].get_column() + 1,
             mask_cells[1].get_row() + 1,
-            mask_cells[1].get_column() + 1
+            mask_cells[1].get_column() + 1,
+            mask_cells[0].index,
+            mask_cells[1].index,
         );
         log(&s);
 
@@ -649,7 +654,8 @@ fn for_group_in_groups(board_candidate_masks: &mut [i32; 81], board: &mut Board,
     step_change_made
 }
 
-fn for_cell_group_in_cell_groups(board_candidate_masks: [i32; 81], cell_groups: &BTreeMap<usize, Vec<Cell>>, two_digit_mask: i32) -> Vec<CellGroup2>  {
+// return groups (rows, cols, blocks) which have exactly 2 cells with the same 2 candidate digits
+fn get_cells_with_two_candidate_digits(board_candidate_masks: [i32; 81], cell_groups: &BTreeMap<usize, Vec<Cell>>, two_digit_mask: i32) -> Vec<CellGroup2>  {
     // cell_groups is a fixed list of cell rows, cell columns, and cell blocks
     let mut cell_group2s : Vec<CellGroup2> = Vec::new();
         for cell_group in cell_groups
