@@ -120,7 +120,7 @@ impl IndexMut<usize> for Board {
 }
 
 #[derive(Debug, Clone)]
-pub struct CellGroup1 {
+pub struct CellGroup2 {  // group with exactly 2 candidates and 2 cells those 2 candidate digits can be in
     pub mask: i32,
     pub discriminator: i32,
     pub description: String,
@@ -129,7 +129,7 @@ pub struct CellGroup1 {
 
 
 #[derive(Debug, Clone)]
-pub struct CellGroup2<'a> {
+pub struct CellGroupN<'a> {  // group with n candidates
     pub mask: i32,
     pub description: String,
     cell_group: (&'a usize, &'a Vec<Cell>),
@@ -242,7 +242,7 @@ fn play(mut rnglcg: PortableLCG) {
 
         change_made = false;
         let mut board_candidate_masks: [i32; 81] =  calculate_candidates(&mut board);  // calculates all the options for every cell on board
-        let cell_groups : BTreeMap<usize, Vec<Cell >> = get_indices();
+        let cell_groups : BTreeMap<usize, Vec<Cell >> = get_indices();  // cell_groups should always be immutable
 
         // cell_groups has 3x 81 cells. 81 for rows, 81 for columns, 81 for blocks
         // 34.
@@ -436,12 +436,12 @@ fn play(mut rnglcg: PortableLCG) {
         {
             print_board_and_code(&mut board);  //#region Print the board as it looks after one change was made to it
         }
-            //#endregion
+        //#endregion
     }//while change_made// 27
     log(&"BOARD SOLVED.".to_string())
 }
 
-fn for_group_with_n_masks(board_candidate_masks: &mut [i32; 81], board: &mut Board, groups_with_n_masks: Vec<CellGroup2>) -> bool {
+fn for_group_with_n_masks(board_candidate_masks: &mut [i32; 81], board: &mut Board, groups_with_n_masks: Vec<CellGroupN>) -> bool {
     let mut step_change_made = false;
     for group_with_n_masks in groups_with_n_masks
     {
@@ -466,24 +466,22 @@ fn for_group_with_n_masks(board_candidate_masks: &mut [i32; 81], board: &mut Boa
             //log(&format!("before &= bcm77={0} group_with_n_masks.mask={1} cell.index={2}, q={3}", board_candidate_masks[77], group_with_n_masks.mask, cell.index, q));
             board_candidate_masks[cell.index] &= group_with_n_masks.mask;  // Add more candidate digits to this cell
             board[cell.index].candidate_digits.mask &= group_with_n_masks.mask;  // Add more candidate digits to this cell
-            //log(&format!("if (candidateMasks[77] ==  bcm77={0}", board_candidate_masks[77]));
             step_change_made = true;
 
             generate_and_log_mask_to_clear_message(mask_to_clear, cell);
             // 59.
         }
     }
-    //log(&format!("before return ==  bcm77={0}", board_candidate_masks[77]));
     step_change_made
 }
 
-fn get_groups_with_n_masks<'a>(board: &Board, board_candidate_masks: &[i32; 81], cell_groups: &'a BTreeMap<usize, Vec<Cell>>) -> Vec<CellGroup2<'a>> {
+fn get_groups_with_n_masks<'a>(board: &Board, board_candidate_masks: &[i32; 81], cell_groups: &'a BTreeMap<usize, Vec<Cell>>) -> Vec<CellGroupN<'a>> {
     let two_or_more_bit_digit_masks: Vec<i32> = mask_to_ones_count().iter()
         .filter(|&(_, count)| *count > 1)  // filter out all masks with only one or zero bits set
         .map(|(mask, _)| *mask)
         .collect();
 
-    let groups_with_n_masks: Vec<CellGroup2> = two_or_more_bit_digit_masks
+    let groups_with_n_masks: Vec<CellGroupN> = two_or_more_bit_digit_masks
         .iter()
         .flat_map(|mask| {
             cell_groups
@@ -514,7 +512,7 @@ fn get_groups_with_n_masks<'a>(board: &Board, board_candidate_masks: &[i32; 81],
                         })
                         .count() as u32;
 
-                    CellGroup2 {
+                    CellGroupN {
                         mask: *mask,
                         description: cell_group2.1.iter().next().unwrap().description.clone(),
                         cell_group: cell_group2.clone(),
@@ -538,33 +536,33 @@ fn get_two_digit_masks(board_candidate_masks: [i32; 81]) -> Vec<i32> {
 }
 
 fn handle_two_digit_masks(board_candidate_masks: &mut [i32; 81], board : &mut Board, cell_groups: &BTreeMap<usize, Vec<Cell>>, two_digit_masks: &Vec<i32>) -> bool {
-    let mut groups = Vec::new();
+    let mut cell_group2s : Vec<CellGroup2> = Vec::new();
     let mut step_change_made = false;
     // Outer loop equivalent to SelectMany over twoDigitMasks
     // for every
     for i in 0..81 {
         assert_eq!(board_candidate_masks[i], board[i].candidate_digits.mask);
     }
-    for mask in two_digit_masks
+    for two_digit_mask in two_digit_masks
     {
         for i in 0..81 {
             assert_eq!(board_candidate_masks[i], board[i].candidate_digits.mask);
         }
-        log(&format!("cellGroups.Count: {} mask: {}", cell_groups.len(), mask).to_string());
+        log(&format!("cellGroups.Count: {} mask: {}", cell_groups.len(), two_digit_mask).to_string());
         // Inner processing equivalent to the SelectMany lambda
-        for_tuple_kvp_in_cell_groups(*board_candidate_masks, &cell_groups, &mut groups, mask.clone());
+        for_cell_group_in_cell_groups(*board_candidate_masks, &cell_groups, &mut cell_group2s, *two_digit_mask);
         for i in 0..81 {
             assert_eq!(board_candidate_masks[i], board[i].candidate_digits.mask);
         }
         // 50.
-        if groups.is_empty() {
+        if cell_group2s.is_empty() {
             log(&"groups is empty".to_string());
             continue;
         }
         //log(&"groups.Any()".to_string());
         //log("50. Groups is NOT empty".to_string());
         //log(&format!("groups.Count()={}", groups.len()));
-        let result = for_group_in_groups(board_candidate_masks, board, &mut groups);
+        let result = for_group_in_groups(board_candidate_masks, board, &mut cell_group2s);
         for i in 0..81 {
             assert_eq!(board_candidate_masks[i], board[i].candidate_digits.mask);
         }
@@ -596,21 +594,21 @@ fn if_candidate_cells(rnglcg: &mut PortableLCG, board: &mut Board, board_candida
     change_made
 }
 
-fn for_group_in_groups(board_candidate_masks: &mut [i32; 81], board: &mut Board, groups: &mut Vec<CellGroup1>) -> bool {
-    log(&format!("groups.Count()={}", groups.len()));
+fn for_group_in_groups(board_candidate_masks: &mut [i32; 81], board: &mut Board, cell_group2s: &mut Vec<CellGroup2>) -> bool {
+    log(&format!("cell_group2s.Count()={}", cell_group2s.len()));
     let mut step_change_made: bool = false;
-    for group in groups.iter().sorted_by_key(|cell_group| cell_group.discriminator)
+    for cell_group2 in cell_group2s.iter().sorted_by_key(|cell_group| cell_group.discriminator)
     {
-        log(&format!("group={}", group.description));
+        log(&format!("cell_group2={}", cell_group2.description));
         // Translation of the original C# code
-        let cells: Vec<_> = group.cells.iter()
-            .filter(|cell| board_candidate_masks[cell.index] != group.mask && // not equal but overlaps group.mask
-                (board_candidate_masks[cell.index] & group.mask) > 0)
+        let cells: Vec<_> = cell_group2.cells.iter()
+            .filter(|cell| board_candidate_masks[cell.index] != cell_group2.mask && // not equal but overlaps group.mask
+                (board_candidate_masks[cell.index] & cell_group2.mask) > 0)
             .sorted_by_key(|cell| cell.index)
             .collect::<Vec<_>>();
 
-        let mask_cells: Vec<&Cell> = group.cells.iter()
-            .filter(|cell| board_candidate_masks[cell.index] == group.mask) // equal to group.mask
+        let mask_cells: Vec<&Cell> = cell_group2.cells.iter()
+            .filter(|cell| board_candidate_masks[cell.index] == cell_group2.mask) // equal to group.mask
             .map(|x| x)
             .collect();
 
@@ -623,13 +621,13 @@ fn for_group_in_groups(board_candidate_masks: &mut [i32; 81], board: &mut Board,
         // "Values {lower} and {upper} in {} are in cells ({mask_cells[0].row+1}, {mask_cells[0].col+1}) and ({mask_cells[1].row+1}, {mask_cells[1].col+1}).",
         // Find the upper two bits. upper & lower represent digits
         log(&"cells.Any()".to_string());
-        let (lower, upper) = top_two_digits(group.mask); // bits represent digits
+        let (lower, upper) = top_two_digits(cell_group2.mask); // bits represent digits
 
         let s = format!(
             "Values {} and {} in {} are in cells ({}, {}) and ({}, {}).",
             lower,
             upper,
-            group.description,
+            cell_group2.description,
             mask_cells[0].get_row() + 1,
             mask_cells[0].get_column() + 1,
             mask_cells[1].get_row() + 1,
@@ -641,7 +639,7 @@ fn for_group_in_groups(board_candidate_masks: &mut [i32; 81], board: &mut Board,
         for i in 0..81 {
             assert_eq!(board_candidate_masks[i], board[i].candidate_digits.mask);
         }
-        let result = for_cell_in_cells(board_candidate_masks, board, group, &cells);
+        let result = for_cell_in_cells(board_candidate_masks, board, cell_group2, &cells);
         for i in 0..81 {
             assert_eq!(board_candidate_masks[i], board[i].candidate_digits.mask);
         }
@@ -650,16 +648,17 @@ fn for_group_in_groups(board_candidate_masks: &mut [i32; 81], board: &mut Board,
     step_change_made
 }
 
-fn for_tuple_kvp_in_cell_groups(board_candidate_masks: [i32; 81], cell_groups: &BTreeMap<usize, Vec<Cell>>, groups: &mut Vec<CellGroup1>, mask: i32) {
-    for tuple_kvp in cell_groups
+fn for_cell_group_in_cell_groups(board_candidate_masks: [i32; 81], cell_groups: &BTreeMap<usize, Vec<Cell>>, cell_group2s : &mut Vec<CellGroup2>, two_digit_mask: i32) {
+    // cell_groups is a fixed list of cell rows, cell columns, and cell blocks
+        for cell_group in cell_groups
     {
         // First Where condition: group.Count(tuple => candidateMasks[tuple.Index] == mask) == 2
-        let cell_list = tuple_kvp.1;
-        let matching_count = cell_list.iter()
-            .filter(|cell| board_candidate_masks[cell.index] == mask)
+        let cell_list = cell_group.1;  //cell_group.0 tells us which group we are looking at (Specific row, col, or block). .1 is the list of 9 indexes which comprise this group
+        let matching_count = cell_list.iter()  // iterate through the 9 cells in this group (may be a row, col, or block group)
+            .filter(|cell| board_candidate_masks[cell.index] == two_digit_mask)  // for each cell in the list, get the index, look up digit candidates, test if they == mask passed to us
             .count();
 
-        // we are hoping to find only 2 cells which can have these two digits
+        // we are hoping to find only 2 cells which can have these two digits in two_digit_mask
         if matching_count != 2 {
             continue;
         }
@@ -667,49 +666,46 @@ fn for_tuple_kvp_in_cell_groups(board_candidate_masks: [i32; 81], cell_groups: &
         // only 2 cells confirmed for 2 digits in mask
         // Second Where condition: group.Any(tuple => candidateMasks[tuple.Index] != mask && (candidateMasks[tuple.Index] & mask) > 0)
         let has_overlapping_non_matching = cell_list.iter().any(|cell| {
-            board_candidate_masks[cell.index] != mask && (board_candidate_masks[cell.index] & mask) > 0
+            board_candidate_masks[cell.index] != two_digit_mask && (board_candidate_masks[cell.index] & two_digit_mask) > 0
         });
 
         if !has_overlapping_non_matching {
-            continue;
+            continue;  // we can't handle it if other cells also have one of the two digits in two_digit_mask (overlap but not equal to)
         }
 
-
-        // Get first description from the group
+        // Get first description from the group. Description tells us which row, col, or block we are examining
         let description = cell_list.first().map(|cell| cell.description.clone()).unwrap_or_default();
-
-        let cell_group = CellGroup1 {
-            mask,
-            discriminator: tuple_kvp.0.clone() as i32,
+        // this cell_group has exactly 2 cells which can have exactly 2 candidate digits. Which digit to put where? It might work both ways!
+        let cell_group2 = CellGroup2 {
+            mask: two_digit_mask,
+            discriminator: cell_group.0.clone() as i32,  // 0-8 (rows), 9-17 (cols), 18-27 (blocks)
             description,
             cells: cell_list.clone(),
         };
+        assert_eq!(cell_list.len(), 9);  // either 9 cells in a row, or 9 in a column, or 9 in a block
 
-        groups.push(cell_group);
+        cell_group2s.push(cell_group2);
     }
 }
 
 
-fn for_cell_in_cells(board_candidate_masks: &mut [i32; 81], board: &mut Board, group: &CellGroup1, cells: &Vec<&Cell>) -> bool {
+fn for_cell_in_cells(board_candidate_masks: &mut [i32; 81], board: &mut Board, cell_group2: &CellGroup2, cells: &Vec<&Cell>) -> bool {
     let mut step_change_made : bool = false;
     for cell in cells
     {
-        let mask_to_remove = board_candidate_masks[cell.index] & group.mask;  // intersection
+        let mask_to_remove = board_candidate_masks[cell.index] & cell_group2.mask;  // intersection
         let values_to_remove = mask_to_vec_digits(mask_to_remove);
 
         //string valuesReport = string.Join(", ", values_to_remove.ToArray());
         let string_values_to_remove: Vec<String> = values_to_remove
             .iter()
-            .map(|&num| num.to_string())
+            .map(|num| num.to_string())
             .collect();
         let values_report = string_values_to_remove.join(", ");
         let s = format!("{} cannot appear in ({}, {}).", values_report, cell.get_row() + 1, cell.get_column() + 1);
         log(&s);
-        if values_report == "2" && cell.get_row() + 1 == 5 && cell.get_column() + 1 == 9 {
-            println!("Found it");
-        }
-        board_candidate_masks[cell.index] &= !group.mask;
-        board[cell.index].candidate_digits.mask &= !group.mask;
+        board_candidate_masks[cell.index] &= !cell_group2.mask;
+        board[cell.index].candidate_digits.mask &= !cell_group2.mask;
         step_change_made = true;
     }
     step_change_made
@@ -1137,7 +1133,7 @@ fn handle_expand(rnglcg: &mut PortableLCG, board_stack: &mut Vec<Board>, alt_boa
     }
 }
 
-fn log_group_with_n_masks_message(group_with_n_masks: &CellGroup2, mask: i32) {
+fn log_group_with_n_masks_message(group_with_n_masks: &CellGroupN, mask: i32) {
     let mut message = format!("In {} values ", group_with_n_masks.description);
     let mut separator = "";
     let mut temp = mask;
@@ -1264,6 +1260,10 @@ fn get_single_candidate_indices( board: &Board, candidate_masks: &[i32; 81]) -> 
 // int is the Cell discriminator. 0-8 is row this cell is in, 9-17 is column, 18-27 is block
 // for discriminator in range 9-17, subtract 9 to get column
 // for discriminator in range 18-27, subtract 18 to get block
+// Cell discriminator, index, digit=0, candidate_digits{mask}
+// 0-8 (rows), {0-8,9-17,18-26, 27-35, 36-44, 45-53, 54-62,63-71,72-80}
+// 9-17 (cols), {0,9,18,27,36,45,54,63,72},...
+// 18-27 (blocks), {0,1,2,9,10,11,18,19,20},...
 fn get_indices() -> BTreeMap<usize, Vec<Cell>> {
     // 30.
     // Group by rows

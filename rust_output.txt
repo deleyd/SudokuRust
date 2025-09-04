@@ -841,21 +841,21 @@ groups is empty
 cellGroups.Count: 27 mask: 96
 groups is empty
 cellGroups.Count: 27 mask: 320
-groups.Count()=1
-group=row #7
+cell_group2s.Count()=1
+cell_group2=row #7
 cells.len()=1
 cells.Any()
 Values 7 and 9 in row #7 are in cells (7, 4) and (7, 6).
 7 cannot appear in (7, 7).
 step_change_made=true
 cellGroups.Count: 27 mask: 6
-groups.Count()=1
-group=row #7
+cell_group2s.Count()=1
+cell_group2=row #7
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 129
-groups.Count()=1
-group=row #7
+cell_group2s.Count()=1
+cell_group2=row #7
 Cells is empty 51
 step_change_made=true
 38. change_made: false
@@ -944,16 +944,16 @@ groups is empty
 cellGroups.Count: 27 mask: 96
 groups is empty
 cellGroups.Count: 27 mask: 320
-groups.Count()=1
-group=row #7
+cell_group2s.Count()=1
+cell_group2=row #7
 cells.len()=1
 cells.Any()
 Values 7 and 9 in row #7 are in cells (7, 4) and (7, 6).
 7 cannot appear in (7, 7).
 step_change_made=true
 cellGroups.Count: 27 mask: 6
-groups.Count()=1
-group=row #7
+cell_group2s.Count()=1
+cell_group2=row #7
 Cells is empty 51
 step_change_made=true
 38. change_made: false
@@ -1091,16 +1091,16 @@ two_digit_masks=[68, 320, 6]
 cellGroups.Count: 27 mask: 68
 groups is empty
 cellGroups.Count: 27 mask: 320
-groups.Count()=1
-group=row #7
+cell_group2s.Count()=1
+cell_group2=row #7
 cells.len()=1
 cells.Any()
 Values 7 and 9 in row #7 are in cells (7, 4) and (7, 6).
 7 cannot appear in (7, 7).
 step_change_made=true
 cellGroups.Count: 27 mask: 6
-groups.Count()=1
-group=row #7
+cell_group2s.Count()=1
+cell_group2=row #7
 Cells is empty 51
 step_change_made=true
 38. change_made: false
@@ -3382,8 +3382,8 @@ groups is empty
 cellGroups.Count: 27 mask: 3
 groups is empty
 cellGroups.Count: 27 mask: 20
-groups.Count()=1
-group=column #1
+cell_group2s.Count()=1
+cell_group2=column #1
 cells.len()=2
 cells.Any()
 Values 3 and 5 in column #1 are in cells (6, 1) and (8, 1).
@@ -3391,13 +3391,13 @@ Values 3 and 5 in column #1 are in cells (6, 1) and (8, 1).
 3 cannot appear in (7, 1).
 step_change_made=true
 cellGroups.Count: 27 mask: 17
-groups.Count()=1
-group=column #1
+cell_group2s.Count()=1
+cell_group2=column #1
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 24
-groups.Count()=1
-group=column #1
+cell_group2s.Count()=1
+cell_group2=column #1
 Cells is empty 51
 step_change_made=true
 38. change_made: false
@@ -4745,8 +4745,8 @@ two_digit_masks=[65, 5, 80, 6, 3]
 cellGroups.Count: 27 mask: 65
 groups is empty
 cellGroups.Count: 27 mask: 5
-groups.Count()=1
-group=column #3
+cell_group2s.Count()=1
+cell_group2=column #3
 cells.len()=2
 cells.Any()
 Values 1 and 3 in column #3 are in cells (4, 3) and (5, 3).
@@ -4754,18 +4754,18 @@ Values 1 and 3 in column #3 are in cells (4, 3) and (5, 3).
 3 cannot appear in (8, 3).
 step_change_made=true
 cellGroups.Count: 27 mask: 80
-groups.Count()=1
-group=column #3
+cell_group2s.Count()=1
+cell_group2=column #3
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 6
-groups.Count()=1
-group=column #3
+cell_group2s.Count()=1
+cell_group2=column #3
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 3
-groups.Count()=1
-group=column #3
+cell_group2s.Count()=1
+cell_group2=column #3
 Cells is empty 51
 step_change_made=true
 38. change_made: false
@@ -4975,8 +4975,8 @@ groups is empty
 cellGroups.Count: 27 mask: 3
 groups is empty
 cellGroups.Count: 27 mask: 80
-groups.Count()=1
-group=block (3, 2)
+cell_group2s.Count()=1
+cell_group2=block (3, 2)
 cells.len()=1
 cells.Any()
 Values 5 and 7 in block (3, 2) are in cells (7, 5) and (8, 5).
@@ -4990,16 +4990,16 @@ groups is empty
 cellGroups.Count: 27 mask: 66
 groups is empty
 cellGroups.Count: 27 mask: 3
-groups.Count()=1
-group=row #7
+cell_group2s.Count()=1
+cell_group2=row #7
 cells.len()=1
 cells.Any()
 Values 1 and 2 in row #7 are in cells (7, 4) and (7, 6).
 2 cannot appear in (7, 2).
 step_change_made=true
 cellGroups.Count: 27 mask: 80
-groups.Count()=1
-group=row #7
+cell_group2s.Count()=1
+cell_group2=row #7
 Cells is empty 51
 step_change_made=true
 38. change_made: false
@@ -5715,8 +5715,8 @@ groups is empty
 cellGroups.Count: 27 mask: 48
 groups is empty
 cellGroups.Count: 27 mask: 272
-groups.Count()=1
-group=block (2, 1)
+cell_group2s.Count()=1
+cell_group2=block (2, 1)
 cells.len()=4
 cells.Any()
 Values 5 and 9 in block (2, 1) are in cells (5, 1) and (6, 1).
@@ -5726,23 +5726,23 @@ Values 5 and 9 in block (2, 1) are in cells (5, 1) and (6, 1).
 5 cannot appear in (6, 3).
 step_change_made=true
 cellGroups.Count: 27 mask: 136
-groups.Count()=1
-group=block (2, 1)
+cell_group2s.Count()=1
+cell_group2=block (2, 1)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 18
-groups.Count()=1
-group=block (2, 1)
+cell_group2s.Count()=1
+cell_group2=block (2, 1)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 65
-groups.Count()=1
-group=block (2, 1)
+cell_group2s.Count()=1
+cell_group2=block (2, 1)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 132
-groups.Count()=1
-group=block (2, 1)
+cell_group2s.Count()=1
+cell_group2=block (2, 1)
 Cells is empty 51
 step_change_made=true
 38. change_made: false
@@ -7201,24 +7201,24 @@ groups is empty
 cellGroups.Count: 27 mask: 264
 groups is empty
 cellGroups.Count: 27 mask: 68
-groups.Count()=2
-group=row #9
+cell_group2s.Count()=2
+cell_group2=row #9
 cells.len()=2
 cells.Any()
 Values 3 and 7 in row #9 are in cells (9, 1) and (9, 9).
 3 cannot appear in (9, 2).
 3 cannot appear in (9, 5).
-group=block (3, 1)
+cell_group2=block (3, 1)
 cells.len()=1
 cells.Any()
 Values 3 and 7 in block (3, 1) are in cells (7, 1) and (9, 1).
 3 cannot appear in (7, 2).
 step_change_made=true
 cellGroups.Count: 27 mask: 132
-groups.Count()=2
-group=row #9
+cell_group2s.Count()=2
+cell_group2=row #9
 Cells is empty 51
-group=block (3, 1)
+cell_group2=block (3, 1)
 Cells is empty 51
 step_change_made=true
 38. change_made: false
@@ -8657,8 +8657,8 @@ Code: 17684532954..967188...714654187.259.3...891..6....428.734..895.9654.783.28
 48. change_made: false
 two_digit_masks=[6, 258, 36, 18, 66, 48, 72, 272, 320, 5, 68, 3]
 cellGroups.Count: 27 mask: 6
-groups.Count()=1
-group=column #4
+cell_group2s.Count()=1
+cell_group2=column #4
 cells.len()=2
 cells.Any()
 Values 2 and 3 in column #4 are in cells (2, 4) and (3, 4).
@@ -8666,58 +8666,58 @@ Values 2 and 3 in column #4 are in cells (2, 4) and (3, 4).
 2 cannot appear in (7, 4).
 step_change_made=true
 cellGroups.Count: 27 mask: 258
-groups.Count()=1
-group=column #4
+cell_group2s.Count()=1
+cell_group2=column #4
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 36
-groups.Count()=1
-group=column #4
+cell_group2s.Count()=1
+cell_group2=column #4
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 18
-groups.Count()=1
-group=column #4
+cell_group2s.Count()=1
+cell_group2=column #4
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 66
-groups.Count()=1
-group=column #4
+cell_group2s.Count()=1
+cell_group2=column #4
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 48
-groups.Count()=1
-group=column #4
+cell_group2s.Count()=1
+cell_group2=column #4
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 72
-groups.Count()=1
-group=column #4
+cell_group2s.Count()=1
+cell_group2=column #4
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 272
-groups.Count()=1
-group=column #4
+cell_group2s.Count()=1
+cell_group2=column #4
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 320
-groups.Count()=1
-group=column #4
+cell_group2s.Count()=1
+cell_group2=column #4
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 5
-groups.Count()=1
-group=column #4
+cell_group2s.Count()=1
+cell_group2=column #4
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 68
-groups.Count()=1
-group=column #4
+cell_group2s.Count()=1
+cell_group2=column #4
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 3
-groups.Count()=1
-group=column #4
+cell_group2s.Count()=1
+cell_group2=column #4
 Cells is empty 51
 step_change_made=true
 38. change_made: false
@@ -9592,8 +9592,8 @@ groups is empty
 cellGroups.Count: 27 mask: 24
 groups is empty
 cellGroups.Count: 27 mask: 3
-groups.Count()=1
-group=row #5
+cell_group2s.Count()=1
+cell_group2=row #5
 cells.len()=2
 cells.Any()
 Values 1 and 2 in row #5 are in cells (5, 1) and (5, 2).
@@ -9601,33 +9601,33 @@ Values 1 and 2 in row #5 are in cells (5, 1) and (5, 2).
 2 cannot appear in (5, 9).
 step_change_made=true
 cellGroups.Count: 27 mask: 272
-groups.Count()=1
-group=row #5
+cell_group2s.Count()=1
+cell_group2=row #5
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 10
-groups.Count()=2
-group=row #5
+cell_group2s.Count()=2
+cell_group2=row #5
 Cells is empty 51
-group=block (2, 3)
+cell_group2=block (2, 3)
 cells.len()=1
 cells.Any()
 Values 2 and 4 in block (2, 3) are in cells (6, 7) and (6, 9).
 4 cannot appear in (4, 7).
 step_change_made=true
 cellGroups.Count: 27 mask: 9
-groups.Count()=4
-group=row #5
+cell_group2s.Count()=4
+cell_group2=row #5
 Cells is empty 51
-group=column #5
+cell_group2=column #5
 cells.len()=2
 cells.Any()
 Values 1 and 4 in column #5 are in cells (7, 5) and (9, 5).
 4 cannot appear in (1, 5).
 4 cannot appear in (3, 5).
-group=block (2, 3)
+cell_group2=block (2, 3)
 Cells is empty 51
-group=block (3, 2)
+cell_group2=block (3, 2)
 cells.len()=3
 cells.Any()
 Values 1 and 4 in block (3, 2) are in cells (7, 5) and (9, 5).
@@ -9636,25 +9636,25 @@ Values 1 and 4 in block (3, 2) are in cells (7, 5) and (9, 5).
 4 cannot appear in (9, 4).
 step_change_made=true
 cellGroups.Count: 27 mask: 258
-groups.Count()=4
-group=row #5
+cell_group2s.Count()=4
+cell_group2=row #5
 Cells is empty 51
-group=column #5
+cell_group2=column #5
 Cells is empty 51
-group=block (2, 3)
+cell_group2=block (2, 3)
 Cells is empty 51
-group=block (3, 2)
+cell_group2=block (3, 2)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 6
-groups.Count()=4
-group=row #5
+cell_group2s.Count()=4
+cell_group2=row #5
 Cells is empty 51
-group=column #5
+cell_group2=column #5
 Cells is empty 51
-group=block (2, 3)
+cell_group2=block (2, 3)
 Cells is empty 51
-group=block (3, 2)
+cell_group2=block (3, 2)
 Cells is empty 51
 step_change_made=true
 38. change_made: false
@@ -9738,8 +9738,8 @@ groups is empty
 cellGroups.Count: 27 mask: 24
 groups is empty
 cellGroups.Count: 27 mask: 3
-groups.Count()=1
-group=row #5
+cell_group2s.Count()=1
+cell_group2=row #5
 cells.len()=2
 cells.Any()
 Values 1 and 2 in row #5 are in cells (5, 1) and (5, 2).
@@ -9747,33 +9747,33 @@ Values 1 and 2 in row #5 are in cells (5, 1) and (5, 2).
 2 cannot appear in (5, 9).
 step_change_made=true
 cellGroups.Count: 27 mask: 272
-groups.Count()=1
-group=row #5
+cell_group2s.Count()=1
+cell_group2=row #5
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 10
-groups.Count()=2
-group=row #5
+cell_group2s.Count()=2
+cell_group2=row #5
 Cells is empty 51
-group=block (2, 3)
+cell_group2=block (2, 3)
 cells.len()=1
 cells.Any()
 Values 2 and 4 in block (2, 3) are in cells (6, 7) and (6, 9).
 4 cannot appear in (4, 7).
 step_change_made=true
 cellGroups.Count: 27 mask: 9
-groups.Count()=4
-group=row #5
+cell_group2s.Count()=4
+cell_group2=row #5
 Cells is empty 51
-group=column #5
+cell_group2=column #5
 cells.len()=2
 cells.Any()
 Values 1 and 4 in column #5 are in cells (7, 5) and (9, 5).
 4 cannot appear in (1, 5).
 4 cannot appear in (3, 5).
-group=block (2, 3)
+cell_group2=block (2, 3)
 Cells is empty 51
-group=block (3, 2)
+cell_group2=block (3, 2)
 cells.len()=3
 cells.Any()
 Values 1 and 4 in block (3, 2) are in cells (7, 5) and (9, 5).
@@ -9782,25 +9782,25 @@ Values 1 and 4 in block (3, 2) are in cells (7, 5) and (9, 5).
 4 cannot appear in (9, 4).
 step_change_made=true
 cellGroups.Count: 27 mask: 258
-groups.Count()=4
-group=row #5
+cell_group2s.Count()=4
+cell_group2=row #5
 Cells is empty 51
-group=column #5
+cell_group2=column #5
 Cells is empty 51
-group=block (2, 3)
+cell_group2=block (2, 3)
 Cells is empty 51
-group=block (3, 2)
+cell_group2=block (3, 2)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 6
-groups.Count()=4
-group=row #5
+cell_group2s.Count()=4
+cell_group2=row #5
 Cells is empty 51
-group=column #5
+cell_group2=column #5
 Cells is empty 51
-group=block (2, 3)
+cell_group2=block (2, 3)
 Cells is empty 51
-group=block (3, 2)
+cell_group2=block (3, 2)
 Cells is empty 51
 step_change_made=true
 38. change_made: false
@@ -9971,8 +9971,8 @@ groups is empty
 cellGroups.Count: 27 mask: 136
 groups is empty
 cellGroups.Count: 27 mask: 72
-groups.Count()=1
-group=column #4
+cell_group2s.Count()=1
+cell_group2=column #4
 cells.len()=2
 cells.Any()
 Values 4 and 7 in column #4 are in cells (3, 4) and (4, 4).
@@ -9980,56 +9980,56 @@ Values 4 and 7 in column #4 are in cells (3, 4) and (4, 4).
 7 cannot appear in (5, 4).
 step_change_made=true
 cellGroups.Count: 27 mask: 80
-groups.Count()=1
-group=column #4
+cell_group2s.Count()=1
+cell_group2=column #4
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 24
-groups.Count()=1
-group=column #4
+cell_group2s.Count()=1
+cell_group2=column #4
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 272
-groups.Count()=1
-group=column #4
+cell_group2s.Count()=1
+cell_group2=column #4
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 10
-groups.Count()=2
-group=column #4
+cell_group2s.Count()=2
+cell_group2=column #4
 Cells is empty 51
-group=block (2, 3)
+cell_group2=block (2, 3)
 cells.len()=1
 cells.Any()
 Values 2 and 4 in block (2, 3) are in cells (6, 7) and (6, 9).
 4 cannot appear in (4, 7).
 step_change_made=true
 cellGroups.Count: 27 mask: 260
-groups.Count()=2
-group=column #4
+cell_group2s.Count()=2
+cell_group2=column #4
 Cells is empty 51
-group=block (2, 3)
+cell_group2=block (2, 3)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 258
-groups.Count()=2
-group=column #4
+cell_group2s.Count()=2
+cell_group2=column #4
 Cells is empty 51
-group=block (2, 3)
+cell_group2=block (2, 3)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 6
-groups.Count()=2
-group=column #4
+cell_group2s.Count()=2
+cell_group2=column #4
 Cells is empty 51
-group=block (2, 3)
+cell_group2=block (2, 3)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 130
-groups.Count()=2
-group=column #4
+cell_group2s.Count()=2
+cell_group2=column #4
 Cells is empty 51
-group=block (2, 3)
+cell_group2=block (2, 3)
 Cells is empty 51
 step_change_made=true
 38. change_made: false
@@ -10086,8 +10086,8 @@ groups is empty
 cellGroups.Count: 27 mask: 136
 groups is empty
 cellGroups.Count: 27 mask: 72
-groups.Count()=1
-group=column #4
+cell_group2s.Count()=1
+cell_group2=column #4
 cells.len()=2
 cells.Any()
 Values 4 and 7 in column #4 are in cells (3, 4) and (4, 4).
@@ -10095,38 +10095,38 @@ Values 4 and 7 in column #4 are in cells (3, 4) and (4, 4).
 7 cannot appear in (5, 4).
 step_change_made=true
 cellGroups.Count: 27 mask: 80
-groups.Count()=1
-group=column #4
+cell_group2s.Count()=1
+cell_group2=column #4
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 24
-groups.Count()=1
-group=column #4
+cell_group2s.Count()=1
+cell_group2=column #4
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 272
-groups.Count()=1
-group=column #4
+cell_group2s.Count()=1
+cell_group2=column #4
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 260
-groups.Count()=1
-group=column #4
+cell_group2s.Count()=1
+cell_group2=column #4
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 258
-groups.Count()=1
-group=column #4
+cell_group2s.Count()=1
+cell_group2=column #4
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 6
-groups.Count()=1
-group=column #4
+cell_group2s.Count()=1
+cell_group2=column #4
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 130
-groups.Count()=1
-group=column #4
+cell_group2s.Count()=1
+cell_group2=column #4
 Cells is empty 51
 step_change_made=true
 38. change_made: false
@@ -12669,54 +12669,54 @@ Code: ......62.2684791535.3612..8.2..4.5...5.297.3..34.6...2.12...3.9395.2.....8
 48. change_made: false
 two_digit_masks=[72, 257, 144, 33, 136, 40]
 cellGroups.Count: 27 mask: 72
-groups.Count()=2
-group=row #1
+cell_group2s.Count()=2
+cell_group2=row #1
 cells.len()=1
 cells.Any()
 Values 4 and 7 in row #1 are in cells (1, 2) and (1, 9).
 4, 7 cannot appear in (1, 1).
-group=block (1, 1)
+cell_group2=block (1, 1)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 257
-groups.Count()=2
-group=row #1
+cell_group2s.Count()=2
+cell_group2=row #1
 Cells is empty 51
-group=block (1, 1)
+cell_group2=block (1, 1)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 144
-groups.Count()=2
-group=row #1
+cell_group2s.Count()=2
+cell_group2=row #1
 Cells is empty 51
-group=block (1, 1)
+cell_group2=block (1, 1)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 33
-groups.Count()=2
-group=row #1
+cell_group2s.Count()=2
+cell_group2=row #1
 Cells is empty 51
-group=block (1, 1)
+cell_group2=block (1, 1)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 136
-groups.Count()=2
-group=row #1
+cell_group2s.Count()=2
+cell_group2=row #1
 Cells is empty 51
-group=block (1, 1)
+cell_group2=block (1, 1)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 40
-groups.Count()=3
-group=row #1
+cell_group2s.Count()=3
+cell_group2=row #1
 Cells is empty 51
-group=column #1
+cell_group2=column #1
 cells.len()=2
 cells.Any()
 Values 4 and 6 in column #1 are in cells (7, 1) and (9, 1).
 6 cannot appear in (4, 1).
 6 cannot appear in (5, 1).
-group=block (1, 1)
+cell_group2=block (1, 1)
 Cells is empty 51
 step_change_made=true
 38. change_made: false
@@ -12776,48 +12776,48 @@ Code: ......62.2684791535.3612..8.2..4.5...5.297.3..34.6...2612...3.9395.2....48
 48. change_made: false
 two_digit_masks=[72, 257, 144, 129, 33, 136]
 cellGroups.Count: 27 mask: 72
-groups.Count()=2
-group=row #1
+cell_group2s.Count()=2
+cell_group2=row #1
 cells.len()=1
 cells.Any()
 Values 4 and 7 in row #1 are in cells (1, 2) and (1, 9).
 7 cannot appear in (1, 1).
-group=block (1, 1)
+cell_group2=block (1, 1)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 257
-groups.Count()=2
-group=row #1
+cell_group2s.Count()=2
+cell_group2=row #1
 Cells is empty 51
-group=block (1, 1)
+cell_group2=block (1, 1)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 144
-groups.Count()=2
-group=row #1
+cell_group2s.Count()=2
+cell_group2=row #1
 Cells is empty 51
-group=block (1, 1)
+cell_group2=block (1, 1)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 129
-groups.Count()=2
-group=row #1
+cell_group2s.Count()=2
+cell_group2=row #1
 Cells is empty 51
-group=block (1, 1)
+cell_group2=block (1, 1)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 33
-groups.Count()=2
-group=row #1
+cell_group2s.Count()=2
+cell_group2=row #1
 Cells is empty 51
-group=block (1, 1)
+cell_group2=block (1, 1)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 136
-groups.Count()=2
-group=row #1
+cell_group2s.Count()=2
+cell_group2=row #1
 Cells is empty 51
-group=block (1, 1)
+cell_group2=block (1, 1)
 Cells is empty 51
 step_change_made=true
 38. change_made: false
@@ -13028,8 +13028,8 @@ groups is empty
 cellGroups.Count: 27 mask: 33
 groups is empty
 cellGroups.Count: 27 mask: 17
-groups.Count()=1
-group=block (2, 2)
+cell_group2s.Count()=1
+cell_group2=block (2, 2)
 cells.len()=2
 cells.Any()
 Values 1 and 5 in block (2, 2) are in cells (6, 4) and (6, 6).
@@ -13037,28 +13037,28 @@ Values 1 and 5 in block (2, 2) are in cells (6, 4) and (6, 6).
 1 cannot appear in (4, 6).
 step_change_made=true
 cellGroups.Count: 27 mask: 192
-groups.Count()=1
-group=block (2, 2)
+cell_group2s.Count()=1
+cell_group2=block (2, 2)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 384
-groups.Count()=1
-group=block (2, 2)
+cell_group2s.Count()=1
+cell_group2=block (2, 2)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 136
-groups.Count()=1
-group=block (2, 2)
+cell_group2s.Count()=1
+cell_group2=block (2, 2)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 129
-groups.Count()=1
-group=block (2, 2)
+cell_group2s.Count()=1
+cell_group2=block (2, 2)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 96
-groups.Count()=1
-group=block (2, 2)
+cell_group2s.Count()=1
+cell_group2=block (2, 2)
 Cells is empty 51
 step_change_made=true
 38. change_made: false
@@ -13071,41 +13071,41 @@ groups is empty
 cellGroups.Count: 27 mask: 33
 groups is empty
 cellGroups.Count: 27 mask: 132
-groups.Count()=1
-group=row #4
+cell_group2s.Count()=1
+cell_group2=row #4
 cells.len()=1
 cells.Any()
 Values 3 and 8 in row #4 are in cells (4, 4) and (4, 6).
 8 cannot appear in (4, 8).
 step_change_made=true
 cellGroups.Count: 27 mask: 17
-groups.Count()=1
-group=row #4
+cell_group2s.Count()=1
+cell_group2=row #4
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 192
-groups.Count()=1
-group=row #4
+cell_group2s.Count()=1
+cell_group2=row #4
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 384
-groups.Count()=1
-group=row #4
+cell_group2s.Count()=1
+cell_group2=row #4
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 136
-groups.Count()=1
-group=row #4
+cell_group2s.Count()=1
+cell_group2=row #4
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 129
-groups.Count()=1
-group=row #4
+cell_group2s.Count()=1
+cell_group2=row #4
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 96
-groups.Count()=1
-group=row #4
+cell_group2s.Count()=1
+cell_group2=row #4
 Cells is empty 51
 step_change_made=true
 38. change_made: false
@@ -14391,50 +14391,50 @@ Code: 17924.6.824689.1.7538176492.1475.326.27.31584.534.29717.5.2481.3.1..724.4.
 48. change_made: false
 two_digit_masks=[20, 384, 288, 160, 260, 272]
 cellGroups.Count: 27 mask: 20
-groups.Count()=1
-group=column #6
+cell_group2s.Count()=1
+cell_group2=column #6
 cells.len()=1
 cells.Any()
 Values 3 and 5 in column #6 are in cells (1, 6) and (2, 6).
 3, 5 cannot appear in (9, 6).
 step_change_made=true
 cellGroups.Count: 27 mask: 384
-groups.Count()=2
-group=row #9
+cell_group2s.Count()=2
+cell_group2=row #9
 cells.len()=2
 cells.Any()
 Values 8 and 9 in row #9 are in cells (9, 2) and (9, 6).
 9 cannot appear in (9, 4).
 9 cannot appear in (9, 9).
-group=column #6
+cell_group2=column #6
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 288
-groups.Count()=2
-group=row #9
+cell_group2s.Count()=2
+cell_group2=row #9
 Cells is empty 51
-group=column #6
+cell_group2=column #6
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 160
-groups.Count()=2
-group=row #9
+cell_group2s.Count()=2
+cell_group2=row #9
 Cells is empty 51
-group=column #6
+cell_group2=column #6
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 260
-groups.Count()=2
-group=row #9
+cell_group2s.Count()=2
+cell_group2=row #9
 Cells is empty 51
-group=column #6
+cell_group2=column #6
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 272
-groups.Count()=2
-group=row #9
+cell_group2s.Count()=2
+cell_group2=row #9
 Cells is empty 51
-group=column #6
+cell_group2=column #6
 Cells is empty 51
 step_change_made=true
 38. change_made: false
@@ -14511,8 +14511,8 @@ Code: 179245638246893157538176492.1475.326.27.31584.534.29717.5.2481.3.1..724.4.
 48. change_made: false
 two_digit_masks=[384, 288, 160, 260, 272]
 cellGroups.Count: 27 mask: 384
-groups.Count()=1
-group=row #9
+cell_group2s.Count()=1
+cell_group2=row #9
 cells.len()=2
 cells.Any()
 Values 8 and 9 in row #9 are in cells (9, 2) and (9, 6).
@@ -14520,23 +14520,23 @@ Values 8 and 9 in row #9 are in cells (9, 2) and (9, 6).
 9 cannot appear in (9, 9).
 step_change_made=true
 cellGroups.Count: 27 mask: 288
-groups.Count()=1
-group=row #9
+cell_group2s.Count()=1
+cell_group2=row #9
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 160
-groups.Count()=1
-group=row #9
+cell_group2s.Count()=1
+cell_group2=row #9
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 260
-groups.Count()=1
-group=row #9
+cell_group2s.Count()=1
+cell_group2=row #9
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 272
-groups.Count()=1
-group=row #9
+cell_group2s.Count()=1
+cell_group2=row #9
 Cells is empty 51
 step_change_made=true
 38. change_made: false
@@ -16525,8 +16525,8 @@ groups is empty
 cellGroups.Count: 27 mask: 9
 groups is empty
 cellGroups.Count: 27 mask: 136
-groups.Count()=1
-group=row #7
+cell_group2s.Count()=1
+cell_group2=row #7
 cells.len()=2
 cells.Any()
 Values 4 and 8 in row #7 are in cells (7, 6) and (7, 8).
@@ -16534,8 +16534,8 @@ Values 4 and 8 in row #7 are in cells (7, 6) and (7, 8).
 4 cannot appear in (7, 4).
 step_change_made=true
 cellGroups.Count: 27 mask: 144
-groups.Count()=1
-group=row #7
+cell_group2s.Count()=1
+cell_group2=row #7
 Cells is empty 51
 step_change_made=true
 38. change_made: false
@@ -16664,8 +16664,8 @@ Code: ..49..753.97345..6.35617...7......6842.86.57...8.79...3.1.9.6.29.6.3...5..
 48. change_made: false
 two_digit_masks=[130, 264, 17, 260, 18, 5, 257, 9, 136, 144]
 cellGroups.Count: 27 mask: 130
-groups.Count()=1
-group=row #1
+cell_group2s.Count()=1
+cell_group2=row #1
 cells.len()=2
 cells.Any()
 Values 2 and 8 in row #1 are in cells (1, 5) and (1, 6).
@@ -16673,45 +16673,45 @@ Values 2 and 8 in row #1 are in cells (1, 5) and (1, 6).
 8 cannot appear in (1, 2).
 step_change_made=true
 cellGroups.Count: 27 mask: 264
-groups.Count()=1
-group=row #1
+cell_group2s.Count()=1
+cell_group2=row #1
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 17
-groups.Count()=1
-group=row #1
+cell_group2s.Count()=1
+cell_group2=row #1
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 260
-groups.Count()=1
-group=row #1
+cell_group2s.Count()=1
+cell_group2=row #1
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 18
-groups.Count()=1
-group=row #1
+cell_group2s.Count()=1
+cell_group2=row #1
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 5
-groups.Count()=1
-group=row #1
+cell_group2s.Count()=1
+cell_group2=row #1
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 257
-groups.Count()=1
-group=row #1
+cell_group2s.Count()=1
+cell_group2=row #1
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 9
-groups.Count()=1
-group=row #1
+cell_group2s.Count()=1
+cell_group2=row #1
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 136
-groups.Count()=2
-group=row #1
+cell_group2s.Count()=2
+cell_group2=row #1
 Cells is empty 51
-group=row #7
+cell_group2=row #7
 cells.len()=2
 cells.Any()
 Values 4 and 8 in row #7 are in cells (7, 6) and (7, 8).
@@ -16719,12 +16719,12 @@ Values 4 and 8 in row #7 are in cells (7, 6) and (7, 8).
 4 cannot appear in (7, 4).
 step_change_made=true
 cellGroups.Count: 27 mask: 144
-groups.Count()=3
-group=row #1
+cell_group2s.Count()=3
+cell_group2=row #1
 Cells is empty 51
-group=row #7
+cell_group2=row #7
 Cells is empty 51
-group=row #9
+cell_group2=row #9
 cells.len()=3
 cells.Any()
 Values 5 and 8 in row #9 are in cells (9, 1) and (9, 5).
@@ -16755,8 +16755,8 @@ Code: ..49..753.97345..6.35617...7......6842.86.57...8.79...3.1.9.6.29.6.3...5.4
 48. change_made: false
 two_digit_masks=[130, 264, 17, 260, 18, 5, 257, 9, 136, 192, 144]
 cellGroups.Count: 27 mask: 130
-groups.Count()=1
-group=row #1
+cell_group2s.Count()=1
+cell_group2=row #1
 cells.len()=2
 cells.Any()
 Values 2 and 8 in row #1 are in cells (1, 5) and (1, 6).
@@ -16764,45 +16764,45 @@ Values 2 and 8 in row #1 are in cells (1, 5) and (1, 6).
 8 cannot appear in (1, 2).
 step_change_made=true
 cellGroups.Count: 27 mask: 264
-groups.Count()=1
-group=row #1
+cell_group2s.Count()=1
+cell_group2=row #1
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 17
-groups.Count()=1
-group=row #1
+cell_group2s.Count()=1
+cell_group2=row #1
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 260
-groups.Count()=1
-group=row #1
+cell_group2s.Count()=1
+cell_group2=row #1
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 18
-groups.Count()=1
-group=row #1
+cell_group2s.Count()=1
+cell_group2=row #1
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 5
-groups.Count()=1
-group=row #1
+cell_group2s.Count()=1
+cell_group2=row #1
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 257
-groups.Count()=1
-group=row #1
+cell_group2s.Count()=1
+cell_group2=row #1
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 9
-groups.Count()=1
-group=row #1
+cell_group2s.Count()=1
+cell_group2=row #1
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 136
-groups.Count()=2
-group=row #1
+cell_group2s.Count()=2
+cell_group2=row #1
 Cells is empty 51
-group=row #7
+cell_group2=row #7
 cells.len()=2
 cells.Any()
 Values 4 and 8 in row #7 are in cells (7, 6) and (7, 8).
@@ -16810,19 +16810,19 @@ Values 4 and 8 in row #7 are in cells (7, 6) and (7, 8).
 4 cannot appear in (7, 4).
 step_change_made=true
 cellGroups.Count: 27 mask: 192
-groups.Count()=2
-group=row #1
+cell_group2s.Count()=2
+cell_group2=row #1
 Cells is empty 51
-group=row #7
+cell_group2=row #7
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 144
-groups.Count()=3
-group=row #1
+cell_group2s.Count()=3
+cell_group2=row #1
 Cells is empty 51
-group=row #7
+cell_group2=row #7
 Cells is empty 51
-group=row #9
+cell_group2=row #9
 cells.len()=2
 cells.Any()
 Values 5 and 8 in row #9 are in cells (9, 1) and (9, 5).
@@ -18150,8 +18150,8 @@ groups is empty
 cellGroups.Count: 27 mask: 24
 groups is empty
 cellGroups.Count: 27 mask: 36
-groups.Count()=1
-group=block (3, 3)
+cell_group2s.Count()=1
+cell_group2=block (3, 3)
 cells.len()=2
 cells.Any()
 Values 3 and 6 in block (3, 3) are in cells (7, 9) and (9, 9).
@@ -18159,23 +18159,23 @@ Values 3 and 6 in block (3, 3) are in cells (7, 9) and (9, 9).
 3 cannot appear in (8, 8).
 step_change_made=true
 cellGroups.Count: 27 mask: 132
-groups.Count()=1
-group=block (3, 3)
+cell_group2s.Count()=1
+cell_group2=block (3, 3)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 6
-groups.Count()=1
-group=block (3, 3)
+cell_group2s.Count()=1
+cell_group2=block (3, 3)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 20
-groups.Count()=1
-group=block (3, 3)
+cell_group2s.Count()=1
+cell_group2=block (3, 3)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 136
-groups.Count()=1
-group=block (3, 3)
+cell_group2s.Count()=1
+cell_group2=block (3, 3)
 Cells is empty 51
 step_change_made=true
 38. change_made: false
@@ -19673,8 +19673,8 @@ groups is empty
 cellGroups.Count: 27 mask: 10
 groups is empty
 cellGroups.Count: 27 mask: 12
-groups.Count()=1
-group=column #9
+cell_group2s.Count()=1
+cell_group2=column #9
 cells.len()=1
 cells.Any()
 Values 3 and 4 in column #9 are in cells (7, 9) and (8, 9).
@@ -19741,8 +19741,8 @@ groups is empty
 cellGroups.Count: 27 mask: 3
 groups is empty
 cellGroups.Count: 27 mask: 12
-groups.Count()=1
-group=column #9
+cell_group2s.Count()=1
+cell_group2=column #9
 cells.len()=1
 cells.Any()
 Values 3 and 4 in column #9 are in cells (7, 9) and (8, 9).
@@ -20572,8 +20572,8 @@ Code: 1....6.89.5.9..1....93.1.569.16..5....5.9.61..4.1.597.518469....97..3.61.6
 48. change_made: false
 two_digit_masks=[10, 34, 6, 130]
 cellGroups.Count: 27 mask: 10
-groups.Count()=1
-group=column #1
+cell_group2s.Count()=1
+cell_group2=column #1
 cells.len()=4
 cells.Any()
 Values 2 and 4 in column #1 are in cells (8, 1) and (9, 1).
@@ -20583,18 +20583,18 @@ Values 2 and 4 in column #1 are in cells (8, 1) and (9, 1).
 2 cannot appear in (6, 1).
 step_change_made=true
 cellGroups.Count: 27 mask: 34
-groups.Count()=1
-group=column #1
+cell_group2s.Count()=1
+cell_group2=column #1
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 6
-groups.Count()=1
-group=column #1
+cell_group2s.Count()=1
+cell_group2=column #1
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 130
-groups.Count()=1
-group=column #1
+cell_group2s.Count()=1
+cell_group2=column #1
 Cells is empty 51
 step_change_made=true
 38. change_made: false
@@ -20625,8 +20625,8 @@ groups is empty
 cellGroups.Count: 27 mask: 6
 groups is empty
 cellGroups.Count: 27 mask: 136
-groups.Count()=1
-group=column #7
+cell_group2s.Count()=1
+cell_group2=column #7
 cells.len()=2
 cells.Any()
 Values 4 and 8 in column #7 are in cells (8, 7) and (9, 7).
@@ -20634,8 +20634,8 @@ Values 4 and 8 in column #7 are in cells (8, 7) and (9, 7).
 4 cannot appear in (3, 7).
 step_change_made=true
 cellGroups.Count: 27 mask: 130
-groups.Count()=1
-group=column #7
+cell_group2s.Count()=1
+cell_group2=column #7
 Cells is empty 51
 step_change_made=true
 38. change_made: false
@@ -20661,8 +20661,8 @@ Code: 1....6.89.5.9..1....9341.569.16..5....5.9.61..4.1.597.518469....97..3.61.6
 48. change_made: false
 two_digit_masks=[10, 130, 66, 34, 6]
 cellGroups.Count: 27 mask: 10
-groups.Count()=1
-group=column #1
+cell_group2s.Count()=1
+cell_group2=column #1
 cells.len()=4
 cells.Any()
 Values 2 and 4 in column #1 are in cells (8, 1) and (9, 1).
@@ -20672,23 +20672,23 @@ Values 2 and 4 in column #1 are in cells (8, 1) and (9, 1).
 2 cannot appear in (6, 1).
 step_change_made=true
 cellGroups.Count: 27 mask: 130
-groups.Count()=1
-group=column #1
+cell_group2s.Count()=1
+cell_group2=column #1
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 66
-groups.Count()=1
-group=column #1
+cell_group2s.Count()=1
+cell_group2=column #1
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 34
-groups.Count()=1
-group=column #1
+cell_group2s.Count()=1
+cell_group2=column #1
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 6
-groups.Count()=1
-group=column #1
+cell_group2s.Count()=1
+cell_group2=column #1
 Cells is empty 51
 step_change_made=true
 38. change_made: false
@@ -20725,8 +20725,8 @@ groups is empty
 cellGroups.Count: 27 mask: 6
 groups is empty
 cellGroups.Count: 27 mask: 136
-groups.Count()=1
-group=column #7
+cell_group2s.Count()=1
+cell_group2=column #7
 cells.len()=1
 cells.Any()
 Values 4 and 8 in column #7 are in cells (8, 7) and (9, 7).
@@ -20763,8 +20763,8 @@ groups is empty
 cellGroups.Count: 27 mask: 6
 groups is empty
 cellGroups.Count: 27 mask: 10
-groups.Count()=1
-group=column #1
+cell_group2s.Count()=1
+cell_group2=column #1
 cells.len()=4
 cells.Any()
 Values 2 and 4 in column #1 are in cells (8, 1) and (9, 1).
@@ -21971,8 +21971,8 @@ groups is empty
 cellGroups.Count: 27 mask: 34
 groups is empty
 cellGroups.Count: 27 mask: 33
-groups.Count()=1
-group=column #4
+cell_group2s.Count()=1
+cell_group2=column #4
 cells.len()=2
 cells.Any()
 Values 1 and 6 in column #4 are in cells (4, 4) and (8, 4).
@@ -21980,18 +21980,18 @@ Values 1 and 6 in column #4 are in cells (4, 4) and (8, 4).
 1, 6 cannot appear in (9, 4).
 step_change_made=true
 cellGroups.Count: 27 mask: 3
-groups.Count()=1
-group=column #4
+cell_group2s.Count()=1
+cell_group2=column #4
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 66
-groups.Count()=1
-group=column #4
+cell_group2s.Count()=1
+cell_group2=column #4
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 130
-groups.Count()=1
-group=column #4
+cell_group2s.Count()=1
+cell_group2=column #4
 Cells is empty 51
 step_change_made=true
 38. change_made: false
@@ -22121,24 +22121,24 @@ groups is empty
 cellGroups.Count: 27 mask: 130
 groups is empty
 cellGroups.Count: 27 mask: 34
-groups.Count()=2
-group=row #8
+cell_group2s.Count()=2
+cell_group2=row #8
 cells.len()=2
 cells.Any()
 Values 2 and 6 in row #8 are in cells (8, 5) and (8, 6).
 2, 6 cannot appear in (8, 1).
 2, 6 cannot appear in (8, 3).
-group=block (3, 2)
+cell_group2=block (3, 2)
 cells.len()=1
 cells.Any()
 Values 2 and 6 in block (3, 2) are in cells (8, 5) and (8, 6).
 2, 6 cannot appear in (9, 6).
 step_change_made=true
 cellGroups.Count: 27 mask: 33
-groups.Count()=2
-group=row #8
+cell_group2s.Count()=2
+cell_group2=row #8
 Cells is empty 51
-group=block (3, 2)
+cell_group2=block (3, 2)
 Cells is empty 51
 step_change_made=true
 38. change_made: false
@@ -22206,8 +22206,8 @@ groups is empty
 cellGroups.Count: 27 mask: 130
 groups is empty
 cellGroups.Count: 27 mask: 34
-groups.Count()=1
-group=row #8
+cell_group2s.Count()=1
+cell_group2=row #8
 cells.len()=2
 cells.Any()
 Values 2 and 6 in row #8 are in cells (8, 5) and (8, 6).
@@ -22215,8 +22215,8 @@ Values 2 and 6 in row #8 are in cells (8, 5) and (8, 6).
 2, 6 cannot appear in (8, 3).
 step_change_made=true
 cellGroups.Count: 27 mask: 33
-groups.Count()=1
-group=row #8
+cell_group2s.Count()=1
+cell_group2=row #8
 Cells is empty 51
 step_change_made=true
 38. change_made: false
@@ -22309,8 +22309,8 @@ groups is empty
 cellGroups.Count: 27 mask: 68
 groups is empty
 cellGroups.Count: 27 mask: 34
-groups.Count()=1
-group=row #8
+cell_group2s.Count()=1
+cell_group2=row #8
 cells.len()=2
 cells.Any()
 Values 2 and 6 in row #8 are in cells (8, 5) and (8, 6).
@@ -22318,8 +22318,8 @@ Values 2 and 6 in row #8 are in cells (8, 5) and (8, 6).
 2, 6 cannot appear in (8, 3).
 step_change_made=true
 cellGroups.Count: 27 mask: 33
-groups.Count()=1
-group=row #8
+cell_group2s.Count()=1
+cell_group2=row #8
 Cells is empty 51
 step_change_made=true
 38. change_made: false
@@ -23294,49 +23294,49 @@ two_digit_masks=[264, 68, 136, 80, 320]
 cellGroups.Count: 27 mask: 264
 groups is empty
 cellGroups.Count: 27 mask: 68
-groups.Count()=3
-group=row #8
+cell_group2s.Count()=3
+cell_group2=row #8
 cells.len()=2
 cells.Any()
 Values 3 and 7 in row #8 are in cells (8, 3) and (8, 4).
 3 cannot appear in (8, 5).
 3, 7 cannot appear in (8, 7).
-group=block (3, 2)
+cell_group2=block (3, 2)
 cells.len()=1
 cells.Any()
 Values 3 and 7 in block (3, 2) are in cells (8, 4) and (9, 4).
 3 cannot appear in (9, 5).
-group=block (3, 3)
+cell_group2=block (3, 3)
 cells.len()=1
 cells.Any()
 Values 3 and 7 in block (3, 3) are in cells (7, 7) and (7, 9).
 3, 7 cannot appear in (9, 7).
 step_change_made=true
 cellGroups.Count: 27 mask: 136
-groups.Count()=3
-group=row #8
+cell_group2s.Count()=3
+cell_group2=row #8
 Cells is empty 51
-group=block (3, 2)
+cell_group2=block (3, 2)
 Cells is empty 51
-group=block (3, 3)
+cell_group2=block (3, 3)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 80
-groups.Count()=3
-group=row #8
+cell_group2s.Count()=3
+cell_group2=row #8
 Cells is empty 51
-group=block (3, 2)
+cell_group2=block (3, 2)
 Cells is empty 51
-group=block (3, 3)
+cell_group2=block (3, 3)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 320
-groups.Count()=3
-group=row #8
+cell_group2s.Count()=3
+cell_group2=row #8
 Cells is empty 51
-group=block (3, 2)
+cell_group2=block (3, 2)
 Cells is empty 51
-group=block (3, 3)
+cell_group2=block (3, 3)
 Cells is empty 51
 step_change_made=true
 38. change_made: false
@@ -24277,8 +24277,8 @@ two_digit_masks=[320, 80, 48, 72]
 cellGroups.Count: 27 mask: 320
 groups is empty
 cellGroups.Count: 27 mask: 80
-groups.Count()=1
-group=column #1
+cell_group2s.Count()=1
+cell_group2=column #1
 cells.len()=2
 cells.Any()
 Values 5 and 7 in column #1 are in cells (4, 1) and (5, 1).
@@ -24286,13 +24286,13 @@ Values 5 and 7 in column #1 are in cells (4, 1) and (5, 1).
 7 cannot appear in (9, 1).
 step_change_made=true
 cellGroups.Count: 27 mask: 48
-groups.Count()=1
-group=column #1
+cell_group2s.Count()=1
+cell_group2=column #1
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 72
-groups.Count()=1
-group=column #1
+cell_group2s.Count()=1
+cell_group2=column #1
 Cells is empty 51
 step_change_made=true
 38. change_made: false
@@ -24333,8 +24333,8 @@ groups is empty
 cellGroups.Count: 27 mask: 129
 groups is empty
 cellGroups.Count: 27 mask: 80
-groups.Count()=1
-group=column #1
+cell_group2s.Count()=1
+cell_group2=column #1
 cells.len()=2
 cells.Any()
 Values 5 and 7 in column #1 are in cells (4, 1) and (5, 1).
@@ -24342,13 +24342,13 @@ Values 5 and 7 in column #1 are in cells (4, 1) and (5, 1).
 7 cannot appear in (9, 1).
 step_change_made=true
 cellGroups.Count: 27 mask: 48
-groups.Count()=1
-group=column #1
+cell_group2s.Count()=1
+cell_group2=column #1
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 72
-groups.Count()=1
-group=column #1
+cell_group2s.Count()=1
+cell_group2=column #1
 Cells is empty 51
 step_change_made=true
 38. change_made: false
@@ -24423,8 +24423,8 @@ groups is empty
 cellGroups.Count: 27 mask: 80
 groups is empty
 cellGroups.Count: 27 mask: 48
-groups.Count()=1
-group=column #6
+cell_group2s.Count()=1
+cell_group2=column #6
 cells.len()=4
 cells.Any()
 Values 5 and 6 in column #6 are in cells (6, 6) and (9, 6).
@@ -24434,13 +24434,13 @@ Values 5 and 6 in column #6 are in cells (6, 6) and (9, 6).
 5 cannot appear in (8, 6).
 step_change_made=true
 cellGroups.Count: 27 mask: 272
-groups.Count()=1
-group=column #6
+cell_group2s.Count()=1
+cell_group2=column #6
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 96
-groups.Count()=1
-group=column #6
+cell_group2s.Count()=1
+cell_group2=column #6
 Cells is empty 51
 step_change_made=true
 38. change_made: false
@@ -26028,8 +26028,8 @@ Code: 14327.8.6759861324286.341.7872156...9143276853654987124.861..7.5917432686.
 48. change_made: false
 two_digit_masks=[272, 264, 260, 6]
 cellGroups.Count: 27 mask: 272
-groups.Count()=1
-group=column #8
+cell_group2s.Count()=1
+cell_group2=column #8
 cells.len()=2
 cells.Any()
 Values 5 and 9 in column #8 are in cells (1, 8) and (3, 8).
@@ -26037,18 +26037,18 @@ Values 5 and 9 in column #8 are in cells (1, 8) and (3, 8).
 5, 9 cannot appear in (9, 8).
 step_change_made=true
 cellGroups.Count: 27 mask: 264
-groups.Count()=1
-group=column #8
+cell_group2s.Count()=1
+cell_group2=column #8
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 260
-groups.Count()=1
-group=column #8
+cell_group2s.Count()=1
+cell_group2=column #8
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 6
-groups.Count()=1
-group=column #8
+cell_group2s.Count()=1
+cell_group2=column #8
 Cells is empty 51
 step_change_made=true
 38. change_made: false
@@ -26893,14 +26893,14 @@ two_digit_masks=[17, 129, 192, 130, 257]
 cellGroups.Count: 27 mask: 17
 groups is empty
 cellGroups.Count: 27 mask: 129
-groups.Count()=2
-group=column #8
+cell_group2s.Count()=2
+cell_group2=column #8
 cells.len()=2
 cells.Any()
 Values 1 and 8 in column #8 are in cells (3, 8) and (4, 8).
 1, 8 cannot appear in (7, 8).
 8 cannot appear in (8, 8).
-group=block (2, 3)
+cell_group2=block (2, 3)
 cells.len()=3
 cells.Any()
 Values 1 and 8 in block (2, 3) are in cells (4, 8) and (4, 9).
@@ -26909,24 +26909,24 @@ Values 1 and 8 in block (2, 3) are in cells (4, 8) and (4, 9).
 1 cannot appear in (6, 9).
 step_change_made=true
 cellGroups.Count: 27 mask: 192
-groups.Count()=2
-group=column #8
+cell_group2s.Count()=2
+cell_group2=column #8
 Cells is empty 51
-group=block (2, 3)
+cell_group2=block (2, 3)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 130
-groups.Count()=2
-group=column #8
+cell_group2s.Count()=2
+cell_group2=column #8
 Cells is empty 51
-group=block (2, 3)
+cell_group2=block (2, 3)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 257
-groups.Count()=2
-group=column #8
+cell_group2s.Count()=2
+cell_group2=column #8
 Cells is empty 51
-group=block (2, 3)
+cell_group2=block (2, 3)
 Cells is empty 51
 step_change_made=true
 38. change_made: false
@@ -26941,24 +26941,24 @@ groups is empty
 cellGroups.Count: 27 mask: 192
 groups is empty
 cellGroups.Count: 27 mask: 12
-groups.Count()=1
-group=block (3, 3)
+cell_group2s.Count()=1
+cell_group2=block (3, 3)
 cells.len()=1
 cells.Any()
 Values 3 and 4 in block (3, 3) are in cells (7, 8) and (8, 8).
 4 cannot appear in (8, 9).
 step_change_made=true
 cellGroups.Count: 27 mask: 130
-groups.Count()=3
-group=row #8
+cell_group2s.Count()=3
+cell_group2=row #8
 cells.len()=2
 cells.Any()
 Values 2 and 8 in row #8 are in cells (8, 7) and (8, 9).
 8 cannot appear in (8, 3).
 8 cannot appear in (8, 5).
-group=block (3, 3)
+cell_group2=block (3, 3)
 Cells is empty 51
-group=block (3, 3)
+cell_group2=block (3, 3)
 cells.len()=2
 cells.Any()
 Values 2 and 8 in block (3, 3) are in cells (8, 7) and (8, 9).
@@ -26966,22 +26966,22 @@ Values 2 and 8 in block (3, 3) are in cells (8, 7) and (8, 9).
 8 cannot appear in (9, 7).
 step_change_made=true
 cellGroups.Count: 27 mask: 257
-groups.Count()=5
-group=row #8
+cell_group2s.Count()=5
+cell_group2=row #8
 Cells is empty 51
-group=row #9
+cell_group2=row #9
 cells.len()=1
 cells.Any()
 Values 1 and 9 in row #9 are in cells (9, 2) and (9, 7).
 1, 9 cannot appear in (9, 1).
-group=column #7
+cell_group2=column #7
 cells.len()=1
 cells.Any()
 Values 1 and 9 in column #7 are in cells (7, 7) and (9, 7).
 9 cannot appear in (5, 7).
-group=block (3, 3)
+cell_group2=block (3, 3)
 Cells is empty 51
-group=block (3, 3)
+cell_group2=block (3, 3)
 Cells is empty 51
 step_change_made=true
 (5, 7) can only contain 2.
@@ -27142,13 +27142,13 @@ two_digit_masks=[17, 129, 257, 12]
 cellGroups.Count: 27 mask: 17
 groups is empty
 cellGroups.Count: 27 mask: 129
-groups.Count()=2
-group=column #8
+cell_group2s.Count()=2
+cell_group2=column #8
 cells.len()=1
 cells.Any()
 Values 1 and 8 in column #8 are in cells (3, 8) and (4, 8).
 1 cannot appear in (7, 8).
-group=block (2, 3)
+cell_group2=block (2, 3)
 cells.len()=2
 cells.Any()
 Values 1 and 8 in block (2, 3) are in cells (4, 8) and (4, 9).
@@ -27156,17 +27156,17 @@ Values 1 and 8 in block (2, 3) are in cells (4, 8) and (4, 9).
 1 cannot appear in (6, 9).
 step_change_made=true
 cellGroups.Count: 27 mask: 257
-groups.Count()=2
-group=column #8
+cell_group2s.Count()=2
+cell_group2=column #8
 Cells is empty 51
-group=block (2, 3)
+cell_group2=block (2, 3)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 12
-groups.Count()=2
-group=column #8
+cell_group2s.Count()=2
+cell_group2=column #8
 Cells is empty 51
-group=block (2, 3)
+cell_group2=block (2, 3)
 Cells is empty 51
 step_change_made=true
 38. change_made: false
@@ -27252,8 +27252,8 @@ two_digit_masks=[17, 257, 12]
 cellGroups.Count: 27 mask: 17
 groups is empty
 cellGroups.Count: 27 mask: 257
-groups.Count()=1
-group=column #2
+cell_group2s.Count()=1
+cell_group2=column #2
 cells.len()=2
 cells.Any()
 Values 1 and 9 in column #2 are in cells (5, 2) and (9, 2).
@@ -27261,8 +27261,8 @@ Values 1 and 9 in column #2 are in cells (5, 2) and (9, 2).
 1, 9 cannot appear in (7, 2).
 step_change_made=true
 cellGroups.Count: 27 mask: 12
-groups.Count()=1
-group=column #2
+cell_group2s.Count()=1
+cell_group2=column #2
 Cells is empty 51
 step_change_made=true
 38. change_made: false
@@ -29303,15 +29303,15 @@ Code: 15..8...7.4...18.3.38.9.1..3.1.......2.93..1..9.128.349.35..2..2..8.93.5..
 48. change_made: false
 two_digit_masks=[96, 34, 160]
 cellGroups.Count: 27 mask: 96
-groups.Count()=2
-group=column #1
+cell_group2s.Count()=2
+cell_group2=column #1
 cells.len()=3
 cells.Any()
 Values 6 and 7 in column #1 are in cells (2, 1) and (3, 1).
 6, 7 cannot appear in (5, 1).
 6, 7 cannot appear in (6, 1).
 6, 7 cannot appear in (9, 1).
-group=block (1, 1)
+cell_group2=block (1, 1)
 cells.len()=2
 cells.Any()
 Values 6 and 7 in block (1, 1) are in cells (2, 1) and (3, 1).
@@ -29319,17 +29319,17 @@ Values 6 and 7 in block (1, 1) are in cells (2, 1) and (3, 1).
 6, 7 cannot appear in (2, 3).
 step_change_made=true
 cellGroups.Count: 27 mask: 34
-groups.Count()=2
-group=column #1
+cell_group2s.Count()=2
+cell_group2=column #1
 Cells is empty 51
-group=block (1, 1)
+cell_group2=block (1, 1)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 160
-groups.Count()=2
-group=column #1
+cell_group2s.Count()=2
+cell_group2=column #1
 Cells is empty 51
-group=block (1, 1)
+cell_group2=block (1, 1)
 Cells is empty 51
 step_change_made=true
 (6, 1) can only contain 5.
@@ -29355,14 +29355,14 @@ Code: 15..8...7.4...18.3.38.9.1..3.1.......2.93..1.59.128.349.35..2..2..8.93.5..
 48. change_made: false
 two_digit_masks=[96, 34, 160]
 cellGroups.Count: 27 mask: 96
-groups.Count()=2
-group=column #1
+cell_group2s.Count()=2
+cell_group2=column #1
 cells.len()=2
 cells.Any()
 Values 6 and 7 in column #1 are in cells (2, 1) and (3, 1).
 6, 7 cannot appear in (5, 1).
 6, 7 cannot appear in (9, 1).
-group=block (1, 1)
+cell_group2=block (1, 1)
 cells.len()=2
 cells.Any()
 Values 6 and 7 in block (1, 1) are in cells (2, 1) and (3, 1).
@@ -29370,17 +29370,17 @@ Values 6 and 7 in block (1, 1) are in cells (2, 1) and (3, 1).
 6, 7 cannot appear in (2, 3).
 step_change_made=true
 cellGroups.Count: 27 mask: 34
-groups.Count()=2
-group=column #1
+cell_group2s.Count()=2
+cell_group2=column #1
 Cells is empty 51
-group=block (1, 1)
+cell_group2=block (1, 1)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 160
-groups.Count()=2
-group=column #1
+cell_group2s.Count()=2
+cell_group2=column #1
 Cells is empty 51
-group=block (1, 1)
+cell_group2=block (1, 1)
 Cells is empty 51
 step_change_made=true
 38. change_made: false
@@ -29511,28 +29511,28 @@ Code: 15..8...7.4...18.3.38.9.1..381......42.93..1859.128.349.35..28.2.48.93.58.
 48. change_made: false
 two_digit_masks=[96, 34, 33]
 cellGroups.Count: 27 mask: 96
-groups.Count()=2
-group=column #3
+cell_group2s.Count()=2
+cell_group2=column #3
 cells.len()=2
 cells.Any()
 Values 6 and 7 in column #3 are in cells (5, 3) and (6, 3).
 6 cannot appear in (1, 3).
 6, 7 cannot appear in (2, 3).
-group=block (1, 1)
+cell_group2=block (1, 1)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 34
-groups.Count()=2
-group=column #3
+cell_group2s.Count()=2
+cell_group2=column #3
 Cells is empty 51
-group=block (1, 1)
+cell_group2=block (1, 1)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 33
-groups.Count()=2
-group=column #3
+cell_group2s.Count()=2
+cell_group2=column #3
 Cells is empty 51
-group=block (1, 1)
+cell_group2=block (1, 1)
 Cells is empty 51
 step_change_made=true
 38. change_made: false
@@ -29723,18 +29723,18 @@ groups is empty
 cellGroups.Count: 27 mask: 24
 groups is empty
 cellGroups.Count: 27 mask: 80
-groups.Count()=1
-group=column #7
+cell_group2s.Count()=1
+cell_group2=column #7
 cells.len()=1
 cells.Any()
 Values 5 and 7 in column #7 are in cells (4, 7) and (5, 7).
 7 cannot appear in (9, 7).
 step_change_made=true
 cellGroups.Count: 27 mask: 33
-groups.Count()=2
-group=column #7
+cell_group2s.Count()=2
+cell_group2=column #7
 Cells is empty 51
-group=block (3, 3)
+cell_group2=block (3, 3)
 cells.len()=2
 cells.Any()
 Values 1 and 6 in block (3, 3) are in cells (7, 9) and (9, 9).
@@ -29742,10 +29742,10 @@ Values 1 and 6 in block (3, 3) are in cells (7, 9) and (9, 9).
 6 cannot appear in (9, 8).
 step_change_made=true
 cellGroups.Count: 27 mask: 96
-groups.Count()=2
-group=column #7
+cell_group2s.Count()=2
+cell_group2=column #7
 Cells is empty 51
-group=block (3, 3)
+cell_group2=block (3, 3)
 Cells is empty 51
 step_change_made=true
 (8, 8) can only contain 7.
@@ -29785,8 +29785,8 @@ groups is empty
 cellGroups.Count: 27 mask: 80
 groups is empty
 cellGroups.Count: 27 mask: 33
-groups.Count()=1
-group=block (3, 3)
+cell_group2s.Count()=1
+cell_group2=block (3, 3)
 cells.len()=1
 cells.Any()
 Values 1 and 6 in block (3, 3) are in cells (7, 9) and (9, 9).
@@ -29798,8 +29798,8 @@ two_digit_masks=[258, 264, 34, 48, 72, 24, 80, 33]
 cellGroups.Count: 27 mask: 258
 groups is empty
 cellGroups.Count: 27 mask: 264
-groups.Count()=1
-group=row #9
+cell_group2s.Count()=1
+cell_group2=row #9
 cells.len()=3
 cells.Any()
 Values 4 and 9 in row #9 are in cells (9, 7) and (9, 8).
@@ -29808,33 +29808,33 @@ Values 4 and 9 in row #9 are in cells (9, 7) and (9, 8).
 4 cannot appear in (9, 6).
 step_change_made=true
 cellGroups.Count: 27 mask: 34
-groups.Count()=1
-group=row #9
+cell_group2s.Count()=1
+cell_group2=row #9
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 48
-groups.Count()=1
-group=row #9
+cell_group2s.Count()=1
+cell_group2=row #9
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 72
-groups.Count()=1
-group=row #9
+cell_group2s.Count()=1
+cell_group2=row #9
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 24
-groups.Count()=1
-group=row #9
+cell_group2s.Count()=1
+cell_group2=row #9
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 80
-groups.Count()=1
-group=row #9
+cell_group2s.Count()=1
+cell_group2=row #9
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 33
-groups.Count()=1
-group=row #9
+cell_group2s.Count()=1
+cell_group2=row #9
 Cells is empty 51
 step_change_made=true
 38. change_made: false
@@ -32427,45 +32427,45 @@ groups is empty
 cellGroups.Count: 27 mask: 17
 groups is empty
 cellGroups.Count: 27 mask: 40
-groups.Count()=1
-group=row #3
+cell_group2s.Count()=1
+cell_group2=row #3
 cells.len()=1
 cells.Any()
 Values 4 and 6 in row #3 are in cells (3, 4) and (3, 6).
 4 cannot appear in (3, 1).
 step_change_made=true
 cellGroups.Count: 27 mask: 288
-groups.Count()=1
-group=row #3
+cell_group2s.Count()=1
+cell_group2=row #3
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 10
-groups.Count()=1
-group=row #3
+cell_group2s.Count()=1
+cell_group2=row #3
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 96
-groups.Count()=2
-group=row #3
+cell_group2s.Count()=2
+cell_group2=row #3
 Cells is empty 51
-group=row #7
+cell_group2=row #7
 cells.len()=1
 cells.Any()
 Values 6 and 7 in row #7 are in cells (7, 1) and (7, 2).
 6 cannot appear in (7, 4).
 step_change_made=true
 cellGroups.Count: 27 mask: 9
-groups.Count()=2
-group=row #3
+cell_group2s.Count()=2
+cell_group2=row #3
 Cells is empty 51
-group=row #7
+cell_group2=row #7
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 264
-groups.Count()=2
-group=row #3
+cell_group2s.Count()=2
+cell_group2=row #3
 Cells is empty 51
-group=row #7
+cell_group2=row #7
 Cells is empty 51
 step_change_made=true
 38. change_made: false
@@ -32585,26 +32585,26 @@ groups is empty
 cellGroups.Count: 27 mask: 17
 groups is empty
 cellGroups.Count: 27 mask: 40
-groups.Count()=1
-group=row #3
+cell_group2s.Count()=1
+cell_group2=row #3
 cells.len()=1
 cells.Any()
 Values 4 and 6 in row #3 are in cells (3, 4) and (3, 6).
 4 cannot appear in (3, 1).
 step_change_made=true
 cellGroups.Count: 27 mask: 10
-groups.Count()=1
-group=row #3
+cell_group2s.Count()=1
+cell_group2=row #3
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 9
-groups.Count()=1
-group=row #3
+cell_group2s.Count()=1
+cell_group2=row #3
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 264
-groups.Count()=1
-group=row #3
+cell_group2s.Count()=1
+cell_group2=row #3
 Cells is empty 51
 step_change_made=true
 38. change_made: false
@@ -33473,8 +33473,8 @@ groups is empty
 cellGroups.Count: 27 mask: 257
 groups is empty
 cellGroups.Count: 27 mask: 96
-groups.Count()=1
-group=block (3, 1)
+cell_group2s.Count()=1
+cell_group2=block (3, 1)
 cells.len()=2
 cells.Any()
 Values 6 and 7 in block (3, 1) are in cells (8, 2) and (9, 3).
@@ -33542,8 +33542,8 @@ groups is empty
 cellGroups.Count: 27 mask: 40
 groups is empty
 cellGroups.Count: 27 mask: 96
-groups.Count()=1
-group=block (3, 1)
+cell_group2s.Count()=1
+cell_group2=block (3, 1)
 cells.len()=2
 cells.Any()
 Values 6 and 7 in block (3, 1) are in cells (8, 2) and (9, 3).
@@ -33621,21 +33621,21 @@ groups is empty
 cellGroups.Count: 27 mask: 36
 groups is empty
 cellGroups.Count: 27 mask: 9
-groups.Count()=1
-group=column #3
+cell_group2s.Count()=1
+cell_group2=column #3
 cells.len()=1
 cells.Any()
 Values 1 and 4 in column #3 are in cells (4, 3) and (5, 3).
 4 cannot appear in (2, 3).
 step_change_made=true
 cellGroups.Count: 27 mask: 40
-groups.Count()=1
-group=column #3
+cell_group2s.Count()=1
+cell_group2=column #3
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 96
-groups.Count()=1
-group=column #3
+cell_group2s.Count()=1
+cell_group2=column #3
 Cells is empty 51
 step_change_made=true
 38. change_made: false
@@ -33712,13 +33712,13 @@ two_digit_masks=[72, 264, 68, 36, 9, 40, 96, 160, 33]
 cellGroups.Count: 27 mask: 72
 groups is empty
 cellGroups.Count: 27 mask: 264
-groups.Count()=2
-group=column #7
+cell_group2s.Count()=2
+cell_group2=column #7
 cells.len()=1
 cells.Any()
 Values 4 and 9 in column #7 are in cells (1, 7) and (2, 7).
 4 cannot appear in (4, 7).
-group=block (1, 3)
+cell_group2=block (1, 3)
 cells.len()=2
 cells.Any()
 Values 4 and 9 in block (1, 3) are in cells (1, 7) and (2, 7).
@@ -33726,52 +33726,52 @@ Values 4 and 9 in block (1, 3) are in cells (1, 7) and (2, 7).
 4 cannot appear in (2, 8).
 step_change_made=true
 cellGroups.Count: 27 mask: 68
-groups.Count()=2
-group=column #7
+cell_group2s.Count()=2
+cell_group2=column #7
 Cells is empty 51
-group=block (1, 3)
+cell_group2=block (1, 3)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 36
-groups.Count()=2
-group=column #7
+cell_group2s.Count()=2
+cell_group2=column #7
 Cells is empty 51
-group=block (1, 3)
+cell_group2=block (1, 3)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 9
-groups.Count()=2
-group=column #7
+cell_group2s.Count()=2
+cell_group2=column #7
 Cells is empty 51
-group=block (1, 3)
+cell_group2=block (1, 3)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 40
-groups.Count()=2
-group=column #7
+cell_group2s.Count()=2
+cell_group2=column #7
 Cells is empty 51
-group=block (1, 3)
+cell_group2=block (1, 3)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 96
-groups.Count()=2
-group=column #7
+cell_group2s.Count()=2
+cell_group2=column #7
 Cells is empty 51
-group=block (1, 3)
+cell_group2=block (1, 3)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 160
-groups.Count()=2
-group=column #7
+cell_group2s.Count()=2
+cell_group2=column #7
 Cells is empty 51
-group=block (1, 3)
+cell_group2=block (1, 3)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 33
-groups.Count()=2
-group=column #7
+cell_group2s.Count()=2
+cell_group2=column #7
 Cells is empty 51
-group=block (1, 3)
+cell_group2=block (1, 3)
 Cells is empty 51
 step_change_made=true
 38. change_made: false
@@ -33839,8 +33839,8 @@ two_digit_masks=[72, 264, 68, 36, 9, 40, 96, 192, 66, 33]
 cellGroups.Count: 27 mask: 72
 groups is empty
 cellGroups.Count: 27 mask: 264
-groups.Count()=1
-group=block (1, 3)
+cell_group2s.Count()=1
+cell_group2=block (1, 3)
 cells.len()=2
 cells.Any()
 Values 4 and 9 in block (1, 3) are in cells (1, 7) and (2, 7).
@@ -33848,43 +33848,43 @@ Values 4 and 9 in block (1, 3) are in cells (1, 7) and (2, 7).
 4 cannot appear in (2, 8).
 step_change_made=true
 cellGroups.Count: 27 mask: 68
-groups.Count()=1
-group=block (1, 3)
+cell_group2s.Count()=1
+cell_group2=block (1, 3)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 36
-groups.Count()=1
-group=block (1, 3)
+cell_group2s.Count()=1
+cell_group2=block (1, 3)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 9
-groups.Count()=1
-group=block (1, 3)
+cell_group2s.Count()=1
+cell_group2=block (1, 3)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 40
-groups.Count()=1
-group=block (1, 3)
+cell_group2s.Count()=1
+cell_group2=block (1, 3)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 96
-groups.Count()=1
-group=block (1, 3)
+cell_group2s.Count()=1
+cell_group2=block (1, 3)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 192
-groups.Count()=1
-group=block (1, 3)
+cell_group2s.Count()=1
+cell_group2=block (1, 3)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 66
-groups.Count()=1
-group=block (1, 3)
+cell_group2s.Count()=1
+cell_group2=block (1, 3)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 33
-groups.Count()=1
-group=block (1, 3)
+cell_group2s.Count()=1
+cell_group2=block (1, 3)
 Cells is empty 51
 step_change_made=true
 38. change_made: false
@@ -37497,45 +37497,45 @@ Code: 1.32...6...836..71..61...2368.5..3.77.1936.4..3.8..6...6275318.3.7.8..5.8.
 48. change_made: false
 two_digit_masks=[264, 257, 18, 40]
 cellGroups.Count: 27 mask: 264
-groups.Count()=1
-group=block (2, 1)
+cell_group2s.Count()=1
+cell_group2=block (2, 1)
 cells.len()=1
 cells.Any()
 Values 4 and 9 in block (2, 1) are in cells (4, 3) and (6, 3).
 4, 9 cannot appear in (6, 1).
 step_change_made=true
 cellGroups.Count: 27 mask: 257
-groups.Count()=2
-group=block (2, 1)
+cell_group2s.Count()=2
+cell_group2=block (2, 1)
 Cells is empty 51
-group=block (2, 3)
+cell_group2=block (2, 3)
 cells.len()=1
 cells.Any()
 Values 1 and 9 in block (2, 3) are in cells (4, 8) and (6, 8).
 9 cannot appear in (6, 9).
 step_change_made=true
 cellGroups.Count: 27 mask: 18
-groups.Count()=3
-group=row #6
+cell_group2s.Count()=3
+cell_group2=row #6
 cells.len()=2
 cells.Any()
 Values 2 and 5 in row #6 are in cells (6, 1) and (6, 9).
 2 cannot appear in (6, 5).
 2 cannot appear in (6, 6).
-group=block (2, 1)
+cell_group2=block (2, 1)
 Cells is empty 51
-group=block (2, 3)
+cell_group2=block (2, 3)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 40
-groups.Count()=4
-group=row #6
+cell_group2s.Count()=4
+cell_group2=row #6
 Cells is empty 51
-group=block (2, 1)
+cell_group2=block (2, 1)
 Cells is empty 51
-group=block (2, 3)
+cell_group2=block (2, 3)
 Cells is empty 51
-group=block (3, 2)
+cell_group2=block (3, 2)
 cells.len()=3
 cells.Any()
 Values 4 and 6 in block (3, 2) are in cells (8, 4) and (9, 4).
@@ -37577,47 +37577,47 @@ two_digit_masks=[272, 264, 257, 18, 40, 10]
 cellGroups.Count: 27 mask: 272
 groups is empty
 cellGroups.Count: 27 mask: 264
-groups.Count()=1
-group=block (2, 1)
+cell_group2s.Count()=1
+cell_group2=block (2, 1)
 cells.len()=1
 cells.Any()
 Values 4 and 9 in block (2, 1) are in cells (4, 3) and (6, 3).
 9 cannot appear in (6, 1).
 step_change_made=true
 cellGroups.Count: 27 mask: 257
-groups.Count()=2
-group=column #2
+cell_group2s.Count()=2
+cell_group2=column #2
 cells.len()=3
 cells.Any()
 Values 1 and 9 in column #2 are in cells (8, 2) and (9, 2).
 9 cannot appear in (1, 2).
 9 cannot appear in (2, 2).
 9 cannot appear in (3, 2).
-group=block (2, 1)
+cell_group2=block (2, 1)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 18
-groups.Count()=3
-group=row #6
+cell_group2s.Count()=3
+cell_group2=row #6
 cells.len()=2
 cells.Any()
 Values 2 and 5 in row #6 are in cells (6, 1) and (6, 9).
 2 cannot appear in (6, 5).
 2 cannot appear in (6, 6).
-group=column #2
+cell_group2=column #2
 Cells is empty 51
-group=block (2, 1)
+cell_group2=block (2, 1)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 40
-groups.Count()=4
-group=row #6
+cell_group2s.Count()=4
+cell_group2=row #6
 Cells is empty 51
-group=column #2
+cell_group2=column #2
 Cells is empty 51
-group=block (2, 1)
+cell_group2=block (2, 1)
 Cells is empty 51
-group=block (3, 2)
+cell_group2=block (3, 2)
 cells.len()=3
 cells.Any()
 Values 4 and 6 in block (3, 2) are in cells (8, 4) and (9, 4).
@@ -37626,14 +37626,14 @@ Values 4 and 6 in block (3, 2) are in cells (8, 4) and (9, 4).
 4 cannot appear in (9, 6).
 step_change_made=true
 cellGroups.Count: 27 mask: 10
-groups.Count()=4
-group=row #6
+cell_group2s.Count()=4
+cell_group2=row #6
 Cells is empty 51
-group=column #2
+cell_group2=column #2
 Cells is empty 51
-group=block (2, 1)
+cell_group2=block (2, 1)
 Cells is empty 51
-group=block (3, 2)
+cell_group2=block (3, 2)
 Cells is empty 51
 step_change_made=true
 38. change_made: false
@@ -37731,8 +37731,8 @@ two_digit_masks=[272, 3, 18, 257, 40, 10]
 cellGroups.Count: 27 mask: 272
 groups is empty
 cellGroups.Count: 27 mask: 3
-groups.Count()=1
-group=block (2, 2)
+cell_group2s.Count()=1
+cell_group2=block (2, 2)
 cells.len()=2
 cells.Any()
 Values 1 and 2 in block (2, 2) are in cells (4, 5) and (4, 6).
@@ -37740,29 +37740,29 @@ Values 1 and 2 in block (2, 2) are in cells (4, 5) and (4, 6).
 2 cannot appear in (6, 6).
 step_change_made=true
 cellGroups.Count: 27 mask: 18
-groups.Count()=1
-group=block (2, 2)
+cell_group2s.Count()=1
+cell_group2=block (2, 2)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 257
-groups.Count()=2
-group=column #2
+cell_group2s.Count()=2
+cell_group2=column #2
 cells.len()=3
 cells.Any()
 Values 1 and 9 in column #2 are in cells (8, 2) and (9, 2).
 9 cannot appear in (1, 2).
 9 cannot appear in (2, 2).
 9 cannot appear in (3, 2).
-group=block (2, 2)
+cell_group2=block (2, 2)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 40
-groups.Count()=3
-group=column #2
+cell_group2s.Count()=3
+cell_group2=column #2
 Cells is empty 51
-group=block (2, 2)
+cell_group2=block (2, 2)
 Cells is empty 51
-group=block (3, 2)
+cell_group2=block (3, 2)
 cells.len()=3
 cells.Any()
 Values 4 and 6 in block (3, 2) are in cells (8, 4) and (9, 4).
@@ -37771,12 +37771,12 @@ Values 4 and 6 in block (3, 2) are in cells (8, 4) and (9, 4).
 4 cannot appear in (9, 6).
 step_change_made=true
 cellGroups.Count: 27 mask: 10
-groups.Count()=3
-group=column #2
+cell_group2s.Count()=3
+cell_group2=column #2
 Cells is empty 51
-group=block (2, 2)
+cell_group2=block (2, 2)
 Cells is empty 51
-group=block (3, 2)
+cell_group2=block (3, 2)
 Cells is empty 51
 step_change_made=true
 38. change_made: false
@@ -37886,8 +37886,8 @@ two_digit_masks=[136, 272, 3, 130, 72, 257, 40, 10]
 cellGroups.Count: 27 mask: 136
 groups is empty
 cellGroups.Count: 27 mask: 272
-groups.Count()=1
-group=block (1, 1)
+cell_group2s.Count()=1
+cell_group2=block (1, 1)
 cells.len()=2
 cells.Any()
 Values 5 and 9 in block (1, 1) are in cells (2, 1) and (3, 1).
@@ -37895,30 +37895,30 @@ Values 5 and 9 in block (1, 1) are in cells (2, 1) and (3, 1).
 9 cannot appear in (3, 2).
 step_change_made=true
 cellGroups.Count: 27 mask: 3
-groups.Count()=1
-group=block (1, 1)
+cell_group2s.Count()=1
+cell_group2=block (1, 1)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 130
-groups.Count()=1
-group=block (1, 1)
+cell_group2s.Count()=1
+cell_group2=block (1, 1)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 72
-groups.Count()=1
-group=block (1, 1)
+cell_group2s.Count()=1
+cell_group2=block (1, 1)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 257
-groups.Count()=1
-group=block (1, 1)
+cell_group2s.Count()=1
+cell_group2=block (1, 1)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 40
-groups.Count()=2
-group=block (1, 1)
+cell_group2s.Count()=2
+cell_group2=block (1, 1)
 Cells is empty 51
-group=block (3, 2)
+cell_group2=block (3, 2)
 cells.len()=3
 cells.Any()
 Values 4 and 6 in block (3, 2) are in cells (8, 4) and (9, 4).
@@ -37927,10 +37927,10 @@ Values 4 and 6 in block (3, 2) are in cells (8, 4) and (9, 4).
 4 cannot appear in (9, 6).
 step_change_made=true
 cellGroups.Count: 27 mask: 10
-groups.Count()=2
-group=block (1, 1)
+cell_group2s.Count()=2
+cell_group2=block (1, 1)
 Cells is empty 51
-group=block (3, 2)
+cell_group2=block (3, 2)
 Cells is empty 51
 step_change_made=true
 38. change_made: false
@@ -38004,13 +38004,13 @@ Code: 1.32...6..2836..71..61...236845..397751936.4.2398476154627531893.7.8..5.8.
 48. change_made: false
 two_digit_masks=[320, 136, 272, 3, 130, 257, 40, 10]
 cellGroups.Count: 27 mask: 320
-groups.Count()=2
-group=column #5
+cell_group2s.Count()=2
+cell_group2=column #5
 cells.len()=1
 cells.Any()
 Values 7 and 9 in column #5 are in cells (1, 5) and (3, 5).
 9 cannot appear in (9, 5).
-group=block (1, 2)
+cell_group2=block (1, 2)
 cells.len()=3
 cells.Any()
 Values 7 and 9 in block (1, 2) are in cells (1, 5) and (3, 5).
@@ -38019,61 +38019,61 @@ Values 7 and 9 in block (1, 2) are in cells (1, 5) and (3, 5).
 9 cannot appear in (3, 6).
 step_change_made=true
 cellGroups.Count: 27 mask: 136
-groups.Count()=2
-group=column #5
+cell_group2s.Count()=2
+cell_group2=column #5
 Cells is empty 51
-group=block (1, 2)
+cell_group2=block (1, 2)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 272
-groups.Count()=3
-group=column #5
+cell_group2s.Count()=3
+cell_group2=column #5
 Cells is empty 51
-group=block (1, 1)
+cell_group2=block (1, 1)
 cells.len()=2
 cells.Any()
 Values 5 and 9 in block (1, 1) are in cells (2, 1) and (3, 1).
 9 cannot appear in (1, 2).
 9 cannot appear in (3, 2).
-group=block (1, 2)
+cell_group2=block (1, 2)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 3
-groups.Count()=3
-group=column #5
+cell_group2s.Count()=3
+cell_group2=column #5
 Cells is empty 51
-group=block (1, 1)
+cell_group2=block (1, 1)
 Cells is empty 51
-group=block (1, 2)
+cell_group2=block (1, 2)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 130
-groups.Count()=3
-group=column #5
+cell_group2s.Count()=3
+cell_group2=column #5
 Cells is empty 51
-group=block (1, 1)
+cell_group2=block (1, 1)
 Cells is empty 51
-group=block (1, 2)
+cell_group2=block (1, 2)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 257
-groups.Count()=3
-group=column #5
+cell_group2s.Count()=3
+cell_group2=column #5
 Cells is empty 51
-group=block (1, 1)
+cell_group2=block (1, 1)
 Cells is empty 51
-group=block (1, 2)
+cell_group2=block (1, 2)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 40
-groups.Count()=4
-group=column #5
+cell_group2s.Count()=4
+cell_group2=column #5
 Cells is empty 51
-group=block (1, 1)
+cell_group2=block (1, 1)
 Cells is empty 51
-group=block (1, 2)
+cell_group2=block (1, 2)
 Cells is empty 51
-group=block (3, 2)
+cell_group2=block (3, 2)
 cells.len()=2
 cells.Any()
 Values 4 and 6 in block (3, 2) are in cells (8, 4) and (9, 4).
@@ -38081,14 +38081,14 @@ Values 4 and 6 in block (3, 2) are in cells (8, 4) and (9, 4).
 4 cannot appear in (9, 6).
 step_change_made=true
 cellGroups.Count: 27 mask: 10
-groups.Count()=4
-group=column #5
+cell_group2s.Count()=4
+cell_group2=column #5
 Cells is empty 51
-group=block (1, 1)
+cell_group2=block (1, 1)
 Cells is empty 51
-group=block (1, 2)
+cell_group2=block (1, 2)
 Cells is empty 51
-group=block (3, 2)
+cell_group2=block (3, 2)
 Cells is empty 51
 step_change_made=true
 38. change_made: false
@@ -38181,8 +38181,8 @@ Code: 1.32...6..2836..71..61...23684512397751936.4.2398476154627531893.7.8..5.8.
 48. change_made: false
 two_digit_masks=[320, 136, 272, 130, 257, 40, 10]
 cellGroups.Count: 27 mask: 320
-groups.Count()=1
-group=block (1, 2)
+cell_group2s.Count()=1
+cell_group2=block (1, 2)
 cells.len()=3
 cells.Any()
 Values 7 and 9 in block (1, 2) are in cells (1, 5) and (3, 5).
@@ -38191,61 +38191,61 @@ Values 7 and 9 in block (1, 2) are in cells (1, 5) and (3, 5).
 9 cannot appear in (3, 6).
 step_change_made=true
 cellGroups.Count: 27 mask: 136
-groups.Count()=1
-group=block (1, 2)
+cell_group2s.Count()=1
+cell_group2=block (1, 2)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 272
-groups.Count()=2
-group=block (1, 1)
+cell_group2s.Count()=2
+cell_group2=block (1, 1)
 cells.len()=2
 cells.Any()
 Values 5 and 9 in block (1, 1) are in cells (2, 1) and (3, 1).
 9 cannot appear in (1, 2).
 9 cannot appear in (3, 2).
-group=block (1, 2)
+cell_group2=block (1, 2)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 130
-groups.Count()=2
-group=block (1, 1)
+cell_group2s.Count()=2
+cell_group2=block (1, 1)
 Cells is empty 51
-group=block (1, 2)
+cell_group2=block (1, 2)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 257
-groups.Count()=2
-group=block (1, 1)
+cell_group2s.Count()=2
+cell_group2=block (1, 1)
 Cells is empty 51
-group=block (1, 2)
+cell_group2=block (1, 2)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 40
-groups.Count()=4
-group=row #9
+cell_group2s.Count()=4
+cell_group2=row #9
 cells.len()=1
 cells.Any()
 Values 4 and 6 in row #9 are in cells (9, 4) and (9, 9).
 4 cannot appear in (9, 6).
-group=block (1, 1)
+cell_group2=block (1, 1)
 Cells is empty 51
-group=block (1, 2)
+cell_group2=block (1, 2)
 Cells is empty 51
-group=block (3, 2)
+cell_group2=block (3, 2)
 cells.len()=1
 cells.Any()
 Values 4 and 6 in block (3, 2) are in cells (8, 4) and (9, 4).
 4 cannot appear in (8, 6).
 step_change_made=true
 cellGroups.Count: 27 mask: 10
-groups.Count()=4
-group=row #9
+cell_group2s.Count()=4
+cell_group2=row #9
 Cells is empty 51
-group=block (1, 1)
+cell_group2=block (1, 1)
 Cells is empty 51
-group=block (1, 2)
+cell_group2=block (1, 2)
 Cells is empty 51
-group=block (3, 2)
+cell_group2=block (3, 2)
 Cells is empty 51
 step_change_made=true
 38. change_made: false
@@ -38340,23 +38340,23 @@ groups is empty
 cellGroups.Count: 27 mask: 257
 groups is empty
 cellGroups.Count: 27 mask: 40
-groups.Count()=2
-group=row #9
+cell_group2s.Count()=2
+cell_group2=row #9
 cells.len()=1
 cells.Any()
 Values 4 and 6 in row #9 are in cells (9, 4) and (9, 9).
 4 cannot appear in (9, 6).
-group=block (3, 2)
+cell_group2=block (3, 2)
 cells.len()=1
 cells.Any()
 Values 4 and 6 in block (3, 2) are in cells (8, 4) and (9, 4).
 4 cannot appear in (8, 6).
 step_change_made=true
 cellGroups.Count: 27 mask: 10
-groups.Count()=2
-group=row #9
+cell_group2s.Count()=2
+cell_group2=row #9
 Cells is empty 51
-group=block (3, 2)
+cell_group2=block (3, 2)
 Cells is empty 51
 step_change_made=true
 38. change_made: false
@@ -39474,31 +39474,31 @@ groups is empty
 cellGroups.Count: 27 mask: 80
 groups is empty
 cellGroups.Count: 27 mask: 257
-groups.Count()=1
-group=column #6
+cell_group2s.Count()=1
+cell_group2=column #6
 cells.len()=1
 cells.Any()
 Values 1 and 9 in column #6 are in cells (4, 6) and (6, 6).
 9 cannot appear in (1, 6).
 step_change_made=true
 cellGroups.Count: 27 mask: 320
-groups.Count()=1
-group=column #6
+cell_group2s.Count()=1
+cell_group2=column #6
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 40
-groups.Count()=1
-group=column #6
+cell_group2s.Count()=1
+cell_group2=column #6
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 72
-groups.Count()=1
-group=column #6
+cell_group2s.Count()=1
+cell_group2=column #6
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 96
-groups.Count()=1
-group=column #6
+cell_group2s.Count()=1
+cell_group2=column #6
 Cells is empty 51
 step_change_made=true
 38. change_made: false
@@ -41879,14 +41879,14 @@ Code: 18..435.9.3..9.....97.8.63...95....38539.6.....183.9567.54.93183.8...49591
 48. change_made: false
 two_digit_masks=[34, 66, 3, 10]
 cellGroups.Count: 27 mask: 34
-groups.Count()=2
-group=column #2
+cell_group2s.Count()=2
+cell_group2=column #2
 cells.len()=2
 cells.Any()
 Values 2 and 6 in column #2 are in cells (7, 2) and (8, 2).
 2, 6 cannot appear in (4, 2).
 2 cannot appear in (6, 2).
-group=block (1, 1)
+cell_group2=block (1, 1)
 cells.len()=2
 cells.Any()
 Values 2 and 6 in block (1, 1) are in cells (1, 3) and (2, 3).
@@ -41894,24 +41894,24 @@ Values 2 and 6 in block (1, 1) are in cells (1, 3) and (2, 3).
 2 cannot appear in (3, 1).
 step_change_made=true
 cellGroups.Count: 27 mask: 66
-groups.Count()=2
-group=column #2
+cell_group2s.Count()=2
+cell_group2=column #2
 Cells is empty 51
-group=block (1, 1)
+cell_group2=block (1, 1)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 3
-groups.Count()=2
-group=column #2
+cell_group2s.Count()=2
+cell_group2=column #2
 Cells is empty 51
-group=block (1, 1)
+cell_group2=block (1, 1)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 10
-groups.Count()=2
-group=column #2
+cell_group2s.Count()=2
+cell_group2=column #2
 Cells is empty 51
-group=block (1, 1)
+cell_group2=block (1, 1)
 Cells is empty 51
 step_change_made=true
 38. change_made: false
@@ -41937,14 +41937,14 @@ Code: 18..435.9.3..9.....97.8.63.6.95....38539.6.....183.9567.54.93183.8...49591
 48. change_made: false
 two_digit_masks=[34, 66, 3, 10]
 cellGroups.Count: 27 mask: 34
-groups.Count()=2
-group=column #2
+cell_group2s.Count()=2
+cell_group2=column #2
 cells.len()=2
 cells.Any()
 Values 2 and 6 in column #2 are in cells (7, 2) and (8, 2).
 2 cannot appear in (4, 2).
 2 cannot appear in (6, 2).
-group=block (1, 1)
+cell_group2=block (1, 1)
 cells.len()=2
 cells.Any()
 Values 2 and 6 in block (1, 1) are in cells (1, 3) and (2, 3).
@@ -41952,24 +41952,24 @@ Values 2 and 6 in block (1, 1) are in cells (1, 3) and (2, 3).
 2 cannot appear in (3, 1).
 step_change_made=true
 cellGroups.Count: 27 mask: 66
-groups.Count()=2
-group=column #2
+cell_group2s.Count()=2
+cell_group2=column #2
 Cells is empty 51
-group=block (1, 1)
+cell_group2=block (1, 1)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 3
-groups.Count()=2
-group=column #2
+cell_group2s.Count()=2
+cell_group2=column #2
 Cells is empty 51
-group=block (1, 1)
+cell_group2=block (1, 1)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 10
-groups.Count()=2
-group=column #2
+cell_group2s.Count()=2
+cell_group2=column #2
 Cells is empty 51
-group=block (1, 1)
+cell_group2=block (1, 1)
 Cells is empty 51
 step_change_made=true
 38. change_made: false
@@ -44548,8 +44548,8 @@ two_digit_masks=[384, 80, 17, 257, 320, 129]
 cellGroups.Count: 27 mask: 384
 groups is empty
 cellGroups.Count: 27 mask: 80
-groups.Count()=1
-group=column #3
+cell_group2s.Count()=1
+cell_group2=column #3
 cells.len()=2
 cells.Any()
 Values 5 and 7 in column #3 are in cells (2, 3) and (3, 3).
@@ -44557,20 +44557,20 @@ Values 5 and 7 in column #3 are in cells (2, 3) and (3, 3).
 7 cannot appear in (6, 3).
 step_change_made=true
 cellGroups.Count: 27 mask: 17
-groups.Count()=1
-group=column #3
+cell_group2s.Count()=1
+cell_group2=column #3
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 257
-groups.Count()=1
-group=column #3
+cell_group2s.Count()=1
+cell_group2=column #3
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 320
-groups.Count()=2
-group=column #3
+cell_group2s.Count()=2
+cell_group2=column #3
 Cells is empty 51
-group=column #7
+cell_group2=column #7
 cells.len()=2
 cells.Any()
 Values 7 and 9 in column #7 are in cells (5, 7) and (6, 7).
@@ -44578,10 +44578,10 @@ Values 7 and 9 in column #7 are in cells (5, 7) and (6, 7).
 9 cannot appear in (9, 7).
 step_change_made=true
 cellGroups.Count: 27 mask: 129
-groups.Count()=2
-group=column #3
+cell_group2s.Count()=2
+cell_group2=column #3
 Cells is empty 51
-group=column #7
+cell_group2=column #7
 Cells is empty 51
 step_change_made=true
 38. change_made: false
@@ -44746,21 +44746,21 @@ groups is empty
 cellGroups.Count: 27 mask: 130
 groups is empty
 cellGroups.Count: 27 mask: 257
-groups.Count()=1
-group=block (1, 3)
+cell_group2s.Count()=1
+cell_group2=block (1, 3)
 cells.len()=1
 cells.Any()
 Values 1 and 9 in block (1, 3) are in cells (3, 8) and (3, 9).
 9 cannot appear in (1, 9).
 step_change_made=true
 cellGroups.Count: 27 mask: 320
-groups.Count()=2
-group=column #7
+cell_group2s.Count()=2
+cell_group2=column #7
 cells.len()=1
 cells.Any()
 Values 7 and 9 in column #7 are in cells (5, 7) and (6, 7).
 9 cannot appear in (9, 7).
-group=block (1, 3)
+cell_group2=block (1, 3)
 Cells is empty 51
 step_change_made=true
 38. change_made: false
@@ -45513,8 +45513,8 @@ groups is empty
 cellGroups.Count: 27 mask: 18
 groups is empty
 cellGroups.Count: 27 mask: 12
-groups.Count()=1
-group=block (3, 3)
+cell_group2s.Count()=1
+cell_group2=block (3, 3)
 cells.len()=2
 cells.Any()
 Values 3 and 4 in block (3, 3) are in cells (9, 8) and (9, 9).
@@ -48812,8 +48812,8 @@ two_digit_masks=[132, 144, 6, 72, 10, 12, 136, 34, 24]
 cellGroups.Count: 27 mask: 132
 groups is empty
 cellGroups.Count: 27 mask: 144
-groups.Count()=1
-group=block (1, 1)
+cell_group2s.Count()=1
+cell_group2=block (1, 1)
 cells.len()=2
 cells.Any()
 Values 5 and 8 in block (1, 1) are in cells (2, 1) and (2, 2).
@@ -48821,38 +48821,38 @@ Values 5 and 8 in block (1, 1) are in cells (2, 1) and (2, 2).
 8 cannot appear in (3, 2).
 step_change_made=true
 cellGroups.Count: 27 mask: 6
-groups.Count()=1
-group=block (1, 1)
+cell_group2s.Count()=1
+cell_group2=block (1, 1)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 72
-groups.Count()=1
-group=block (1, 1)
+cell_group2s.Count()=1
+cell_group2=block (1, 1)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 10
-groups.Count()=1
-group=block (1, 1)
+cell_group2s.Count()=1
+cell_group2=block (1, 1)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 12
-groups.Count()=1
-group=block (1, 1)
+cell_group2s.Count()=1
+cell_group2=block (1, 1)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 136
-groups.Count()=1
-group=block (1, 1)
+cell_group2s.Count()=1
+cell_group2=block (1, 1)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 34
-groups.Count()=1
-group=block (1, 1)
+cell_group2s.Count()=1
+cell_group2=block (1, 1)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 24
-groups.Count()=1
-group=block (1, 1)
+cell_group2s.Count()=1
+cell_group2=block (1, 1)
 Cells is empty 51
 step_change_made=true
 38. change_made: false
@@ -49968,8 +49968,8 @@ groups is empty
 cellGroups.Count: 27 mask: 12
 groups is empty
 cellGroups.Count: 27 mask: 260
-groups.Count()=1
-group=block (3, 3)
+cell_group2s.Count()=1
+cell_group2=block (3, 3)
 cells.len()=4
 cells.Any()
 Values 3 and 9 in block (3, 3) are in cells (8, 7) and (8, 8).
@@ -49979,8 +49979,8 @@ Values 3 and 9 in block (3, 3) are in cells (8, 7) and (8, 8).
 3 cannot appear in (9, 9).
 step_change_made=true
 cellGroups.Count: 27 mask: 66
-groups.Count()=1
-group=block (3, 3)
+cell_group2s.Count()=1
+cell_group2=block (3, 3)
 Cells is empty 51
 step_change_made=true
 38. change_made: false
@@ -51231,8 +51231,8 @@ groups is empty
 cellGroups.Count: 27 mask: 264
 groups is empty
 cellGroups.Count: 27 mask: 96
-groups.Count()=1
-group=block (2, 2)
+cell_group2s.Count()=1
+cell_group2=block (2, 2)
 cells.len()=3
 cells.Any()
 Values 6 and 7 in block (2, 2) are in cells (5, 5) and (6, 5).
@@ -51241,8 +51241,8 @@ Values 6 and 7 in block (2, 2) are in cells (5, 5) and (6, 5).
 6, 7 cannot appear in (6, 4).
 step_change_made=true
 cellGroups.Count: 27 mask: 192
-groups.Count()=1
-group=block (2, 2)
+cell_group2s.Count()=1
+cell_group2=block (2, 2)
 Cells is empty 51
 step_change_made=true
 38. change_made: false
@@ -51688,21 +51688,21 @@ groups is empty
 cellGroups.Count: 27 mask: 132
 groups is empty
 cellGroups.Count: 27 mask: 272
-groups.Count()=1
-group=row #2
+cell_group2s.Count()=1
+cell_group2=row #2
 cells.len()=1
 cells.Any()
 Values 5 and 9 in row #2 are in cells (2, 2) and (2, 9).
 5 cannot appear in (2, 3).
 step_change_made=true
 cellGroups.Count: 27 mask: 264
-groups.Count()=1
-group=row #2
+cell_group2s.Count()=1
+cell_group2=row #2
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 144
-groups.Count()=1
-group=row #2
+cell_group2s.Count()=1
+cell_group2=row #2
 Cells is empty 51
 step_change_made=true
 38. change_made: false
@@ -52452,8 +52452,8 @@ groups is empty
 cellGroups.Count: 27 mask: 36
 groups is empty
 cellGroups.Count: 27 mask: 10
-groups.Count()=1
-group=row #9
+cell_group2s.Count()=1
+cell_group2=row #9
 cells.len()=2
 cells.Any()
 Values 2 and 4 in row #9 are in cells (9, 1) and (9, 3).
@@ -52525,8 +52525,8 @@ groups is empty
 cellGroups.Count: 27 mask: 6
 groups is empty
 cellGroups.Count: 27 mask: 264
-groups.Count()=2
-group=row #4
+cell_group2s.Count()=2
+cell_group2=row #4
 cells.len()=4
 cells.Any()
 Values 4 and 9 in row #4 are in cells (4, 4) and (4, 7).
@@ -52534,59 +52534,59 @@ Values 4 and 9 in row #4 are in cells (4, 4) and (4, 7).
 4, 9 cannot appear in (4, 5).
 4 cannot appear in (4, 8).
 9 cannot appear in (4, 9).
-group=block (2, 2)
+cell_group2=block (2, 2)
 cells.len()=1
 cells.Any()
 Values 4 and 9 in block (2, 2) are in cells (4, 4) and (6, 4).
 4, 9 cannot appear in (6, 5).
 step_change_made=true
 cellGroups.Count: 27 mask: 258
-groups.Count()=2
-group=row #4
+cell_group2s.Count()=2
+cell_group2=row #4
 Cells is empty 51
-group=block (2, 2)
+cell_group2=block (2, 2)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 72
-groups.Count()=2
-group=row #4
+cell_group2s.Count()=2
+cell_group2=row #4
 Cells is empty 51
-group=block (2, 2)
+cell_group2=block (2, 2)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 40
-groups.Count()=2
-group=row #4
+cell_group2s.Count()=2
+cell_group2=row #4
 Cells is empty 51
-group=block (2, 2)
+cell_group2=block (2, 2)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 12
-groups.Count()=2
-group=row #4
+cell_group2s.Count()=2
+cell_group2=row #4
 Cells is empty 51
-group=block (2, 2)
+cell_group2=block (2, 2)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 36
-groups.Count()=2
-group=row #4
+cell_group2s.Count()=2
+cell_group2=row #4
 Cells is empty 51
-group=block (2, 2)
+cell_group2=block (2, 2)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 10
-groups.Count()=2
-group=row #4
+cell_group2s.Count()=2
+cell_group2=row #4
 Cells is empty 51
-group=block (2, 2)
+cell_group2=block (2, 2)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 96
-groups.Count()=2
-group=row #4
+cell_group2s.Count()=2
+cell_group2=row #4
 Cells is empty 51
-group=block (2, 2)
+cell_group2=block (2, 2)
 Cells is empty 51
 step_change_made=true
 (4, 9) can only contain 2.
@@ -55570,8 +55570,8 @@ groups is empty
 cellGroups.Count: 27 mask: 17
 groups is empty
 cellGroups.Count: 27 mask: 384
-groups.Count()=1
-group=block (2, 2)
+cell_group2s.Count()=1
+cell_group2=block (2, 2)
 cells.len()=2
 cells.Any()
 Values 8 and 9 in block (2, 2) are in cells (5, 5) and (6, 6).
@@ -55579,23 +55579,23 @@ Values 8 and 9 in block (2, 2) are in cells (5, 5) and (6, 6).
 8, 9 cannot appear in (6, 5).
 step_change_made=true
 cellGroups.Count: 27 mask: 136
-groups.Count()=1
-group=block (2, 2)
+cell_group2s.Count()=1
+cell_group2=block (2, 2)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 12
-groups.Count()=1
-group=block (2, 2)
+cell_group2s.Count()=1
+cell_group2=block (2, 2)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 260
-groups.Count()=1
-group=block (2, 2)
+cell_group2s.Count()=1
+cell_group2=block (2, 2)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 272
-groups.Count()=1
-group=block (2, 2)
+cell_group2s.Count()=1
+cell_group2=block (2, 2)
 Cells is empty 51
 step_change_made=true
 38. change_made: false
@@ -55604,41 +55604,41 @@ two_digit_masks=[264, 20, 17, 384, 136, 12, 260, 272]
 cellGroups.Count: 27 mask: 264
 groups is empty
 cellGroups.Count: 27 mask: 20
-groups.Count()=1
-group=column #5
+cell_group2s.Count()=1
+cell_group2=column #5
 cells.len()=1
 cells.Any()
 Values 3 and 5 in column #5 are in cells (4, 5) and (6, 5).
 5 cannot appear in (8, 5).
 step_change_made=true
 cellGroups.Count: 27 mask: 17
-groups.Count()=1
-group=column #5
+cell_group2s.Count()=1
+cell_group2=column #5
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 384
-groups.Count()=1
-group=column #5
+cell_group2s.Count()=1
+cell_group2=column #5
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 136
-groups.Count()=1
-group=column #5
+cell_group2s.Count()=1
+cell_group2=column #5
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 12
-groups.Count()=1
-group=column #5
+cell_group2s.Count()=1
+cell_group2=column #5
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 260
-groups.Count()=1
-group=column #5
+cell_group2s.Count()=1
+cell_group2=column #5
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 272
-groups.Count()=1
-group=column #5
+cell_group2s.Count()=1
+cell_group2=column #5
 Cells is empty 51
 step_change_made=true
 38. change_made: false
@@ -59177,8 +59177,8 @@ groups is empty
 cellGroups.Count: 27 mask: 17
 groups is empty
 cellGroups.Count: 27 mask: 258
-groups.Count()=1
-group=block (2, 2)
+cell_group2s.Count()=1
+cell_group2=block (2, 2)
 cells.len()=2
 cells.Any()
 Values 2 and 9 in block (2, 2) are in cells (4, 4) and (4, 6).
@@ -59186,18 +59186,18 @@ Values 2 and 9 in block (2, 2) are in cells (4, 4) and (4, 6).
 2, 9 cannot appear in (6, 6).
 step_change_made=true
 cellGroups.Count: 27 mask: 24
-groups.Count()=1
-group=block (2, 2)
+cell_group2s.Count()=1
+cell_group2=block (2, 2)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 10
-groups.Count()=1
-group=block (2, 2)
+cell_group2s.Count()=1
+cell_group2=block (2, 2)
 Cells is empty 51
 step_change_made=true
 cellGroups.Count: 27 mask: 12
-groups.Count()=1
-group=block (2, 2)
+cell_group2s.Count()=1
+cell_group2=block (2, 2)
 Cells is empty 51
 step_change_made=true
 38. change_made: false
