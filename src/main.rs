@@ -601,43 +601,47 @@ fn if_candidate_cells(rnglcg: &mut PortableLCG, board: &mut Board, board_candida
 fn for_group_in_groups(board_candidate_masks: &mut [i32; 81], board: &mut Board, cell_group2s: &mut Vec<CellGroup2>) -> bool {
     log(&format!("cell_group2s.Count()={}", cell_group2s.len()));
     let mut step_change_made: bool = false;
+
+    // cell_group2 is a row, column, or block, which has 2 cells with exactly 2 candiate digits between them (which digit goes in which cell is yet to be determined)
     for cell_group2 in cell_group2s.iter().sorted_by_key(|cell_group| cell_group.discriminator)
     {
         log(&format!("cell_group2={}", cell_group2.description));
-        // Translation of the original C# code
-        let cells: Vec<_> = cell_group2.cells.iter()
-            .filter(|cell| board_candidate_masks[cell.index] != cell_group2.mask && // not equal but overlaps group.mask
+        for i in 0..81 {
+            assert_eq!(board_candidate_masks[i], board[i].candidate_digits.mask);
+        }
+
+        let cell_group2_cells_which_overlap: Vec<_> = cell_group2.cells.iter()
+            .filter(|cell| board_candidate_masks[cell.index] != cell_group2.mask && // not equal but overlaps board_candidate_masks[cell.index]
                 (board_candidate_masks[cell.index] & cell_group2.mask) > 0)
             .sorted_by_key(|cell| cell.index)
             .collect::<Vec<_>>();
 
-        let mask_cells: Vec<&Cell> = cell_group2.cells.iter()
-            .filter(|cell| board_candidate_masks[cell.index] == cell_group2.mask) // equal to group.mask
-            .map(|x| x)
-            .collect();
-
         // 51.
-        if cells.is_empty() {
+        if cell_group2_cells_which_overlap.is_empty() {
             log(&"Cells is empty 51".to_string());
             continue;
         }
-        log(&format!("cells.len()={}", cells.len()).to_string());
+        log(&format!("cells.len()={}", cell_group2_cells_which_overlap.len()).to_string());
         // "Values {lower} and {upper} in {} are in cells ({mask_cells[0].row+1}, {mask_cells[0].col+1}) and ({mask_cells[1].row+1}, {mask_cells[1].col+1}).",
         // Find the upper two bits. upper & lower represent digits
         log(&"cells.Any()".to_string());
         let (lower, upper) = top_two_digits(cell_group2.mask); // bits represent digits
 
+        let cells_with_same_2_candidates: Vec<&Cell> = cell_group2.cells.iter()
+            .filter(|cell| board_candidate_masks[cell.index] == cell_group2.mask) // equal to cell_group2.mask
+            .map(|x| x)
+            .collect();
         let s = format!(
             "Values {} and {} in {} go in cells ({}, {}) and ({}, {}). [index {} and {}]",
             lower,
             upper,
             cell_group2.description,
-            mask_cells[0].get_row() + 1,
-            mask_cells[0].get_column() + 1,
-            mask_cells[1].get_row() + 1,
-            mask_cells[1].get_column() + 1,
-            mask_cells[0].index,
-            mask_cells[1].index,
+            cells_with_same_2_candidates[0].get_row() + 1,
+            cells_with_same_2_candidates[0].get_column() + 1,
+            cells_with_same_2_candidates[1].get_row() + 1,
+            cells_with_same_2_candidates[1].get_column() + 1,
+            cells_with_same_2_candidates[0].index,
+            cells_with_same_2_candidates[1].index,
         );
         log(&s);
 
@@ -645,11 +649,11 @@ fn for_group_in_groups(board_candidate_masks: &mut [i32; 81], board: &mut Board,
         for i in 0..81 {
             assert_eq!(board_candidate_masks[i], board[i].candidate_digits.mask);
         }
-        let result = for_cell_in_cells(board_candidate_masks, board, cell_group2, &cells);
+        let result = for_cell_in_cells(board_candidate_masks, board, cell_group2, &cell_group2_cells_which_overlap);
+        step_change_made = step_change_made || result;
         for i in 0..81 {
             assert_eq!(board_candidate_masks[i], board[i].candidate_digits.mask);
         }
-        step_change_made = step_change_made || result;
     }
     step_change_made
 }
