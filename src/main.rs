@@ -1037,7 +1037,7 @@ fn construct_final_board(mut rnglcg: &mut PortableLCG) -> Board {
                 //let stack_len = board_stack.len();
                 //log(&format!("rowIndexStack Count={} rowToMove={}", stack_len, board_stack.last().unwrap().candidate_cell.get_row()));
                 let moved_to_digit = handle_move(&mut board_stack, true);
-                command = and_next_command(&mut board_stack, moved_to_digit);
+                command = and_next_command(moved_to_digit);
             }
             _ => {
                 // should never get here
@@ -1079,41 +1079,31 @@ fn print_digit_to_move(cell_to_move: &Cell, digit_to_move: i32, moved_to_digit: 
     log(&format!("digitToMove:{0} movedToDigit:{1} rowToMove:{2} colToMove:{3} rowToWrite:{4} colToWrite:{5} currentStateIndex:{6}", digit_to_move, moved_to_digit, row_to_move, col_to_move, row_to_write, col_to_write, cell_to_move.index));
 }
 
-fn and_next_command(board_stack: &mut Vec<Board>, moved_to_digit: i32) -> Commands {
+fn and_next_command(moved_to_digit: i32) -> Commands {
     if moved_to_digit <= 9 {
-        //update_board_state(board_stack, cell_to_move, moved_to_digit);
-        //log(&format!("19d. moved_to_digit: {:?}", moved_to_digit));
-
         // Next possible digit was found at current position
         // Next step will be to expand the state
-        // Next step will be to expand the state/ 9
         Commands::Expand
     } else {
         // No viable candidate was found at current position - pop it in the next iteration
-        //board_stack.last_mut().unwrap().last_digit = 0; no need to do this since we pop in next iteration
-        //log(&format!("collapse. last_digit_stack.last():{}", board_stack.last_mut().unwrap().last_digit));
         Commands::Collapse
     }
 }
 
-fn update_board_state(board_stack: &mut Vec<Board>, cell_to_move: &Cell, moved_to_digit: i32) {
-    //lastDigitStack.Push(movedToDigit);
-    //usedDigits[movedToDigit - 1] = true;
-    //currentState[currentStateIndex] = movedToDigit;
-    board_stack.last_mut().unwrap().last_digit = moved_to_digit;
-    board_stack.last_mut().unwrap().used_digits.set_digit(moved_to_digit);
-    board_stack.last_mut().unwrap()[cell_to_move.index].digit = moved_to_digit;
-}
 
 fn update_board(board_stack: &mut Vec<Board>, cell_to_move: &Cell, digit_to_move: i32, moved_to_digit: i32) {
+    let mut board = board_stack.pop().unwrap();
     if digit_to_move > 0
     {
-        board_stack.last_mut().unwrap().used_digits.clear_digit(digit_to_move);
-        board_stack.last_mut().unwrap()[cell_to_move.index].digit = 0; // does this change last element of state_stack?
+        board.used_digits.clear_digit(digit_to_move);
+        board[cell_to_move.index].digit = 0;
     }
     if moved_to_digit <= 9 {
-        update_board_state(board_stack, cell_to_move, moved_to_digit);
+        board.last_digit = moved_to_digit;
+        board.used_digits.set_digit(moved_to_digit);
+        board[cell_to_move.index].digit = moved_to_digit;
     }
+    board_stack.push(board);
 }
 
 fn handle_expand(rnglcg: &mut PortableLCG, board_stack: &mut Vec<Board>, alt_board: Board) {
