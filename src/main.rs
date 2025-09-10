@@ -735,14 +735,7 @@ fn for_cell_in_cells(board_candidate_masks: &mut [i32; 81], board: &mut Board, c
     for cell in cells
     {
         let mask_to_remove = board_candidate_masks[cell.index] & cell_group2.mask;  // intersection
-        let values_to_remove = mask_to_vec_digits(mask_to_remove);
-
-        //string valuesReport = string.Join(", ", values_to_remove.ToArray());
-        let string_values_to_remove: Vec<String> = values_to_remove
-            .iter()
-            .map(|num| num.to_string())
-            .collect();
-        let values_report = string_values_to_remove.join(", ");
+        let values_report = mask_to_string_of_comma_separated_digits(mask_to_remove);
         let s = format!("{} cannot appear in ({}, {}).", values_report, cell.get_row() + 1, cell.get_column() + 1);
         log(&s);
         board_candidate_masks[cell.index] &= !cell_group2.mask;
@@ -1148,7 +1141,7 @@ fn handle_expand(rnglcg: &mut PortableLCG, board_stack: &mut Vec<Board>, alt_boa
             candidates_count < best_candidates_count ||  // looking for the cell with the LEAST number of candidates
             (candidates_count == best_candidates_count && random_value < best_random_value) // if two cells both have the same number of candidates, randomly select one (this "random" looks not random)
         {
-            best_cell = cell.clone(); // this cell becomes the best cell (saved as row,col. we could save index instead?)
+            best_cell = cell.clone(); // this cell becomes the best cell
             best_used_digits = used_digits;
             best_candidates_count = candidates_count;  // candidates_count is a function of digits_used array. We search for the smallest number of candidates
             best_random_value = random_value;
@@ -1161,7 +1154,7 @@ fn handle_expand(rnglcg: &mut PortableLCG, board_stack: &mut Vec<Board>, alt_boa
         current_board.candidate_cell = best_cell;
         current_board.used_digits = best_used_digits;
         current_board.last_digit = 0;
-        board_stack.push(current_board);          // current state came from state_stack?
+        board_stack.push(current_board);
     }
 }
 
@@ -1176,22 +1169,8 @@ fn print_code(board: &Board) {
 
 fn log_group_with_n_masks_message(group_with_n_masks: &CellGroupN, mask: i32) {
     let mut message = format!("In {} values ", group_with_n_masks.description);
-    let mut separator = "";
-    let mut temp = mask;
-    let mut cur_value = 1;
-    // convert mask to message
-    while temp > 0
-    {
-        if (temp & 1) > 0
-        {
-            let s = format!("{}{}", separator, cur_value);
-            message.push_str(&s);
-            separator = ", ";
-        }
-        temp = temp >> 1;
-        cur_value += 1;
-    }
-
+    let s = mask_to_string_of_comma_separated_digits(mask);
+    message.push_str(&s);
     // 55.
     message.push_str(&" appear only in cells".to_string());
     for cell in group_with_n_masks.cells_with_mask.clone()
@@ -1479,252 +1458,257 @@ fn single_bitmask_to_digit() -> &'static HashMap<usize, i32> {
 }
 
 // Convert mask to list of digits they represent. Returns list of digits.
-fn mask_to_vec_digits(input_mask: i32) -> Vec<i32> {
-    let mut mask_to_remove = input_mask;
-    let mut values_to_remove: Vec<i32> = Vec::new();
-    let mut cur_value: i32 = 1;
-    while mask_to_remove > 0
+fn mask_to_string_of_comma_separated_digits(mask: i32) -> String {
+    let mut shift_mask = mask;
+    let mut message = "".to_string();
+    let mut separator = "";
+    let mut cur_value = 1;  // bit 0 is digit 1
+
+    while shift_mask > 0
     {
-        if (mask_to_remove & 1) > 0
+        if (shift_mask & 1) > 0
         {
-            values_to_remove.push(cur_value);
+            let s = format!("{}{}", separator, cur_value);
+            message.push_str(&s);
+            separator = ", ";
         }
-        mask_to_remove = mask_to_remove >> 1;
+        shift_mask = shift_mask >> 1;
         cur_value += 1;
     }
-    values_to_remove
+    message
 }
 
+
 fn top_two_digits(value: i32) -> (i32, i32) {
-    let mut temp = value;
-    let mut lower = 0;
-    let mut upper = 0;
-    let mut digit = 1;
-    while temp > 0
+let mut temp = value;
+let mut lower = 0;
+let mut upper = 0;
+let mut digit = 1;
+while temp > 0
+{
+    if (temp & 1) != 0
     {
-        if (temp & 1) != 0
-        {
-            lower = upper;
-            upper = digit;
-        }
-        temp = temp >> 1;
-        digit += 1;
+        lower = upper;
+        upper = digit;
     }
-    (lower, upper)
+    temp = temp >> 1;
+    digit += 1;
+}
+(lower, upper)
 }
 
 fn get_row_col_block_used_digits(current_state: &Board, target_cell : &Cell) -> ([bool; 9], Digits) {
-    // gather all digits used in cell's row, column, and block. output is_digit_used. input: current_state, row, col, block_row, block_col
-    let row = target_cell.get_row();
-    let col = target_cell.get_column();
-    let block_row = row / 3;
-    let block_col = col / 3;
-    let mut is_digit_used: [bool; 9] = [false; 9];
-    let mut used_digits = Digits::new(0);
+// gather all digits used in cell's row, column, and block. output is_digit_used. input: current_state, row, col, block_row, block_col
+let row = target_cell.get_row();
+let col = target_cell.get_column();
+let block_row = row / 3;
+let block_col = col / 3;
+let mut is_digit_used: [bool; 9] = [false; 9];
+let mut used_digits = Digits::new(0);
 
-    for i in 0..9  // 12.
+for i in 0..9  // 12.
+{
+    let cell = current_state[9 * i + col].clone();
+    let row_digit = cell.digit;
+    if row_digit > 0
     {
-        let cell = current_state[9 * i + col].clone();
-        let row_digit = cell.digit;
-        if row_digit > 0
-        {
-            is_digit_used[row_digit as usize - 1] = true;
-            used_digits.set_digit(row_digit);
-        }
-
-        let cell = current_state[9 * row + i].clone();
-        let col_digit = cell.digit;
-        if col_digit > 0
-        {
-            is_digit_used[col_digit as usize - 1] = true;
-            used_digits.set_digit(col_digit);
-        }
-
-        let cell = current_state[(block_row * 3 + i / 3) * 9 + (block_col * 3 + i % 3)].clone();
-        let block_digit = cell.digit;
-        if block_digit > 0
-        {
-            is_digit_used[block_digit as usize - 1] = true;
-            used_digits.set_digit(block_digit);
-        }
-    } // for (i = 0..8)
-    for i in 0..9 {
-        assert_eq!(is_digit_used[i], used_digits.is_present((i+1) as i32));
+        is_digit_used[row_digit as usize - 1] = true;
+        used_digits.set_digit(row_digit);
     }
-    (is_digit_used, used_digits)
+
+    let cell = current_state[9 * row + i].clone();
+    let col_digit = cell.digit;
+    if col_digit > 0
+    {
+        is_digit_used[col_digit as usize - 1] = true;
+        used_digits.set_digit(col_digit);
+    }
+
+    let cell = current_state[(block_row * 3 + i / 3) * 9 + (block_col * 3 + i % 3)].clone();
+    let block_digit = cell.digit;
+    if block_digit > 0
+    {
+        is_digit_used[block_digit as usize - 1] = true;
+        used_digits.set_digit(block_digit);
+    }
+} // for (i = 0..8)
+for i in 0..9 {
+    assert_eq!(is_digit_used[i], used_digits.is_present((i+1) as i32));
+}
+(is_digit_used, used_digits)
 }
 
 #[derive(Clone, Copy)]
 pub struct PortableLCG {
-    seed: u64,
-    a: u64, // Multiplier
-    c: u64, // Increment
-    m_mask: u64, // Modulus mask (for 48-bit modulus: 2^48 - 1)
+seed: u64,
+a: u64, // Multiplier
+c: u64, // Increment
+m_mask: u64, // Modulus mask (for 48-bit modulus: 2^48 - 1)
 }
 
 
 // Mutable because we update seed at every call
 // From "Numerical Recipies"
 impl PortableLCG {
-    pub fn new(seed: u64) -> Self {
-        PortableLCG {
-            seed,
-            a: 25214903917, // POSIX multiplier
-            c: 11,          // POSIX increment
-            m_mask: (1u64 << 48) - 1, // 2^48 - 1
-        }
+pub fn new(seed: u64) -> Self {
+    PortableLCG {
+        seed,
+        a: 25214903917, // POSIX multiplier
+        c: 11,          // POSIX increment
+        m_mask: (1u64 << 48) - 1, // 2^48 - 1
     }
+}
 
-    // Generates the next random 32-bit integer
-    pub fn next(&mut self) -> i32 {
-        // Apply the LCG formula, handling overflow with wrapping_mul and wrapping_add,
-        // and using a bitmask for the modulus.
-        self.seed = (self.seed.wrapping_mul(self.a).wrapping_add(self.c)) & self.m_mask;
-        // Extract the upper 32 bits from the 48-bit state.
-        (self.seed >> 17) as i32
-    }
-    // r is range 0 to r.
-    pub fn next_range(&mut self,r:i32) -> i32 {
-        return ((self.next() as f64 / 0x7FFFFFFF as f64) * r as f64) as i32;
-    }
+// Generates the next random 32-bit integer
+pub fn next(&mut self) -> i32 {
+    // Apply the LCG formula, handling overflow with wrapping_mul and wrapping_add,
+    // and using a bitmask for the modulus.
+    self.seed = (self.seed.wrapping_mul(self.a).wrapping_add(self.c)) & self.m_mask;
+    // Extract the upper 32 bits from the 48-bit state.
+    (self.seed >> 17) as i32
+}
+// r is range 0 to r.
+pub fn next_range(&mut self,r:i32) -> i32 {
+    return ((self.next() as f64 / 0x7FFFFFFF as f64) * r as f64) as i32;
+}
 }
 
 
 fn write_from_function(content: &str) -> io::Result<()> {
-    // Lock the mutex to get access to the global file.
-    let mut file_guard = GLOBAL_FILE.lock().unwrap();
+// Lock the mutex to get access to the global file.
+let mut file_guard = GLOBAL_FILE.lock().unwrap();
 
-    // Check if the file is initialized and write to it.
-    if let Some(ref mut file) = *file_guard {
-        file.write_all(content.as_bytes())?;
-    } else {
-        // Handle the case where the file is not yet initialized (e.g., error or not set up).
-        eprintln!("Error: File not initialized in GLOBAL_FILE.");
-        return Err(io::Error::new(ErrorKind::Other, "File not initialized"));
-    }
-    Ok(())
+// Check if the file is initialized and write to it.
+if let Some(ref mut file) = *file_guard {
+    file.write_all(content.as_bytes())?;
+} else {
+    // Handle the case where the file is not yet initialized (e.g., error or not set up).
+    eprintln!("Error: File not initialized in GLOBAL_FILE.");
+    return Err(io::Error::new(ErrorKind::Other, "File not initialized"));
+}
+Ok(())
 }
 
 fn log(s : &String)
 {
-    println!("{}", s);
-    write_from_function(s).expect("TODO: panic message");
-    write_from_function("\n").expect("TODO: panic message");
+println!("{}", s);
+write_from_function(s).expect("TODO: panic message");
+write_from_function("\n").expect("TODO: panic message");
 }
 
 
 
 fn compare_files_line_by_line(file1_path: &str, file2_path: &str) -> io::Result<()> {
-    let file1 = File::open(file1_path)?;
-    let file2 = File::open(file2_path)?;
+let file1 = File::open(file1_path)?;
+let file2 = File::open(file2_path)?;
 
-    let reader1 = BufReader::new(file1);
-    let reader2 = BufReader::new(file2);
+let reader1 = BufReader::new(file1);
+let reader2 = BufReader::new(file2);
 
-    let mut line1_num = 0;
-    let mut line2_num = 0;
-    let mut differences_found = false;
+let mut line1_num = 0;
+let mut line2_num = 0;
+let mut differences_found = false;
 
-    // Create iterators for lines in each file
-    let mut lines1 = reader1.lines();
-    let mut lines2 = reader2.lines();
+// Create iterators for lines in each file
+let mut lines1 = reader1.lines();
+let mut lines2 = reader2.lines();
 
-    loop {
-        let line1_opt = lines1.next();
-        let line2_opt = lines2.next();
-        line1_num += 1;
-        line2_num += 1;
+loop {
+    let line1_opt = lines1.next();
+    let line2_opt = lines2.next();
+    line1_num += 1;
+    line2_num += 1;
 
-        match (line1_opt, line2_opt) {
-            (Some(Ok(line1)), Some(Ok(line2))) => {
-                if *line1 != line2 {
-                    println!("Difference at file1 line {}, file2 line {}:", line1_num, line2_num);
-                    println!("  File 1: {}", line1);
-                    println!("  File 2: {}", line2);
-                    differences_found = true;
-                    break;
-                }
-            },
-            (Some(Ok(line1)), None) => {
-                println!("Difference at file1 line {}, file2 line {}: File 1 has extra line: {}", line1_num, line2_num, line1);
+    match (line1_opt, line2_opt) {
+        (Some(Ok(line1)), Some(Ok(line2))) => {
+            if *line1 != line2 {
+                println!("Difference at file1 line {}, file2 line {}:", line1_num, line2_num);
+                println!("  File 1: {}", line1);
+                println!("  File 2: {}", line2);
                 differences_found = true;
                 break;
-            },
-            (None, Some(Ok(line2))) => {
-                println!("Difference at file1 line {}, file2 line {}: File 2 has extra line: {}", line1_num, line2_num, line2);
-                differences_found = true;
-                break;
-            },
-            (None, None) => {
-                // End of both files
-                break;
-            },
-            (Some(Err(e)), _) | (_, Some(Err(e))) => {
-                return Err(e); // Handle potential I/O errors during line reading
-            },
-        }
+            }
+        },
+        (Some(Ok(line1)), None) => {
+            println!("Difference at file1 line {}, file2 line {}: File 1 has extra line: {}", line1_num, line2_num, line1);
+            differences_found = true;
+            break;
+        },
+        (None, Some(Ok(line2))) => {
+            println!("Difference at file1 line {}, file2 line {}: File 2 has extra line: {}", line1_num, line2_num, line2);
+            differences_found = true;
+            break;
+        },
+        (None, None) => {
+            // End of both files
+            break;
+        },
+        (Some(Err(e)), _) | (_, Some(Err(e))) => {
+            return Err(e); // Handle potential I/O errors during line reading
+        },
     }
+}
 
-    if !differences_found {
-        println!("Files are identical.");
-    } else {
-        println!("Differences found between files.");
-    }
+if !differences_found {
+    println!("Files are identical.");
+} else {
+    println!("Differences found between files.");
+}
 
-    Ok(())
+Ok(())
 }
 
 fn main()
 {
-    let file_path = "rust_output.txt";
+let file_path = "rust_output.txt";
 
-    match fs::remove_file(file_path) {
-        Ok(_) => {
-            println!("File '{}' removed successfully.", file_path);
+match fs::remove_file(file_path) {
+    Ok(_) => {
+        println!("File '{}' removed successfully.", file_path);
+    }
+    Err(e) => {
+        // If the error is Kind::NotFound, the file didn't exist, which is acceptable
+        if e.kind() == ErrorKind::NotFound {
+            println!("File '{}' does not exist, no action needed.", file_path);
+        } else {
+            // Handle other potential errors during file deletion
+            eprintln!("Error removing file '{}': {}", file_path, e);
         }
-        Err(e) => {
-            // If the error is Kind::NotFound, the file didn't exist, which is acceptable
-            if e.kind() == ErrorKind::NotFound {
-                println!("File '{}' does not exist, no action needed.", file_path);
-            } else {
-                // Handle other potential errors during file deletion
-                eprintln!("Error removing file '{}': {}", file_path, e);
-            }
-        }
     }
+}
 
-    // Open the file in main and store it in the global static variable.
-    let file = OpenOptions::new()
-        .write(true)
-        .create(true)
-        .append(true) // Open in append mode to add content without overwriting
-        .open(file_path);
+// Open the file in main and store it in the global static variable.
+let file = OpenOptions::new()
+    .write(true)
+    .create(true)
+    .append(true) // Open in append mode to add content without overwriting
+    .open(file_path);
 
-    // Lock the mutex and store the file.
-    *GLOBAL_FILE.lock().unwrap() = Some(file.expect("REASON"));
+// Lock the mutex and store the file.
+*GLOBAL_FILE.lock().unwrap() = Some(file.expect("REASON"));
 
-    // MAIN LOOP
-    for seed in 1..5
-    {
-        let my_rng = PortableLCG::new(seed);
-        log(&format!("RUN {}", seed));
-        play(my_rng);
-    }
+// MAIN LOOP
+for seed in 1..5
+{
+    let my_rng = PortableLCG::new(seed);
+    log(&format!("RUN {}", seed));
+    play(my_rng);
+}
 
-    log(&"THE END!".to_string());
-    // Close file by setting the global file to None (this drops the file handle)
-    *GLOBAL_FILE.lock().unwrap() = None;
+log(&"THE END!".to_string());
+// Close file by setting the global file to None (this drops the file handle)
+*GLOBAL_FILE.lock().unwrap() = None;
 
-    let reffile_path1 = r"C:\Users\Charlene\OneDrive\Sudoku\ORIG\SudokuKata\bin\Debug\csharp_output.txt";
-    let reffile_path2 = r"C:\Users\David\OneDrive\Sudoku\ORIG\SudokuKata\bin\Debug\csharp_output.txt";
-    let reffile_path: &str = if Path::new(reffile_path1).exists()  // 9.
-    {
-        reffile_path1
-    } else {
-        reffile_path2
-    };
+let reffile_path1 = r"C:\Users\Charlene\OneDrive\Sudoku\ORIG\SudokuKata\bin\Debug\csharp_output.txt";
+let reffile_path2 = r"C:\Users\David\OneDrive\Sudoku\ORIG\SudokuKata\bin\Debug\csharp_output.txt";
+let reffile_path: &str = if Path::new(reffile_path1).exists()  // 9.
+{
+    reffile_path1
+} else {
+    reffile_path2
+};
 
-    if let Err(e) = compare_files_line_by_line(file_path, reffile_path) {
-        eprintln!("Error comparing files: {}", e);
-    }
+if let Err(e) = compare_files_line_by_line(file_path, reffile_path) {
+    eprintln!("Error comparing files: {}", e);
+}
 }
