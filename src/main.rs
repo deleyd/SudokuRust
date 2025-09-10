@@ -1090,7 +1090,7 @@ fn and_next_command(board_stack: &mut Vec<Board>, moved_to_digit: i32) -> Comman
         Commands::Expand
     } else {
         // No viable candidate was found at current position - pop it in the next iteration
-        board_stack.last_mut().unwrap().last_digit = 0;
+        //board_stack.last_mut().unwrap().last_digit = 0; no need to do this since we pop in next iteration
         //log(&format!("collapse. last_digit_stack.last():{}", board_stack.last_mut().unwrap().last_digit));
         Commands::Collapse
     }
