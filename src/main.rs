@@ -238,7 +238,7 @@ fn play(mut rnglcg: PortableLCG) {
     let mut change_made: bool = true;
     while change_made// 27
     {
-        log(&"27. top of loop".to_string());
+        //log(&"27. top of loop".to_string());
 
         change_made = false;
         let mut board_candidate_masks: [i32; 81] =  calculate_candidates(&mut board);  // calculates all the options for every cell on board
@@ -268,12 +268,12 @@ fn play(mut rnglcg: PortableLCG) {
             //#region Try to find a number which can only appear in one place in a row/column/block
             // 38.
             // if there were no cells which could only be set to a single digit
-            log(&format!("38. change_made: {}", change_made).to_string());
+            //log(&format!("38. change_made: {}", change_made).to_string());
             for i in 0..81 {
                 assert_eq!(board_candidate_masks[i], board[i].candidate_digits.mask);
             }
             if change_made {
-                log(&format!("48. change_made: {}", change_made).to_string());
+                //log(&format!("48. change_made: {}", change_made).to_string());
                 continue;
             }
 
@@ -284,7 +284,7 @@ fn play(mut rnglcg: PortableLCG) {
 
             //#region Try to find pairs of digits in the same row/column/block and remove them from other colliding cells
             // 48.
-            log(&format!("48. change_made: {}", change_made).to_string());
+            //log(&format!("48. change_made: {}", change_made).to_string());
             for i in 0..81 {
                 assert_eq!(board_candidate_masks[i], board[i].candidate_digits.mask);
             }
@@ -365,6 +365,7 @@ fn play(mut rnglcg: PortableLCG) {
                 let mut command = Commands::Expand;
                 while command != Commands::Complete && command != Commands::Fail
                 {
+                    //log(&format!("Top command={:?}", command));
                     match command {
                         Commands::Expand => {
                             handle_expand(&mut rnglcg, &mut board_stack, alternate_board.clone());
@@ -383,6 +384,7 @@ fn play(mut rnglcg: PortableLCG) {
 
                         // 73.
                         Commands::Move => {
+                            //log(&"73. command=move".to_string());
                             let moved_to_digit = handle_move(&mut board_stack, false);
                             if moved_to_digit <= 9 {  // 75.
                                 command = if board_stack.last_mut().unwrap().cells.iter().any(|cell| cell.digit == 0) {
@@ -445,6 +447,10 @@ fn for_group_with_n_masks(board_candidate_masks: &mut [i32; 81], board: &mut Boa
     let mut step_change_made = false;
     for group_with_n_masks in groups_with_n_masks
     {
+        log(&format!(
+            "54. groupWithNMasks: Mask: {0} KVP.Key: {1} : {2}",
+            group_with_n_masks.mask, group_with_n_masks.cell_group.0, group_with_n_masks.description
+        ));
         let mask = group_with_n_masks.mask;
 
         if group_with_n_masks.cell_group.1.iter().any(|cell| {
@@ -558,8 +564,8 @@ fn handle_two_digit_masks(board_candidate_masks: &mut [i32; 81], board : &mut Bo
             assert_eq!(board_candidate_masks[i], board[i].candidate_digits.mask);
         }
         // 50.
+        //log(&format!("50. len(groups): {}", cell_group2s.len()));
         if cell_group2s.is_empty() {
-            log(&"groups is empty".to_string());
             continue;
         }
         //log(&"groups.Any()".to_string());
@@ -571,7 +577,7 @@ fn handle_two_digit_masks(board_candidate_masks: &mut [i32; 81], board : &mut Bo
             assert_eq!(board_candidate_masks[i], board[i].candidate_digits.mask);
         }
         step_change_made = step_change_made || result;
-        log(&format!("step_change_made={}", step_change_made))
+        //log(&format!("step_change_made={}", step_change_made))
     }
     step_change_made
 }
@@ -605,7 +611,7 @@ fn for_group_in_groups(board_candidate_masks: &mut [i32; 81], board: &mut Board,
     // cell_group2 is a row, column, or block, which has 2 cells with exactly 2 candiate digits between them (which digit goes in which cell is yet to be determined)
     for cell_group2 in cell_group2s.iter().sorted_by_key(|cell_group| cell_group.discriminator)
     {
-        log(&format!("cell_group2={}", cell_group2.description));
+        //log(&format!("cell_group2={}", cell_group2.description));
         for i in 0..81 {
             assert_eq!(board_candidate_masks[i], board[i].candidate_digits.mask);
         }
@@ -618,13 +624,13 @@ fn for_group_in_groups(board_candidate_masks: &mut [i32; 81], board: &mut Board,
 
         // 51.
         if cell_group2_cells_which_overlap.is_empty() {
-            log(&"Cells is empty 51".to_string());
+            //log(&"Cells is empty 51".to_string());
             continue;
         }
-        log(&format!("cells.len()={}", cell_group2_cells_which_overlap.len()).to_string());
+        //log(&format!("cells.len()={}", cell_group2_cells_which_overlap.len()).to_string());
         // "Values {lower} and {upper} in {} are in cells ({mask_cells[0].row+1}, {mask_cells[0].col+1}) and ({mask_cells[1].row+1}, {mask_cells[1].col+1}).",
         // Find the upper two bits. upper & lower represent digits
-        log(&"cells.Any()".to_string());
+        //log(&"cells.Any()".to_string());
         let (lower, upper) = top_two_digits(cell_group2.mask); // bits represent digits
 
         let cells_with_same_2_candidates: Vec<&Cell> = cell_group2.cells.iter()
@@ -662,13 +668,25 @@ fn for_group_in_groups(board_candidate_masks: &mut [i32; 81], board: &mut Board,
 fn get_cells_with_two_candidate_digits(board_candidate_masks: [i32; 81], cell_groups: &BTreeMap<usize, Vec<Cell>>, two_digit_mask: i32) -> Vec<CellGroup2>  {
     // cell_groups is a fixed list of cell rows, cell columns, and cell blocks
     let mut cell_group2s : Vec<CellGroup2> = Vec::new();
-        for cell_group in cell_groups
+    for cell_group in cell_groups
     {
         // First Where condition: group.Count(tuple => candidateMasks[tuple.Index] == mask) == 2
         let cell_list = cell_group.1;  //cell_group.0 tells us which group we are looking at (Specific row, col, or block). .1 is the list of 9 indexes which comprise this group
-        let matching_count = cell_list.iter()  // iterate through the 9 cells in this group (may be a row, col, or block group)
+        let mut sorted_cells: Vec<&Cell> = cell_list.iter().collect();
+        sorted_cells.sort_by_key(|cell| cell.index);
+        for cell in &sorted_cells
+        {
+            log(&format!("cell.Index: {0} candidateMasks[cell.Index]: {1} = mask: {2}", cell.index, board_candidate_masks[cell.index], two_digit_mask));
+            if board_candidate_masks[cell.index] == two_digit_mask {
+                log(&"FOUND MATCH!".to_string());
+            }
+        }
+        let matching_count = sorted_cells.iter()  // iterate through the 9 cells in this group (may be a row, col, or block group)
             .filter(|cell| board_candidate_masks[cell.index] == two_digit_mask)  // for each cell in the list, get the index, look up digit candidates, test if they == mask passed to us
             .count();
+
+        log(&format!("candidateMasks.Count: {}", board_candidate_masks.len()));
+        log(&format!("matchingMaskCount: {}", matching_count));
 
         // we are hoping to find only 2 cells which can have these two digits in two_digit_mask
         if matching_count != 2 {
@@ -677,16 +695,26 @@ fn get_cells_with_two_candidate_digits(board_candidate_masks: [i32; 81], cell_gr
 
         // only 2 cells confirmed for 2 digits in mask
         // Second Where condition: group.Any(tuple => candidateMasks[tuple.Index] != mask && (candidateMasks[tuple.Index] & mask) > 0)
-        let has_overlapping_non_matching = cell_list.iter().any(|cell| {
+        log(&format!("cells length: {}", sorted_cells.len()));
+        for cell in &sorted_cells {
+            log(&format!("cell.Index={} candidateMasks[cell.Index]={} mask={} candidateMasks[cell.Index]&mask={}", cell.index, board_candidate_masks[cell.index], two_digit_mask, board_candidate_masks[cell.index] & two_digit_mask));
+            if board_candidate_masks[cell.index] != two_digit_mask && (board_candidate_masks[cell.index] & two_digit_mask) > 0 {
+                log(&"TRUE!".to_string());
+                break;
+            }
+        }
+        let has_overlapping_non_matching = sorted_cells.iter().any(|cell| {
             board_candidate_masks[cell.index] != two_digit_mask && (board_candidate_masks[cell.index] & two_digit_mask) > 0
         });
 
         if !has_overlapping_non_matching {
+            log(&"no hasOverlappingNonMatch: ".to_string());
             continue;  // we can't handle it if other cells also have one of the two digits in two_digit_mask (overlap but not equal to)
         }
 
         // Get first description from the group. Description tells us which row, col, or block we are examining
-        let description = cell_list.first().map(|cell| cell.description.clone()).unwrap_or_default();
+        log(&"hasOverlappingNonMatch: YES".to_string());
+        let description = sorted_cells.first().map(|cell| cell.description.clone()).unwrap_or_default();
         // this cell_group has exactly 2 cells which can have exactly 2 candidate digits. Which digit to put where? It might work both ways!
         let cell_group2 = CellGroup2 {
             mask: two_digit_mask,
@@ -1006,8 +1034,8 @@ fn construct_final_board(mut rnglcg: &mut PortableLCG) -> Board {
                 command = Commands::Move;   // Always try to move after collapse
             }
             Commands::Move => {
-                let stack_len = board_stack.len();
-                log(&format!("rowIndexStack Count={} rowToMove={}", stack_len, board_stack.last().unwrap().candidate_cell.get_row()));
+                //let stack_len = board_stack.len();
+                //log(&format!("rowIndexStack Count={} rowToMove={}", stack_len, board_stack.last().unwrap().candidate_cell.get_row()));
                 let moved_to_digit = handle_move(&mut board_stack, true);
                 command = and_next_command(&mut board_stack, moved_to_digit);
             }
@@ -1021,8 +1049,8 @@ fn construct_final_board(mut rnglcg: &mut PortableLCG) -> Board {
 }
 
 fn handle_move(board_stack: &mut Vec<Board>, pr: bool) -> i32 {
-    let cell_to_move: Cell = board_stack.last_mut().unwrap().candidate_cell.clone();
-    let digit_to_move: i32 = board_stack.last_mut().unwrap().last_digit;
+    let cell_to_move: Cell = board_stack.last().unwrap().candidate_cell.clone();
+    let digit_to_move: i32 = board_stack.last().unwrap().last_digit;
     let moved_to_digit = get_moved_to_digit(digit_to_move, board_stack.last_mut().unwrap().used_digits.clone());
 
     if pr {
@@ -1054,7 +1082,7 @@ fn print_digit_to_move(cell_to_move: &Cell, digit_to_move: i32, moved_to_digit: 
 fn and_next_command(board_stack: &mut Vec<Board>, moved_to_digit: i32) -> Commands {
     if moved_to_digit <= 9 {
         //update_board_state(board_stack, cell_to_move, moved_to_digit);
-        log(&format!("19d. moved_to_digit: {:?}", moved_to_digit));
+        //log(&format!("19d. moved_to_digit: {:?}", moved_to_digit));
 
         // Next possible digit was found at current position
         // Next step will be to expand the state
@@ -1063,7 +1091,7 @@ fn and_next_command(board_stack: &mut Vec<Board>, moved_to_digit: i32) -> Comman
     } else {
         // No viable candidate was found at current position - pop it in the next iteration
         board_stack.last_mut().unwrap().last_digit = 0;
-        log(&format!("collapse. last_digit_stack.last():{}", board_stack.last_mut().unwrap().last_digit));
+        //log(&format!("collapse. last_digit_stack.last():{}", board_stack.last_mut().unwrap().last_digit));
         Commands::Collapse
     }
 }
@@ -1139,11 +1167,21 @@ fn handle_expand(rnglcg: &mut PortableLCG, board_stack: &mut Vec<Board>, alt_boa
 
     if !contains_unsolvable_cells  // 16.
     {
+        print_code(&current_board);
         current_board.candidate_cell = best_cell;
         current_board.used_digits = best_used_digits;
         current_board.last_digit = 0;
         board_stack.push(current_board);          // current state came from state_stack?
     }
+}
+
+fn print_code(board: &Board) {
+    let code = board.cells.iter()
+        .map(|cell| if cell.digit == 0 { ".".to_string() } else { cell.to_string() })
+        .collect::<Vec<String>>()
+        .join("");
+    log(&format!("Code: {}", code));
+    log(&"".to_string());
 }
 
 fn log_group_with_n_masks_message(group_with_n_masks: &CellGroupN, mask: i32) {
@@ -1676,7 +1714,7 @@ fn main()
     *GLOBAL_FILE.lock().unwrap() = Some(file.expect("REASON"));
 
     // MAIN LOOP
-    for seed in 1..50
+    for seed in 1..5
     {
         let my_rng = PortableLCG::new(seed);
         log(&format!("RUN {}", seed));
