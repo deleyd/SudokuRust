@@ -358,7 +358,7 @@ fn look_for_pairs_that_can_be_exchanged(mut rnglcg: &mut PortableLCG, final_boar
     // Try to see if there are pairs of values that can be exchanged arbitrarily
     // This happens when board has more than one valid solution
     let mut change_made = false;
-    let ( _candidate_cells1, _candidate_cells2, mut candidate_cell_pairs) = get_candidate_cells(&mut board_candidate_masks);
+    let mut candidate_cell_pairs = get_candidate_cells(&mut board_candidate_masks);
 
     // At this point we have the lists with pairs of cells that might pick one of two digits each
     // Now we have to check whether that is really true - does the board have two solutions?
@@ -468,16 +468,16 @@ fn set_board_to_randomly_picked_cell_pair(rnglcg: &mut PortableLCG,
                                           candidate_cells_stack: &Vec<CandidateCellPair>) {
     let random_pos = rnglcg.next_range(candidate_cells_stack.len() as i32) as usize; // Randomly pick a candidate cell
     let candidate_cell_pair = &candidate_cells_stack[random_pos];
-    let candidate_cell1 = &candidate_cell_pair.candidate_cell1;
-    let candidate_cell2 = &candidate_cell_pair.candidate_cell2;
+    //let candidate_cell1 = &candidate_cell_pair.candidate_cell1;
+    //let candidate_cell2 = &candidate_cell_pair.candidate_cell2;
 
-    board[candidate_cell1].digit = final_board[candidate_cell1].digit;
-    board[candidate_cell2].digit = final_board[candidate_cell2].digit;
-    board_candidate_masks[candidate_cell1.index] = 0;
-    board_candidate_masks[candidate_cell2.index] = 0;
-    board[candidate_cell1.index].candidate_digits.mask = 0;
-    board[candidate_cell2.index].candidate_digits.mask = 0;
-    print_and_log_guessing_message(&final_board, candidate_cell1, candidate_cell2);
+    board[candidate_cell_pair.candidate_cell1.index].digit = final_board[candidate_cell_pair.candidate_cell1.index].digit;
+    board[candidate_cell_pair.candidate_cell2.index].digit = final_board[candidate_cell_pair.candidate_cell2.index].digit;
+    board_candidate_masks[candidate_cell_pair.candidate_cell1.index] = 0;
+    board_candidate_masks[candidate_cell_pair.candidate_cell2.index] = 0;
+    board[candidate_cell_pair.candidate_cell1.index].candidate_digits.mask = 0;
+    board[candidate_cell_pair.candidate_cell2.index].candidate_digits.mask = 0;
+    print_and_log_guessing_message(&final_board, &candidate_cell_pair.candidate_cell1, &candidate_cell_pair.candidate_cell2);
 }
 
 fn look_for_groups_of_digits_of_size_n(mut board: &mut Board, mut board_candidate_masks: &mut [i32; 81], cell_groups: &BTreeMap<usize, Vec<Cell>>) -> bool {
@@ -825,10 +825,10 @@ fn get_alternate_board(final_board: &Board, board: &Board, candidate_cell1: &Can
 // Try to see if there are pairs of values that can be exchanged arbitrarily
 // This happens when board has more than one valid solution
 // Look for a cell that has exactly 2 candidate digits; then look for another cell with the same 2 candidate digits
-fn get_candidate_cells(board_candidate_masks: &mut [i32; 81]) -> (VecDeque<CandidateCell>, VecDeque<CandidateCell>, VecDeque<CandidateCellPair>) {
+fn get_candidate_cells(board_candidate_masks: &mut [i32; 81]) -> VecDeque<CandidateCellPair> {
     let mut candidate_cell_pairs: VecDeque<CandidateCellPair> = VecDeque::new();
-    let mut candidate_cells1: VecDeque<CandidateCell> = VecDeque::new();
-    let mut candidate_cells2: VecDeque<CandidateCell> = VecDeque::new();
+    //let mut candidate_cells1: VecDeque<CandidateCell> = VecDeque::new();
+    //let mut candidate_cells2: VecDeque<CandidateCell> = VecDeque::new();
 
     // 61.
     // index i goes from 0 to 80, index j goes from i+1 to 81. Gives us two cells, i & j, to compare candidate digits
@@ -852,12 +852,12 @@ fn get_candidate_cells(board_candidate_masks: &mut [i32; 81]) -> (VecDeque<Candi
             {
                 // found two cells which have the same 2 candidate digits and share a row, column, or block
                 candidate_cell_pairs.push_back(CandidateCellPair::new(CandidateCell::new(i, lower_digit, &"".to_string()), CandidateCell::new(j, upper_digit, &"".to_string())));
-                candidate_cells1.push_back(CandidateCell::new(i, lower_digit, &"".to_string()));
-                candidate_cells2.push_back(CandidateCell::new(j, upper_digit, &"".to_string()));
+                //1candidate_cells1.push_back(CandidateCell::new(i, lower_digit, &"".to_string()));
+                //candidate_cells2.push_back(CandidateCell::new(j, upper_digit, &"".to_string()));
             }
         }
     }
-    (candidate_cells1, candidate_cells2, candidate_cell_pairs)
+    candidate_cell_pairs
 }
 
 fn print_starting_board(board: &mut Board) {
