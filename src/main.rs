@@ -16,7 +16,6 @@ use std::fmt;
 // Option is used because the file might not be initialized yet.
 static GLOBAL_FILE: Mutex<Option<File>> = Mutex::new(None);
 
-// Cell should have a value
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct Cell {
@@ -785,6 +784,9 @@ fn get_alternate_board(final_board: &Board, board: &Board, candidate_cell1: &Can
     alternate_board
 }
 
+// Try to see if there are pairs of values that can be exchanged arbitrarily
+// This happens when board has more than one valid solution
+// Look for a cell that has exactly 2 candidate digits; then look for another cell with the same 2 candidate digits
 fn get_candidate_cells(board_candidate_masks: &mut [i32; 81]) -> (VecDeque<CandidateCell>, VecDeque<CandidateCell>) {
     let mut candidate_cells1: VecDeque<CandidateCell> = VecDeque::new();
     let mut candidate_cells2: VecDeque<CandidateCell> = VecDeque::new();
@@ -794,19 +796,22 @@ fn get_candidate_cells(board_candidate_masks: &mut [i32; 81]) -> (VecDeque<Candi
     for i in 0..80  // stop at 80 because j looks at i+1 cell
     {
         // 62.
-        if count_candidates(board_candidate_masks[i]) != 2 {
+        if count_candidates(board_candidate_masks[i]) != 2 { // looking for cells with exactly 2 candidate digits
             continue;
-        }   // if this cell candidate i has exactly 2 digits
+        }   // This cell candidate i has exactly 2 digits
         let (lower_digit, upper_digit) = top_two_digits(board_candidate_masks[i]); // we already determined that this candidate has exactly 2 digits
 
-        // 63.
+        // 63. Now look for another cell with exactly the same 2 digit candidates
         for j in i + 1..81
         {
             if board_candidate_masks[j] != board_candidate_masks[i] {
                 continue;
-            }    // if candidate digits for cells[i] & cells[j] are identical set,
-            if row_or_column_or_block_overlap(i, j)
+            }
+            // Found another cell[j] which has exactly the same two candidate digits as cell [i]
+            // Check if the two cells share a row, column, or block
+            if row_or_column_or_block_shared(i, j)
             {
+                // found two cells which have the same 2 candidate digits and share a row, column, or block
                 candidate_cells1.push_back(CandidateCell::new(i, lower_digit, &"".to_string()));
                 candidate_cells2.push_back(CandidateCell::new(j, upper_digit, &"".to_string()));
             }
@@ -914,7 +919,7 @@ fn index_to_block(i: usize) -> usize {
     return 3 * (row / 3) + col / 3
 }
 
-fn row_or_column_or_block_overlap(i:usize, j:usize) -> bool {
+fn row_or_column_or_block_shared(i:usize, j:usize) -> bool {
     let row_i = index_to_row(i);
     let col_i = index_to_col(i);
     let block_i = index_to_block(i);
