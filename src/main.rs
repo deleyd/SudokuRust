@@ -208,7 +208,6 @@ impl Digits {
         self.mask &= !(1 << i);
     }
     fn count(&self) -> i32 {
-        //let count = mask_to_ones_count().get(&self.mask).copied().unwrap_or(0);
         let count = count_candidates(self.mask);
         return count;
     }
@@ -258,6 +257,9 @@ fn play(mut rnglcg: PortableLCG) {
 
         change_made = false;
         let mut board_candidate_masks: [i32; 81] =  calculate_candidates(&mut board);  // calculates all the options for every cell on board
+        for i in 0..81 {
+            assert_eq!(board_candidate_masks[i], board[i].candidate_digits.mask);
+        }
         let cell_groups : BTreeMap<usize, Vec<Cell >> = get_indices();  // Key is the discriminator 0-27 cell_groups should always be immutable
         for i in 0..81 {
             assert_eq!(board_candidate_masks[i], board[i].candidate_digits.mask);
@@ -364,22 +366,12 @@ fn look_for_pairs_that_can_be_exchanged(mut rnglcg: &mut PortableLCG, final_boar
     // Now we have to check whether that is really true - does the board have two solutions?
     // possibly replace with cellList1,2. holding cells and values set for cell.
     let mut candidate_cells_stack : Vec<CandidateCellPair> = Vec::new();
-    //let mut candidate_cells_stack1: Vec<CandidateCell> = Vec::new();
-    //let mut candidate_cells_stack2: Vec<CandidateCell> = Vec::new();
 
     // 64.
     while !candidate_cell_pairs.is_empty()
     {
-        //let candidate_cell1 = candidate_cells1.pop_front().unwrap();
-        //let candidate_cell2 = candidate_cells2.pop_front().unwrap();
         let candidate_cell_pair = candidate_cell_pairs.pop_front().unwrap();
-        //let c1 = candidate_cell_pair.candidate_cell1;
-        //let c2 = candidate_cell_pair.candidate_cell2;
-        /*assert_eq!(&candidate_cell1.index, &candidate_cell_pair.candidate_cell1.index);
-        assert_eq!(&candidate_cell1.digit, &candidate_cell_pair.candidate_cell1.digit);
-        assert_eq!(&candidate_cell2.index, &candidate_cell_pair.candidate_cell2.index);
-        assert_eq!(&candidate_cell2.digit, &candidate_cell_pair.candidate_cell2.digit);*/
-        let alternate_board = get_alternate_board(&final_board, &board, &candidate_cell_pair.candidate_cell1, &candidate_cell_pair.candidate_cell2);
+        let alternate_board = get_alternate_board(&final_board, &board, &candidate_cell_pair);
 
         // 65.
         // What follows below is a complete copy-paste of the solver which appears at the beginning of this method
@@ -411,9 +403,10 @@ fn look_for_pairs_that_can_be_exchanged(mut rnglcg: &mut PortableLCG, final_boar
                 // 73.
                 Commands::Move => {
                     //log(&"73. command=move".to_string());
-                    let moved_to_digit = handle_move(&mut board_stack, false);
+                    let mut board = board_stack.pop().unwrap(); // Borrow top board
+                    let moved_to_digit = handle_move(&mut board, false);
                     if moved_to_digit <= 9 {  // 75.
-                        command = if board_stack.last_mut().unwrap().cells.iter().any(|cell| cell.digit == 0) {
+                        command = if board.cells.iter().any(|cell| cell.digit == 0) {
                             Commands::Expand
                         } else {
                             Commands::Complete
@@ -422,6 +415,7 @@ fn look_for_pairs_that_can_be_exchanged(mut rnglcg: &mut PortableLCG, final_boar
                         // 76. No viable candidate was found at current position - pop it in the next iteration
                         command = Commands::Collapse;
                     }
+                    board_stack.push(board); // put top board back
                 } // match command::move
                 _ => {  // catch everything else
                     // should never get here
@@ -434,28 +428,16 @@ fn look_for_pairs_that_can_be_exchanged(mut rnglcg: &mut PortableLCG, final_boar
         if command == Commands::Complete
         {   // Board was solved successfully even with two digits swapped
             candidate_cells_stack.push(CandidateCellPair::new(candidate_cell_pair.candidate_cell1.clone(),candidate_cell_pair.candidate_cell2.clone()));
-            //candidate_cells_stack1.push(candidate_cell1);
-            //candidate_cells_stack2.push(candidate_cell2);
         }
     } // while !candidate_cells1.is_empty()
 
-
-    /*assert_eq!(candidate_cells_stack.len(),candidate_cells_stack1.len());
-    for i in 0..candidate_cells_stack.len() {
-        assert_eq!(candidate_cells_stack[i].candidate_cell1.index, candidate_cells_stack1[i].index);
-        assert_eq!(candidate_cells_stack[i].candidate_cell1.digit, candidate_cells_stack1[i].digit);
-        assert_eq!(candidate_cells_stack[i].candidate_cell2.index, candidate_cells_stack2[i].index);
-        assert_eq!(candidate_cells_stack[i].candidate_cell2.digit, candidate_cells_stack2[i].digit);
-    }*/
 
     // 78.
     if !candidate_cells_stack.is_empty()
     {
         // Randomly pick a candidate cell pair and set board to that
-
        set_board_to_randomly_picked_cell_pair(&mut rnglcg, final_board, board, &mut board_candidate_masks, &mut candidate_cells_stack);
         change_made = true;
-
         // 79.
     }
     change_made
@@ -468,8 +450,6 @@ fn set_board_to_randomly_picked_cell_pair(rnglcg: &mut PortableLCG,
                                           candidate_cells_stack: &Vec<CandidateCellPair>) {
     let random_pos = rnglcg.next_range(candidate_cells_stack.len() as i32) as usize; // Randomly pick a candidate cell
     let candidate_cell_pair = &candidate_cells_stack[random_pos];
-    //let candidate_cell1 = &candidate_cell_pair.candidate_cell1;
-    //let candidate_cell2 = &candidate_cell_pair.candidate_cell2;
 
     board[candidate_cell_pair.candidate_cell1.index].digit = final_board[candidate_cell_pair.candidate_cell1.index].digit;
     board[candidate_cell_pair.candidate_cell2.index].digit = final_board[candidate_cell_pair.candidate_cell2.index].digit;
@@ -477,7 +457,7 @@ fn set_board_to_randomly_picked_cell_pair(rnglcg: &mut PortableLCG,
     board_candidate_masks[candidate_cell_pair.candidate_cell2.index] = 0;
     board[candidate_cell_pair.candidate_cell1.index].candidate_digits.mask = 0;
     board[candidate_cell_pair.candidate_cell2.index].candidate_digits.mask = 0;
-    print_and_log_guessing_message(&final_board, &candidate_cell_pair.candidate_cell1, &candidate_cell_pair.candidate_cell2);
+    print_and_log_guessing_message(&final_board, &candidate_cell_pair);
 }
 
 fn look_for_groups_of_digits_of_size_n(mut board: &mut Board, mut board_candidate_masks: &mut [i32; 81], cell_groups: &BTreeMap<usize, Vec<Cell>>) -> bool {
@@ -807,17 +787,17 @@ fn for_cell_in_cells(board_candidate_masks: &mut [i32; 81], board: &mut Board, c
     step_change_made
 }
 
-fn get_alternate_board(final_board: &Board, board: &Board, candidate_cell1: &CandidateCell, candidate_cell2: &CandidateCell) -> Board {
+fn get_alternate_board(final_board: &Board, board: &Board, candidate_cell_pair: &CandidateCellPair) -> Board {
     let mut alternate_board: Board = board.clone();
 
     // assign digit1, digit2, in the order opposite of final_board
-    if final_board[candidate_cell1.index].digit == candidate_cell1.digit
+    if final_board[candidate_cell_pair.candidate_cell1.index].digit == candidate_cell_pair.candidate_cell1.digit
     {
-        alternate_board[candidate_cell1].digit = candidate_cell2.digit;
-        alternate_board[candidate_cell2].digit = candidate_cell1.digit;
+        alternate_board[&candidate_cell_pair.candidate_cell1].digit = candidate_cell_pair.candidate_cell2.digit;
+        alternate_board[&candidate_cell_pair.candidate_cell2].digit = candidate_cell_pair.candidate_cell1.digit;
     } else {
-        alternate_board[candidate_cell1.index].digit = candidate_cell1.digit;
-        alternate_board[candidate_cell2.index].digit = candidate_cell2.digit;
+        alternate_board[candidate_cell_pair.candidate_cell1.index].digit = candidate_cell_pair.candidate_cell1.digit;
+        alternate_board[candidate_cell_pair.candidate_cell2.index].digit = candidate_cell_pair.candidate_cell2.digit;
     }
     alternate_board
 }
@@ -827,8 +807,6 @@ fn get_alternate_board(final_board: &Board, board: &Board, candidate_cell1: &Can
 // Look for a cell that has exactly 2 candidate digits; then look for another cell with the same 2 candidate digits
 fn get_candidate_cells(board_candidate_masks: &mut [i32; 81]) -> VecDeque<CandidateCellPair> {
     let mut candidate_cell_pairs: VecDeque<CandidateCellPair> = VecDeque::new();
-    //let mut candidate_cells1: VecDeque<CandidateCell> = VecDeque::new();
-    //let mut candidate_cells2: VecDeque<CandidateCell> = VecDeque::new();
 
     // 61.
     // index i goes from 0 to 80, index j goes from i+1 to 81. Gives us two cells, i & j, to compare candidate digits
@@ -852,8 +830,6 @@ fn get_candidate_cells(board_candidate_masks: &mut [i32; 81]) -> VecDeque<Candid
             {
                 // found two cells which have the same 2 candidate digits and share a row, column, or block
                 candidate_cell_pairs.push_back(CandidateCellPair::new(CandidateCell::new(i, lower_digit, &"".to_string()), CandidateCell::new(j, upper_digit, &"".to_string())));
-                //1candidate_cells1.push_back(CandidateCell::new(i, lower_digit, &"".to_string()));
-                //candidate_cells2.push_back(CandidateCell::new(j, upper_digit, &"".to_string()));
             }
         }
     }
@@ -876,11 +852,11 @@ fn print_final_board(final_board: &Board) {
     print_board(&final_board);
 }
 
-fn print_and_log_guessing_message(final_board: &Board, candidate_cell1: &CandidateCell, candidate_cell2: &CandidateCell) {
-    let row1 = candidate_cell1.get_row();
-    let col1 = candidate_cell1.get_column();
-    let row2 = candidate_cell2.get_row();
-    let col2 = candidate_cell2.get_column();
+fn print_and_log_guessing_message(final_board: &Board, candidate_cell_pair: &CandidateCellPair) {
+    let row1 = candidate_cell_pair.candidate_cell1.get_row();
+    let col1 = candidate_cell_pair.candidate_cell1.get_column();
+    let row2 = candidate_cell_pair.candidate_cell2.get_row();
+    let col2 = candidate_cell_pair.candidate_cell2.get_column();
     let description: String;
 
     if row1 == row2
@@ -890,18 +866,18 @@ fn print_and_log_guessing_message(final_board: &Board, candidate_cell1: &Candida
     {
         description = format!("column #{}", col1 + 1);
     } else {
-        let (block_row, block_col) = candidate_cell1.get_block();
+        let (block_row, block_col) = candidate_cell_pair.candidate_cell1.get_block();
         description = format!("block ({}, {})", block_row + 1, block_col + 1);
     }
 
     let s = format!("Guessing that {} and {} are arbitrary in {} (multiple solutions): Pick {}->({}, {}), {}->({}, {}).",
-                    candidate_cell1.digit,
-                    candidate_cell2.digit,
+                    candidate_cell_pair.candidate_cell1.digit,
+                    candidate_cell_pair.candidate_cell2.digit,
                     description,
-                    final_board[candidate_cell1.index],
+                    final_board[candidate_cell_pair.candidate_cell1.index],
                     row1 + 1,
                     col1 + 1,
-                    final_board[candidate_cell2.index],
+                    final_board[candidate_cell_pair.candidate_cell2.index],
                     row2 + 1,
                     col2 + 1);
     log(&s);
@@ -1095,7 +1071,9 @@ fn construct_final_board(mut rnglcg: &mut PortableLCG) -> Board {
             Commands::Move => {
                 //let stack_len = board_stack.len();
                 //log(&format!("rowIndexStack Count={} rowToMove={}", stack_len, board_stack.last().unwrap().candidate_cell.get_row()));
-                let moved_to_digit = handle_move(&mut board_stack, true);
+                let mut board = board_stack.pop().unwrap();
+                let moved_to_digit = handle_move(&mut board, true);
+                board_stack.push(board);
                 command = and_next_command(moved_to_digit);
             }
             _ => {
@@ -1107,16 +1085,16 @@ fn construct_final_board(mut rnglcg: &mut PortableLCG) -> Board {
     board_stack.last().unwrap().clone()
 }
 
-fn handle_move(board_stack: &mut Vec<Board>, pr: bool) -> i32 {
-    let cell_to_move: Cell = board_stack.last().unwrap().candidate_cell.clone();
-    let digit_to_move: i32 = board_stack.last().unwrap().last_digit;
-    let moved_to_digit = get_moved_to_digit(digit_to_move, board_stack.last_mut().unwrap().used_digits.clone());
+fn handle_move(board: &mut Board, pr: bool) -> i32 {
+    let cell_to_move: Cell = board.candidate_cell.clone();
+    let digit_to_move: i32 = board.last_digit;
+    let moved_to_digit = get_moved_to_digit(digit_to_move, board.used_digits.clone());
 
     if pr {
         print_digit_to_move(&cell_to_move, digit_to_move, moved_to_digit);
     }
 
-    update_board(board_stack, &cell_to_move, digit_to_move, moved_to_digit);
+    update_board(board, &cell_to_move, digit_to_move, moved_to_digit);
     moved_to_digit
 }
 
@@ -1150,8 +1128,8 @@ fn and_next_command(moved_to_digit: i32) -> Commands {
 }
 
 
-fn update_board(board_stack: &mut Vec<Board>, cell_to_move: &Cell, digit_to_move: i32, moved_to_digit: i32) {
-    let mut board = board_stack.pop().unwrap();
+fn update_board(board: &mut Board, cell_to_move: &Cell, digit_to_move: i32, moved_to_digit: i32) {
+    //let mut board = board_stack.pop().unwrap();
     if digit_to_move > 0
     {
         board.used_digits.clear_digit(digit_to_move);
@@ -1162,7 +1140,7 @@ fn update_board(board_stack: &mut Vec<Board>, cell_to_move: &Cell, digit_to_move
         board.used_digits.set_digit(moved_to_digit);
         board[cell_to_move.index].digit = moved_to_digit;
     }
-    board_stack.push(board);
+    //board_stack.push(board);
 }
 
 fn handle_expand(rnglcg: &mut PortableLCG, board_stack: &mut Vec<Board>, alt_board: Board) {
@@ -1175,7 +1153,6 @@ fn handle_expand(rnglcg: &mut PortableLCG, board_stack: &mut Vec<Board>, alt_boa
 
     // input: current_state. output: contains_unsolvable_cells, best_row, best_col,
     let mut best_cell = Cell::new(0,0);
-    //let mut best_used_digits: [bool; 9] = [false; 9];
     let mut best_used_digits: Digits = Digits::new(0);
     let mut best_candidates_count: i32 = -1;
     let mut best_random_value: i32 = -1;
@@ -1189,10 +1166,10 @@ fn handle_expand(rnglcg: &mut PortableLCG, board_stack: &mut Vec<Board>, alt_boa
         }
         // 11.  otherwise cell unused. Let's see what we can do with it
 
-        let (_digits_used_array, used_digits) = get_row_col_block_used_digits(&current_board, cell); // returns an array of 9 true/false values
+        let used_digits = get_row_col_block_used_digits(&current_board, cell); // returns an array of 9 true/false values
 
         // 13.
-        let candidates_count: i32 = 9 - used_digits.count();
+        let candidates_count = 9 - used_digits.count();
         if candidates_count == 0  // 14.  if there are no candidates, then this cell has no options and Sudoku is unsolvable
         {
             contains_unsolvable_cells = true;
@@ -1292,7 +1269,7 @@ fn get_random_single_candidate_cell(rnglcg: &mut PortableLCG,  board: &Board, bo
     let single_candidate_mask = board_candidate_masks[board_random_single_candidate_cell_index];  // candidate_mask has 1 bit set in range 0-8 indicating which digit 1-9 we can put in this cell
     let single_candidate_mask1 = board[board_random_single_candidate_cell_index].candidate_digits.mask;  // candidate_mask has 1 bit set in range 0-8 indicating which digit 1-9 we can put in this cell
     assert_eq!(single_candidate_mask, single_candidate_mask1);
-    let digit = single_bitmask_to_digit()[&(single_candidate_mask as usize)]; // digit 1-9
+    let digit = single_bitmask_to_digit()[&(single_candidate_mask1 as usize)]; // digit 1-9
     (board_random_single_candidate_cell_index, digit)
 }
 
@@ -1338,7 +1315,7 @@ fn get_single_candidate_indices( board: &Board, candidate_masks: &[i32; 81]) -> 
             assert_eq!(single_candidate_indices[i], single_candidate_indices1[i]);
         }
     }
-    single_candidate_indices
+    single_candidate_indices1
 }
 
 //#region Build a collection (named cellGroups) which maps cell indices into distinct groups (rows/columns/blocks)
@@ -1546,184 +1523,179 @@ fn mask_to_string_of_comma_separated_digits(mask: i32) -> String {
     message
 }
 
-
+// look through the bits set in the mask, from lowest to highest,
+// and return the top two numbers the top two bits represent.
+// (There's only two bits set when this is called.)
 fn top_two_digits(value: i32) -> (i32, i32) {
-let mut temp = value;
-let mut lower = 0;
-let mut upper = 0;
-let mut digit = 1;
-while temp > 0
-{
-    if (temp & 1) != 0
+    let mut temp = value;
+    let mut lower = 0;
+    let mut upper = 0;
+    let mut digit = 1;
+    while temp > 0
     {
-        lower = upper;
-        upper = digit;
+        if (temp & 1) != 0
+        {
+            lower = upper;
+            upper = digit;
+        }
+        temp = temp >> 1;
+        digit += 1;
     }
-    temp = temp >> 1;
-    digit += 1;
+    (lower, upper)
 }
-(lower, upper)
-}
 
-fn get_row_col_block_used_digits(current_state: &Board, target_cell : &Cell) -> ([bool; 9], Digits) {
-// gather all digits used in cell's row, column, and block. output is_digit_used. input: current_state, row, col, block_row, block_col
-let row = target_cell.get_row();
-let col = target_cell.get_column();
-let block_row = row / 3;
-let block_col = col / 3;
-let mut is_digit_used: [bool; 9] = [false; 9];
-let mut used_digits = Digits::new(0);
+fn get_row_col_block_used_digits(current_state: &Board, target_cell: &Cell) -> Digits {
+    // gather all digits used in cell's row, column, and block. output is_digit_used. input: current_state, row, col, block_row, block_col
+    let row = target_cell.get_row();
+    let col = target_cell.get_column();
+    let block_row = row / 3;
+    let block_col = col / 3;
+    let mut used_digits = Digits::new(0);
 
-for i in 0..9  // 12.
-{
-    let cell = current_state[9 * i + col].clone();
-    let row_digit = cell.digit;
-    if row_digit > 0
+    for i in 0..9  // 12.
     {
-        is_digit_used[row_digit as usize - 1] = true;
-        used_digits.set_digit(row_digit);
-    }
+        let cell = current_state[9 * i + col].clone();
+        let row_digit = cell.digit;
+        if row_digit > 0
+        {
+            used_digits.set_digit(row_digit);
+        }
 
-    let cell = current_state[9 * row + i].clone();
-    let col_digit = cell.digit;
-    if col_digit > 0
-    {
-        is_digit_used[col_digit as usize - 1] = true;
-        used_digits.set_digit(col_digit);
-    }
+        let cell = current_state[9 * row + i].clone();
+        let col_digit = cell.digit;
+        if col_digit > 0
+        {
+            used_digits.set_digit(col_digit);
+        }
 
-    let cell = current_state[(block_row * 3 + i / 3) * 9 + (block_col * 3 + i % 3)].clone();
-    let block_digit = cell.digit;
-    if block_digit > 0
-    {
-        is_digit_used[block_digit as usize - 1] = true;
-        used_digits.set_digit(block_digit);
-    }
-} // for (i = 0..8)
-for i in 0..9 {
-    assert_eq!(is_digit_used[i], used_digits.is_present((i+1) as i32));
-}
-(is_digit_used, used_digits)
+        let cell = current_state[(block_row * 3 + i / 3) * 9 + (block_col * 3 + i % 3)].clone();
+        let block_digit = cell.digit;
+        if block_digit > 0
+        {
+            used_digits.set_digit(block_digit);
+        }
+    } // for (i = 0..8)
+
+    used_digits
 }
 
 #[derive(Clone, Copy)]
 pub struct PortableLCG {
-seed: u64,
-a: u64, // Multiplier
-c: u64, // Increment
-m_mask: u64, // Modulus mask (for 48-bit modulus: 2^48 - 1)
+    seed: u64,
+    a: u64, // Multiplier
+    c: u64, // Increment
+    m_mask: u64, // Modulus mask (for 48-bit modulus: 2^48 - 1)
 }
 
 
 // Mutable because we update seed at every call
 // From "Numerical Recipies"
 impl PortableLCG {
-pub fn new(seed: u64) -> Self {
-    PortableLCG {
-        seed,
-        a: 25214903917, // POSIX multiplier
-        c: 11,          // POSIX increment
-        m_mask: (1u64 << 48) - 1, // 2^48 - 1
+    pub fn new(seed: u64) -> Self {
+        PortableLCG {
+            seed,
+            a: 25214903917, // POSIX multiplier
+            c: 11,          // POSIX increment
+            m_mask: (1u64 << 48) - 1, // 2^48 - 1
+        }
     }
-}
 
-// Generates the next random 32-bit integer
-pub fn next(&mut self) -> i32 {
-    // Apply the LCG formula, handling overflow with wrapping_mul and wrapping_add,
-    // and using a bitmask for the modulus.
-    self.seed = (self.seed.wrapping_mul(self.a).wrapping_add(self.c)) & self.m_mask;
-    // Extract the upper 32 bits from the 48-bit state.
-    (self.seed >> 17) as i32
-}
-// r is range 0 to r.
-pub fn next_range(&mut self,r:i32) -> i32 {
-    return ((self.next() as f64 / 0x7FFFFFFF as f64) * r as f64) as i32;
-}
+    // Generates the next random 32-bit integer
+    pub fn next(&mut self) -> i32 {
+        // Apply the LCG formula, handling overflow with wrapping_mul and wrapping_add,
+        // and using a bitmask for the modulus.
+        self.seed = (self.seed.wrapping_mul(self.a).wrapping_add(self.c)) & self.m_mask;
+        // Extract the upper 32 bits from the 48-bit state.
+        (self.seed >> 17) as i32
+    }
+    // r is range 0 to r.
+    pub fn next_range(&mut self, r: i32) -> i32 {
+        return ((self.next() as f64 / 0x7FFFFFFF as f64) * r as f64) as i32;
+    }
 }
 
 
 fn write_from_function(content: &str) -> io::Result<()> {
-// Lock the mutex to get access to the global file.
-let mut file_guard = GLOBAL_FILE.lock().unwrap();
+    // Lock the mutex to get access to the global file.
+    let mut file_guard = GLOBAL_FILE.lock().unwrap();
 
-// Check if the file is initialized and write to it.
-if let Some(ref mut file) = *file_guard {
-    file.write_all(content.as_bytes())?;
-} else {
-    // Handle the case where the file is not yet initialized (e.g., error or not set up).
-    eprintln!("Error: File not initialized in GLOBAL_FILE.");
-    return Err(io::Error::new(ErrorKind::Other, "File not initialized"));
-}
-Ok(())
+    // Check if the file is initialized and write to it.
+    if let Some(ref mut file) = *file_guard {
+        file.write_all(content.as_bytes())?;
+    } else {
+        // Handle the case where the file is not yet initialized (e.g., error or not set up).
+        eprintln!("Error: File not initialized in GLOBAL_FILE.");
+        return Err(io::Error::new(ErrorKind::Other, "File not initialized"));
+    }
+    Ok(())
 }
 
-fn log(s : &String)
+fn log(s: &String)
 {
-println!("{}", s);
-write_from_function(s).expect("TODO: panic message");
-write_from_function("\n").expect("TODO: panic message");
+    println!("{}", s);
+    write_from_function(s).expect("TODO: panic message");
+    write_from_function("\n").expect("TODO: panic message");
 }
-
 
 
 fn compare_files_line_by_line(file1_path: &str, file2_path: &str) -> io::Result<()> {
-let file1 = File::open(file1_path)?;
-let file2 = File::open(file2_path)?;
+    let file1 = File::open(file1_path)?;
+    let file2 = File::open(file2_path)?;
 
-let reader1 = BufReader::new(file1);
-let reader2 = BufReader::new(file2);
+    let reader1 = BufReader::new(file1);
+    let reader2 = BufReader::new(file2);
 
-let mut line1_num = 0;
-let mut line2_num = 0;
-let mut differences_found = false;
+    let mut line1_num = 0;
+    let mut line2_num = 0;
+    let mut differences_found = false;
 
-// Create iterators for lines in each file
-let mut lines1 = reader1.lines();
-let mut lines2 = reader2.lines();
+    // Create iterators for lines in each file
+    let mut lines1 = reader1.lines();
+    let mut lines2 = reader2.lines();
 
-loop {
-    let line1_opt = lines1.next();
-    let line2_opt = lines2.next();
-    line1_num += 1;
-    line2_num += 1;
+    loop {
+        let line1_opt = lines1.next();
+        let line2_opt = lines2.next();
+        line1_num += 1;
+        line2_num += 1;
 
-    match (line1_opt, line2_opt) {
-        (Some(Ok(line1)), Some(Ok(line2))) => {
-            if *line1 != line2 {
-                println!("Difference at file1 line {}, file2 line {}:", line1_num, line2_num);
-                println!("  File 1: {}", line1);
-                println!("  File 2: {}", line2);
+        match (line1_opt, line2_opt) {
+            (Some(Ok(line1)), Some(Ok(line2))) => {
+                if *line1 != line2 {
+                    println!("Difference at file1 line {}, file2 line {}:", line1_num, line2_num);
+                    println!("  File 1: {}", line1);
+                    println!("  File 2: {}", line2);
+                    differences_found = true;
+                    break;
+                }
+            }
+            (Some(Ok(line1)), None) => {
+                println!("Difference at file1 line {}, file2 line {}: File 1 has extra line: {}", line1_num, line2_num, line1);
                 differences_found = true;
                 break;
             }
-        },
-        (Some(Ok(line1)), None) => {
-            println!("Difference at file1 line {}, file2 line {}: File 1 has extra line: {}", line1_num, line2_num, line1);
-            differences_found = true;
-            break;
-        },
-        (None, Some(Ok(line2))) => {
-            println!("Difference at file1 line {}, file2 line {}: File 2 has extra line: {}", line1_num, line2_num, line2);
-            differences_found = true;
-            break;
-        },
-        (None, None) => {
-            // End of both files
-            break;
-        },
-        (Some(Err(e)), _) | (_, Some(Err(e))) => {
-            return Err(e); // Handle potential I/O errors during line reading
-        },
+            (None, Some(Ok(line2))) => {
+                println!("Difference at file1 line {}, file2 line {}: File 2 has extra line: {}", line1_num, line2_num, line2);
+                differences_found = true;
+                break;
+            }
+            (None, None) => {
+                // End of both files
+                break;
+            }
+            (Some(Err(e)), _) | (_, Some(Err(e))) => {
+                return Err(e); // Handle potential I/O errors during line reading
+            }
+        }
     }
-}
 
-if !differences_found {
-    println!("Files are identical.");
-} else {
-    println!("Differences found between files.");
-}
+    if !differences_found {
+        println!("Files are identical.");
+    } else {
+        println!("Differences found between files.");
+    }
 
-Ok(())
+    Ok(())
 }
 
 fn main()
@@ -1752,31 +1724,31 @@ let file = OpenOptions::new()
     .append(true) // Open in append mode to add content without overwriting
     .open(file_path);
 
-// Lock the mutex and store the file.
-*GLOBAL_FILE.lock().unwrap() = Some(file.expect("REASON"));
+    // Lock the mutex and store the file.
+    *GLOBAL_FILE.lock().unwrap() = Some(file.expect("REASON"));
 
-// MAIN LOOP
-for seed in 1..50
-{
-    let my_rng = PortableLCG::new(seed);
-    log(&format!("RUN {}", seed));
-    play(my_rng);
-}
+    // MAIN LOOP
+    for seed in 1..50
+    {
+        let my_rng = PortableLCG::new(seed);
+        log(&format!("RUN {}", seed));
+        play(my_rng);
+    }
 
-log(&"THE END!".to_string());
-// Close file by setting the global file to None (this drops the file handle)
-*GLOBAL_FILE.lock().unwrap() = None;
+    log(&"THE END!".to_string());
+    // Close file by setting the global file to None (this drops the file handle)
+    *GLOBAL_FILE.lock().unwrap() = None;
 
-let reffile_path1 = r"C:\Users\Charlene\OneDrive\Sudoku\ORIG\SudokuKata\bin\Debug\csharp_output.txt";
-let reffile_path2 = r"C:\Users\David\OneDrive\Sudoku\ORIG\SudokuKata\bin\Debug\csharp_output.txt";
-let reffile_path: &str = if Path::new(reffile_path1).exists()  // 9.
-{
-    reffile_path1
-} else {
-    reffile_path2
-};
+    let reffile_path1 = r"C:\Users\Charlene\OneDrive\Sudoku\ORIG\SudokuKata\bin\Debug\csharp_output.txt";
+    let reffile_path2 = r"C:\Users\David\OneDrive\Sudoku\ORIG\SudokuKata\bin\Debug\csharp_output.txt";
+    let reffile_path: &str = if Path::new(reffile_path1).exists()  // 9.
+    {
+        reffile_path1
+    } else {
+        reffile_path2
+    };
 
-if let Err(e) = compare_files_line_by_line(file_path, reffile_path) {
-    eprintln!("Error comparing files: {}", e);
-}
+    if let Err(e) = compare_files_line_by_line(file_path, reffile_path) {
+        eprintln!("Error comparing files: {}", e);
+    }
 }
