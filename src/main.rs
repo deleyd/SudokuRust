@@ -1603,29 +1603,29 @@ fn compare_files_line_by_line(file1_path: &str, file2_path: &str) -> io::Result<
 
 fn main()
 {
-let file_path = "rust_output.txt";
+    let file_path = "rust_output.txt";
 
-match fs::remove_file(file_path) {
-    Ok(_) => {
-        println!("File '{}' removed successfully.", file_path);
-    }
-    Err(e) => {
-        // If the error is Kind::NotFound, the file didn't exist, which is acceptable
-        if e.kind() == ErrorKind::NotFound {
-            println!("File '{}' does not exist, no action needed.", file_path);
-        } else {
-            // Handle other potential errors during file deletion
-            eprintln!("Error removing file '{}': {}", file_path, e);
+    match fs::remove_file(file_path) {
+        Ok(_) => {
+            println!("File '{}' removed successfully.", file_path);
+        }
+        Err(e) => {
+            // If the error is Kind::NotFound, the file didn't exist, which is acceptable
+            if e.kind() == ErrorKind::NotFound {
+                println!("File '{}' does not exist, no action needed.", file_path);
+            } else {
+                // Handle other potential errors during file deletion
+                eprintln!("Error removing file '{}': {}", file_path, e);
+            }
         }
     }
-}
 
-// Open the file in main and store it in the global static variable.
-let file = OpenOptions::new()
-    .write(true)
-    .create(true)
-    .append(true) // Open in append mode to add content without overwriting
-    .open(file_path);
+    // Open the file in main and store it in the global static variable.
+    let file = OpenOptions::new()
+        .write(true)
+        .create(true)
+        .append(true) // Open in append mode to add content without overwriting
+        .open(file_path);
 
     // Lock the mutex and store the file.
     *GLOBAL_FILE.lock().unwrap() = Some(file.expect("REASON"));
