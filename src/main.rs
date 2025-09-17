@@ -290,13 +290,23 @@ fn play(mut rnglcg: PortableLCG) {
             //log(&format!("48. change_made: {}", change_made).to_string());
             //let two_digit_masks = candidate_masks.Where(mask => mask_to_ones_count[mask] == 2).Distinct().ToList();
             // look for cells which have only 2 options for digits
-            let two_digit_masks: Vec<i32> = get_two_digit_masks(&mut board);
+            let two_digit_masks: Vec<i32> = get_cells_with_two_candidates(&mut board);
 
             // note every number here when expressed in biary uses only 2 bits, indicating there are two candidates for which? cells
-            log(&format!("two_digit_masks={:?}", &two_digit_masks));
+            //log(&format!("two_digit_masks={:#x?}", &two_digit_masks));
+            let mut s : String = "two_digit_masks=[".to_string();
+            let mut first : bool = true;
+            for mask in &two_digit_masks
+            {
+                if !first {s.push_str(", ");}
+                first = false;
+                s.push_str(&format!("{:09b}", &mask));
+            }
+            s += "]";
+            log(&s);
 
-            // 49.
-            let result = handle_two_digit_masks(&mut board, &cell_groups, &two_digit_masks);
+            // 49. handle cells with exactly 2 candidate digits as specified in two_digit_masks
+            let result = handle_cells_with_specified_two_candidates(&mut board, &cell_groups, &two_digit_masks);
             step_change_made = step_change_made || result;
             if change_made || step_change_made {
                 continue;
@@ -532,7 +542,7 @@ fn for_n_digit_groups(board: &mut Board, n_digit_groups: Vec<CellGroupN>) -> boo
 }
 
 
-fn get_two_digit_masks(board: &mut Board) -> Vec<i32> {
+fn get_cells_with_two_candidates(board: &mut Board) -> Vec<i32> {
     let board_candidate_masks: [i32; 81] = std::array::from_fn(|i| board[i].candidate_digits.mask);
 
     /*let mut board_candidate_masks:[i32; 81] = [0;81];
@@ -547,7 +557,7 @@ fn get_two_digit_masks(board: &mut Board) -> Vec<i32> {
     two_digit_masks
 }
 
-fn handle_two_digit_masks(board : &mut Board, cell_groups: &BTreeMap<usize, Vec<Cell>>, two_digit_masks: &Vec<i32>) -> bool {
+fn handle_cells_with_specified_two_candidates(board : &mut Board, cell_groups: &BTreeMap<usize, Vec<Cell>>, two_digit_masks: &Vec<i32>) -> bool {
     let mut cell_group2s : Vec<CellGroup2> = Vec::new();
     let mut step_change_made = false;
     // Outer loop equivalent to SelectMany over twoDigitMasks
@@ -556,8 +566,8 @@ fn handle_two_digit_masks(board : &mut Board, cell_groups: &BTreeMap<usize, Vec<
     {
         log(&format!("cellGroups.Count: {} mask: {}", cell_groups.len(), two_digit_mask).to_string());
 
-        // return groups (rows, cols, blocks) which have exactly 2 cells with the same 2 candidate digits (we don't say which 2 cells these are)
-        let more_cell_group2s = get_cells_with_two_candidate_digits(board, &cell_groups, *two_digit_mask);
+        // return groups (rows, cols, blocks) which have exactly 2 cells with the same 2 candidate digits specified in two_digit_mask
+        let more_cell_group2s = get_cells_with_specified_two_candidate_digits(board, &cell_groups, *two_digit_mask);
 
         cell_group2s.extend(more_cell_group2s);
         // 50.
@@ -568,7 +578,7 @@ fn handle_two_digit_masks(board : &mut Board, cell_groups: &BTreeMap<usize, Vec<
         //log(&"groups.Any()".to_string());
         //log("50. Groups is NOT empty".to_string());
         //log(&format!("groups.Count()={}", groups.len()));
-        let result = for_group_in_groups(board, &mut cell_group2s);
+        let result = handle_cellgroup2_groups(board, &mut cell_group2s);
 
         step_change_made = step_change_made || result;
         //log(&format!("step_change_made={}", step_change_made))
@@ -599,7 +609,7 @@ fn set_one_single_digit_cell(rnglcg: &mut PortableLCG, board: &mut Board, candid
     change_made
 }
 
-fn for_group_in_groups(board: &mut Board, cell_group2s: &mut Vec<CellGroup2>) -> bool {
+fn handle_cellgroup2_groups(board: &mut Board, cell_group2s: &mut Vec<CellGroup2>) -> bool {
     log(&format!("cell_group2s.Count()={}", cell_group2s.len()));
     let mut step_change_made: bool = false;
 
@@ -644,14 +654,14 @@ fn for_group_in_groups(board: &mut Board, cell_group2s: &mut Vec<CellGroup2>) ->
         log(&s);
 
         // 52.
-        let result = for_cell_in_cells(board, cell_group2, &cell_group2_cells_which_overlap);
+        let result = remove_other_candidates(board, cell_group2, &cell_group2_cells_which_overlap);
         step_change_made = step_change_made || result;
     }
     step_change_made
 }
 
-// return groups (rows, cols, blocks) which have exactly 2 cells with the same 2 candidate digits
-fn get_cells_with_two_candidate_digits(board: &mut Board, cell_groups: &BTreeMap<usize, Vec<Cell>>, two_digit_mask: i32) -> Vec<CellGroup2>  {
+// return groups (rows, cols, blocks) which have exactly 2 cells with the same 2 candidate digits in two_digit_mask
+fn get_cells_with_specified_two_candidate_digits(board: &mut Board, cell_groups: &BTreeMap<usize, Vec<Cell>>, two_digit_mask: i32) -> Vec<CellGroup2>  {
     // cell_groups is a fixed list of cell rows, cell columns, and cell blocks
     let mut cell_group2s : Vec<CellGroup2> = Vec::new();
     for cell_group in cell_groups // key is the discrminiator
@@ -662,7 +672,7 @@ fn get_cells_with_two_candidate_digits(board: &mut Board, cell_groups: &BTreeMap
         sorted_cells.sort_by_key(|cell| cell.index);
         for cell in &sorted_cells
         {
-            log(&format!("cell.Index: {0} candidateMasks[cell.Index]: {1} = mask: {2}", cell.index, board[cell.index].candidate_digits.mask, two_digit_mask));
+            log(&format!("cell.Index: {} candidateMasks[{}]: {:09b} = mask: {:09b}", cell.index, cell.index, board[cell.index].candidate_digits.mask, two_digit_mask));
             if board[cell.index].candidate_digits.mask == two_digit_mask {
                 log(&"FOUND MATCH!".to_string());
             }
@@ -683,7 +693,7 @@ fn get_cells_with_two_candidate_digits(board: &mut Board, cell_groups: &BTreeMap
         // Second Where condition: group.Any(tuple => candidateMasks[tuple.Index] != mask && (candidateMasks[tuple.Index] & mask) > 0)
         log(&format!("cells length: {}", sorted_cells.len()));
         for cell in &sorted_cells {
-            log(&format!("cell.Index={} candidateMasks[cell.Index]={} mask={} candidateMasks[cell.Index]&mask={}", cell.index, board[cell.index].candidate_digits.mask, two_digit_mask, board[cell.index].candidate_digits.mask & two_digit_mask));
+            log(&format!("cell.Index={} candidateMasks[{}]={:09b} mask={:09b} candidateMasks[cell.Index]&mask= {:09b}", cell.index, cell.index, board[cell.index].candidate_digits.mask, two_digit_mask, board[cell.index].candidate_digits.mask & two_digit_mask));
             if board[cell.index].candidate_digits.mask != two_digit_mask && (board[cell.index].candidate_digits.mask & two_digit_mask) > 0 {
                 log(&"TRUE!".to_string());
                 break;
@@ -716,7 +726,8 @@ fn get_cells_with_two_candidate_digits(board: &mut Board, cell_groups: &BTreeMap
 }
 
 
-fn for_cell_in_cells(board: &mut Board, cell_group2: &CellGroup2, cells: &Vec<&Cell>) -> bool {
+// Remove candidates because they must go elsewhere
+fn remove_other_candidates(board: &mut Board, cell_group2: &CellGroup2, cells: &Vec<&Cell>) -> bool {
     let mut step_change_made : bool = false;
     for cell in cells
     {
@@ -730,6 +741,7 @@ fn for_cell_in_cells(board: &mut Board, cell_group2: &CellGroup2, cells: &Vec<&C
     step_change_made
 }
 
+// Get board with candidate_cell_pair cells swapped
 fn get_alternate_board(final_board: &Board, board: &Board, candidate_cell_pair: &CandidateCellPair) -> Board {
     let mut alternate_board: Board = board.clone();
 
@@ -1631,7 +1643,7 @@ fn main()
     *GLOBAL_FILE.lock().unwrap() = Some(file.expect("REASON"));
 
     // MAIN LOOP
-    for seed in 1..50
+    for seed in 1..5
     {
         let my_rng = PortableLCG::new(seed);
         log(&format!("RUN {}", seed));
