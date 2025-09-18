@@ -11,11 +11,58 @@ use std::path::Path;
 use std::sync::OnceLock;
 use std::fmt;
 
+
+/* A Sudoku board is a 9x9 matrix of cells. 9x9=81 cells total. We index the cells as follows:
+
+            row, col index                            blockRow, blockCol               blockCellRow, blockCellCol, blockCellIndex
+
+          0  1  2  3  4  5  6  7  8                    0         1       2
+        +--------+--------+--------+               +--------+--------+--------+       +-----------+     +-----------+
+      0 | 0  1  2| 3  4  5| 6  7  8|               |        |        |        |       |0,0|0,1|0,2|     | 0 | 1 | 2 |
+      1 | 9 10 11|12 13 14|15 16 17|             0 |  0,0   |   0,1  |  0,2   |       +---+---+---+     +---+---+---+
+      2 |18 19 20|21 22 23|24 25 26|               |        |        |        |       |1,0|1,1|1,2|     | 3 | 4 | 5 |
+        +--------+--------+--------+               +--------+--------+--------+       +---+---+---+     +---+---+---+
+      3 |27 28 29|30 31 32|33 34 35|               |        |        |        |       |2,0|2,1|2,2|     | 6 | 7 | 8 |
+      4 |36 37 38|39 40 41|42 43 44|             1 |  0,1   |   1,1  |  1,2   |       +---+---+---+     +---+---+---+
+      5 |45 46 47|48 49 50|51 52 53|               |        |        |        |
+        +--------+--------+--------+               +--------+--------+--------+
+      6 |54 55 56|57 58 59|60 61 62|               |        |        |        |
+      7 |63 64 65|66 67 68|69 70 71|             2 |  0,2   |   1,2  |  2,2   |
+      8 |72 73 74|75 76 77|78 79 80|               |        |        |        |
+        +--------+--------+--------+               +--------+--------+--------+
+
+ index = row*9 + col
+ row = index / 9   [integer divide]
+ col = index % 9
+ blockRow = row/3
+ blockCol = col/3
+
+ Traverse a row:
+ for i in 0..9 { cell_index = row + i; }
+ Traverse a column:
+ for i in 0..9 { cell_index = 9*i + col; }
+ Traverse a block:
+ for i in 0..9 {
+     9 * (block_row * 3 + i / 3) + block_col * 3 + i % 3;
+}
+     Explanation:
+         block_row * 3 = row
+         9*row = starting index of row
+         i/3 = {0,0,0,1,1,1,2,2,2} [integer divide]
+         9*(i/3) = {0,0,0,9,9,9,18,18,18}  index offset to each row
+         PUTTING THAT TOGETHER WE HAVE:
+         starting index of row + index offset to each row
+         NOW WE ADD:
+         block_col * 3 = offset into row where block starts
+         i % 3 = offset into block gives cell
+         PUTTING THAT TOGETHER WE HAVE:
+         starting index of row + index offset to each row + offset into row where block starts + offset into block gives cell
+*/
+
 // Declare a global static variable to hold the file.
 // Mutex is used for thread-safe access to the file.
 // Option is used because the file might not be initialized yet.
 static GLOBAL_FILE: Mutex<Option<File>> = Mutex::new(None);
-
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct Cell {
