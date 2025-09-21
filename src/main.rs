@@ -1121,12 +1121,8 @@ fn generate_initial_board(rnglcg: &mut PortableLCG, final_board: &Board) -> Boar
     while removed_pos < 9 * 9 - remaining_digits  // 21. Loop. Clear cells until we have 'remainind_digits' cells left with numbers in them.
     {
         // 1. Randomly shuffle positions[] array to give us a random collection of 51 indexes
-        let cur_remaining_digits: i32 = (positions.len() - removed_pos) as i32;  // positions.len()=81
-        //let index_to_pick = removed_pos + rnglcg.next_range(cur_remaining_digits) as usize;
         let index_to_pick = next_in_range(rnglcg, removed_pos, 81);
         let board_index = positions[index_to_pick];
-        let row: usize = index_to_row(board_index);
-        let col: usize = index_to_col(board_index);
 
         let block_row_to_remove = index_to_block_row(board_index);
         let block_col_to_remove = index_to_block_col(board_index);
