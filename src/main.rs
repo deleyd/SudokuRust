@@ -1075,6 +1075,12 @@ fn generate_initial_board(rnglcg: &mut PortableLCG, final_board: &Board) -> Boar
     let mut removed_pos: usize = 0;
     let mut board = final_board.clone(); // start with a copy of the final board
 
+    // get a random sample from a set
+    // for i from 0 to n − 2 do
+    //      j ← random integer such that i ≤ j ≤ n − 1
+    //      exchange a[i] and a[j]
+    //
+    // Python has rand.sample(range) Randomly sample exactly amount distinct indices from 0..length, and return them in random order (fully shuffled).
     // 'positions' array is initially filled with index numbers 0-80 in order
     // We will be doing the equivalent of a random shuffling of a deck of cards (we have 81 cards in this case).
     // Recall how to shuffle a deck of cards. We randomly pick a card from the array, swap it with card at position[0]
@@ -1109,36 +1115,49 @@ fn generate_initial_board(rnglcg: &mut PortableLCG, final_board: &Board) -> Boar
     // We might decide later on to choose a different way of randomly picking 51 indexes from our array of 81 indexes
     // We could easily do that, swapping out method 1 for method 2.
     // We can't easily do that when both the random shuffle and the clearing of cells is in the same loop.
+    // However, there are conditions when we reject a randomly chosen cell if the block cell is in already has max_removed_per_block cells cleared,
+    // in which case we throw away that random index and ask for another one.
 
     while removed_pos < 9 * 9 - remaining_digits  // 21. Loop. Clear cells until we have 'remainind_digits' cells left with numbers in them.
     {
+        // 1. Randomly shuffle positions[] array to give us a random collection of 51 indexes
         let cur_remaining_digits: i32 = (positions.len() - removed_pos) as i32;  // positions.len()=81
-        let index_to_pick = removed_pos + rnglcg.next_range(cur_remaining_digits) as usize;
+        //let index_to_pick = removed_pos + rnglcg.next_range(cur_remaining_digits) as usize;
+        let index_to_pick = next_in_range(rnglcg, removed_pos, 81);
+        let board_index = positions[index_to_pick];
+        let row: usize = index_to_row(board_index);
+        let col: usize = index_to_col(board_index);
 
-        let picked_index = positions[index_to_pick];
-        let row: usize = index_to_row(picked_index);
-        let col: usize = index_to_col(picked_index);
-
-        let block_row_to_remove = index_to_block_row(picked_index);
-        let block_col_to_remove = index_to_block_col(picked_index);
+        let block_row_to_remove = index_to_block_row(board_index);
+        let block_col_to_remove = index_to_block_col(board_index);
 
         if removed_per_block[block_row_to_remove][block_col_to_remove] >= max_removed_per_block
         {
-            continue;
+            continue;  // try again
         }
 
         removed_per_block[block_row_to_remove][block_col_to_remove] += 1;
         // 21.
-        let cell_index: usize = 9 * row + col;
-        board[cell_index].digit = 0;
+        board[board_index].digit = 0;
 
-        // swap [removed_pos] with [index_to_pick]
-        let temp = positions[removed_pos];
-        positions[removed_pos] = positions[index_to_pick];
-        positions[index_to_pick] = temp;
+        // swap positions[removed_pos] with positions[index_to_pick]
+        positions = swap(positions, removed_pos, index_to_pick);
         removed_pos += 1;
     }
     board
+}
+fn swap(mut positions:[usize; 9 * 9], a: usize, b: usize) -> [usize; 9 * 9]
+{
+    let temp = positions[a];
+    positions[a] = positions[b];
+    positions[b] = temp;
+    positions
+}
+fn next_in_range(rnglcg: &mut PortableLCG, low: usize, high: usize) -> usize
+{
+    let cur_remaining_digits: usize = high - low;
+    let index_to_pick = low + rnglcg.next_range(cur_remaining_digits as i32) as usize;
+    index_to_pick
 }
 
 fn construct_final_board(mut rnglcg: &mut PortableLCG) -> Board {
