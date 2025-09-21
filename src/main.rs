@@ -108,21 +108,20 @@ impl Board {
         Board {
             cells,
             candidate_cell: Cell::new(0,0),
-            //used_digits:  [false; 9],
             used_digits: Digits::new(0),
             last_digit: -2,
         }
     }
 }
-impl Index<&CandidateCell> for Board {
+impl Index<&SingleCandidateCell> for Board {
     type Output = Cell;
 
-    fn index(&self, candidate_cell: &CandidateCell) -> &Self::Output {
+    fn index(&self, candidate_cell: &SingleCandidateCell) -> &Self::Output {
         &self.cells[candidate_cell.index]
     }
 }
-impl IndexMut<&CandidateCell> for Board {
-    fn index_mut(&mut self, candidate_cell: &CandidateCell) -> &mut Self::Output {
+impl IndexMut<&SingleCandidateCell> for Board {
+    fn index_mut(&mut self, candidate_cell: &SingleCandidateCell) -> &mut Self::Output {
         &mut self.cells[candidate_cell.index]
     }
 }
@@ -166,32 +165,32 @@ impl IndexMut<usize> for Board {
 }
 
 #[derive(Debug, Clone)]
-pub struct CellGroup2 {  // group with exactly 2 candidates and 2 cells those 2 candidate digits can be in
-    pub mask: i32,
-    pub discriminator: i32,
+pub struct CellGroup2 {       // group with exactly 2 candidates and 2 cells those 2 candidate digits can be in
+    pub mask: i32,            // mask with 2 bits set indicating the 2 candidate digits
+    pub discriminator: i32,   // Key: 0-8 (rows), 9-17 (columns), 18-27 (blocks).
     pub description: String,
-    cells: Vec<Cell>,
+    cell_group: Vec<Cell>,         // either 9 cells in a row, or 9 in a column, or 9 in a block
 }
 
 
 #[derive(Debug, Clone)]
 pub struct CellGroupN<'a> {  // group with n candidates
-    pub mask: i32,
+    pub mask: i32,                               // mask with n bits set indicating the n candidate digits
     pub description: String,
     kvp_cell_group: (&'a usize, &'a Vec<Cell>),
-    cells_with_mask: Vec<Cell>,
+    cells_with_mask: Vec<Cell>,                  // list of cells which meet the condition that it has exactly the n candidate digits in mask
     pub cleanable_cells_count: u32,
 }
 
 #[derive(Debug, Clone)]
-struct CandidateCell {
-    index: usize,
-    digit: i32,
+struct SingleCandidateCell {
+    index: usize,         // index tells us which cell on the board it is
+    digit: i32,           // the one digit this cell can be set to when considering the row it's in, or the column it's in, or the block it's in
     description: String,
 }
-impl CandidateCell {
-    pub fn new(index: usize, digit: i32, description: &String) -> CandidateCell {
-        CandidateCell {
+impl SingleCandidateCell {
+    pub fn new(index: usize, digit: i32, description: &String) -> SingleCandidateCell {
+        SingleCandidateCell {
             index,
             digit,
             description: description.clone(),
@@ -214,15 +213,33 @@ impl CandidateCell {
 }
 
 
+struct TwoCandidatesCellPair {
+    index1 : usize,
+    index2 : usize,
+    digit1 : i32,
+    digit2 : i32,
+}
+impl TwoCandidatesCellPair {
+    pub fn new(i1: usize, i2: usize, d1: i32, d2: i32) -> TwoCandidatesCellPair {
+        TwoCandidatesCellPair {
+            index1 : i1,
+            index2 : i2,
+            digit1 : d1,
+            digit2 : d2,
+        }
+    }
+}
+
+
 struct CandidateCellPair {
-    candidate_cell1 : CandidateCell,
-    candidate_cell2 : CandidateCell,
+    cell1: SingleCandidateCell,
+    cell2: SingleCandidateCell,
 }
 impl CandidateCellPair {
-    pub fn new(c1: CandidateCell, c2: CandidateCell) -> CandidateCellPair {
+    pub fn new(c1: SingleCandidateCell, c2: SingleCandidateCell) -> CandidateCellPair {
         CandidateCellPair {
-            candidate_cell1 : c1,
-            candidate_cell2 : c2,
+            cell1: c1,
+            cell2: c2,
         }
     }
 }
@@ -394,16 +411,19 @@ fn look_for_pairs_that_can_be_exchanged(mut rnglcg: &mut PortableLCG, final_boar
     // This happens when board has more than one valid solution
     let mut change_made = false;
     let mut candidate_cell_pairs = get_candidate_cells(board);
+    let mut two_candidate_cell_pairs = get_two_candidate_cells(board);
 
     // At this point we have the lists with pairs of cells that might pick one of two digits each
     // Now we have to check whether that is really true - does the board have two solutions?
     // possibly replace with cellList1,2. holding cells and values set for cell.
     let mut candidate_cell_pair_stack: Vec<CandidateCellPair> = Vec::new();
+    let mut two_candidate_cell_pair_stack: Vec<TwoCandidatesCellPair> = Vec::new();
 
     // 64.
     while !candidate_cell_pairs.is_empty()
     {
         let candidate_cell_pair = candidate_cell_pairs.pop_front().unwrap();
+        let two_candidate_cell_pair = two_candidate_cell_pairs.pop_front().unwrap();
         let alternate_board = get_alternate_board(&final_board, &board, &candidate_cell_pair);
 
         // 65.
@@ -460,7 +480,8 @@ fn look_for_pairs_that_can_be_exchanged(mut rnglcg: &mut PortableLCG, final_boar
         // 77.
         if command == Commands::Complete
         {   // Board was solved successfully even with two digits swapped
-            candidate_cell_pair_stack.push(CandidateCellPair::new(candidate_cell_pair.candidate_cell1.clone(), candidate_cell_pair.candidate_cell2.clone()));
+            candidate_cell_pair_stack.push(CandidateCellPair::new(candidate_cell_pair.cell1.clone(), candidate_cell_pair.cell2.clone()));
+            two_candidate_cell_pair_stack.push(TwoCandidatesCellPair::new(two_candidate_cell_pair.index1, two_candidate_cell_pair.index2, two_candidate_cell_pair.digit1, two_candidate_cell_pair.digit2));
         }
     } // while !candidate_cells1.is_empty()
 
@@ -483,10 +504,10 @@ fn set_randomly_picked_cell_pair_on_board(rnglcg: &mut PortableLCG,
     let random_pos = rnglcg.next_range(candidate_cells_stack.len() as i32) as usize; // Randomly pick a candidate cell
     let candidate_cell_pair = &candidate_cells_stack[random_pos];
 
-    board[candidate_cell_pair.candidate_cell1.index].digit = final_board[candidate_cell_pair.candidate_cell1.index].digit;
-    board[candidate_cell_pair.candidate_cell2.index].digit = final_board[candidate_cell_pair.candidate_cell2.index].digit;
-    board[candidate_cell_pair.candidate_cell1.index].candidate_digits.mask = 0;
-    board[candidate_cell_pair.candidate_cell2.index].candidate_digits.mask = 0;
+    board[candidate_cell_pair.cell1.index].digit = final_board[candidate_cell_pair.cell1.index].digit;
+    board[candidate_cell_pair.cell2.index].digit = final_board[candidate_cell_pair.cell2.index].digit;
+    board[candidate_cell_pair.cell1.index].candidate_digits.mask = 0;
+    board[candidate_cell_pair.cell2.index].candidate_digits.mask = 0;
     print_and_log_guessing_message(&final_board, &candidate_cell_pair);
 }
 
@@ -635,7 +656,7 @@ fn handle_cells_with_specified_two_candidates(board : &mut Board, cell_groups: &
 
 // randomly select one of the single candidate cells (cell which has only one candidate digit) and set that cell to the candidate digit
 // Return true if a cell was set to its candidate digit. False if the list of single digit candidate cells is empty
-fn set_one_single_digit_cell(rnglcg: &mut PortableLCG, board: &mut Board, candidate_cells: Vec<CandidateCell>) -> bool {
+fn set_one_single_digit_cell(rnglcg: &mut PortableLCG, board: &mut Board, candidate_cells: Vec<SingleCandidateCell>) -> bool {
     let mut change_made = false;
     if candidate_cells.len() > 0
     {
@@ -665,7 +686,7 @@ fn handle_cellgroup2_groups(board: &mut Board, cell_group2s: &mut Vec<CellGroup2
     {
         //log(&format!("cell_group2={}", cell_group2.description));
 
-        let cell_group2_cells_which_overlap: Vec<_> = cell_group2.cells.iter()
+        let cell_group2_cells_which_overlap: Vec<_> = cell_group2.cell_group.iter()
             .filter(|cell| board[cell.index].candidate_digits.mask != cell_group2.mask && // not equal but overlaps board_candidate_masks[cell.index]
                 (board[cell.index].candidate_digits.mask & cell_group2.mask) > 0)
             .sorted_by_key(|cell| cell.index)
@@ -682,7 +703,7 @@ fn handle_cellgroup2_groups(board: &mut Board, cell_group2s: &mut Vec<CellGroup2
         //log(&"cells.Any()".to_string());
         let (lower, upper) = top_two_digits(cell_group2.mask); // bits represent digits
 
-        let cells_with_same_2_candidates: Vec<&Cell> = cell_group2.cells.iter()
+        let cells_with_same_2_candidates: Vec<&Cell> = cell_group2.cell_group.iter()
             .filter(|cell| board[cell.index].candidate_digits.mask == cell_group2.mask) // equal to cell_group2.mask
             .map(|x| x)
             .collect();
@@ -711,10 +732,10 @@ fn handle_cellgroup2_groups(board: &mut Board, cell_group2s: &mut Vec<CellGroup2
 fn get_cells_with_specified_two_candidate_digits(board: &mut Board, cell_groups: &BTreeMap<usize, Vec<Cell>>, two_digit_mask: i32) -> Vec<CellGroup2>  {
     // cell_groups is a fixed list of cell rows, cell columns, and cell blocks
     let mut cell_group2s : Vec<CellGroup2> = Vec::new();
-    for cell_group in cell_groups // key is the discrminiator
+    for cell_group_kvp in cell_groups // key is the discrminiator
     {
         // First Where condition: group.Count(tuple => candidateMasks[tuple.Index] == mask) == 2
-        let cell_list = cell_group.1;  //cell_group.0 (key is the discrminator 0-27) tells us which group we are looking at (Specific row, col, or block). .1 is the list of 9 indexes which comprise this group
+        let cell_list = cell_group_kvp.1;  //cell_group.0 (key is the discrminator 0-27) tells us which group we are looking at (Specific row, col, or block). .1 is the list of 9 indexes which comprise this group
         let mut sorted_cells: Vec<&Cell> = cell_list.iter().collect();
         sorted_cells.sort_by_key(|cell| cell.index);
         for cell in &sorted_cells
@@ -742,7 +763,6 @@ fn get_cells_with_specified_two_candidate_digits(board: &mut Board, cell_groups:
         for cell in &sorted_cells {
             log(&format!("cell.Index={} candidateMasks[{}]={:09b} mask={:09b} candidateMasks[cell.Index]&mask= {:09b}", cell.index, cell.index, board[cell.index].candidate_digits.mask, two_digit_mask, board[cell.index].candidate_digits.mask & two_digit_mask));
             if board[cell.index].candidate_digits.mask != two_digit_mask && (board[cell.index].candidate_digits.mask & two_digit_mask) > 0 {
-                log(&"TRUE!".to_string());
                 break;
             }
         }
@@ -758,12 +778,13 @@ fn get_cells_with_specified_two_candidate_digits(board: &mut Board, cell_groups:
         // Get first description from the group. Description tells us which row, col, or block we are examining
         log(&"hasOverlappingNonMatch: YES".to_string());
         let description = sorted_cells.first().map(|cell| cell.description.clone()).unwrap_or_default();
-        // this cell_group has exactly 2 cells which can have exactly 2 candidate digits. Which digit to put where? It might work both ways!
+        // this cell_group of 9 cells two of which have exactly 2 candidate digits, the same 2 candidate digits.
+        // One cell gets one digit, the other cell gets the other digit. Which digit goes with which cell? It might work both ways!
         let cell_group2 = CellGroup2 {
             mask: two_digit_mask,
-            discriminator: cell_group.0.clone() as i32,  // 0-8 (rows), 9-17 (cols), 18-27 (blocks). Key.
+            discriminator: cell_group_kvp.0.clone() as i32,  // 0-8 (rows), 9-17 (cols), 18-27 (blocks). Key.
             description,
-            cells: cell_list.clone(),
+            cell_group: cell_list.clone(),
         };
         assert_eq!(cell_list.len(), 9);  // either 9 cells in a row, or 9 in a column, or 9 in a block
 
@@ -793,13 +814,13 @@ fn get_alternate_board(final_board: &Board, board: &Board, candidate_cell_pair: 
     let mut alternate_board: Board = board.clone();
 
     // assign digit1, digit2, in the order opposite of final_board
-    if final_board[candidate_cell_pair.candidate_cell1.index].digit == candidate_cell_pair.candidate_cell1.digit
+    if final_board[candidate_cell_pair.cell1.index].digit == candidate_cell_pair.cell1.digit
     {
-        alternate_board[&candidate_cell_pair.candidate_cell1].digit = candidate_cell_pair.candidate_cell2.digit;
-        alternate_board[&candidate_cell_pair.candidate_cell2].digit = candidate_cell_pair.candidate_cell1.digit;
+        alternate_board[&candidate_cell_pair.cell1].digit = candidate_cell_pair.cell2.digit;
+        alternate_board[&candidate_cell_pair.cell2].digit = candidate_cell_pair.cell1.digit;
     } else {
-        alternate_board[candidate_cell_pair.candidate_cell1.index].digit = candidate_cell_pair.candidate_cell1.digit;
-        alternate_board[candidate_cell_pair.candidate_cell2.index].digit = candidate_cell_pair.candidate_cell2.digit;
+        alternate_board[candidate_cell_pair.cell1.index].digit = candidate_cell_pair.cell1.digit;
+        alternate_board[candidate_cell_pair.cell2.index].digit = candidate_cell_pair.cell2.digit;
     }
     alternate_board
 }
@@ -807,6 +828,7 @@ fn get_alternate_board(final_board: &Board, board: &Board, candidate_cell_pair: 
 // Try to see if there are pairs of values that can be exchanged arbitrarily
 // This happens when board has more than one valid solution
 // Look for a cell that has exactly 2 candidate digits; then look for another cell with the same 2 candidate digits
+// Return 2 cells which share a row, column, or block, and which share the same 2 digit candidates
 fn get_candidate_cells(board: &mut Board) -> VecDeque<CandidateCellPair> {
     let mut candidate_cell_pairs: VecDeque<CandidateCellPair> = VecDeque::new();
 
@@ -817,7 +839,7 @@ fn get_candidate_cells(board: &mut Board) -> VecDeque<CandidateCellPair> {
         // 62.
         if count_candidates(board[i].candidate_digits.mask) != 2 { // looking for cells with exactly 2 candidate digits
             continue;
-        }   // This cell candidate i has exactly 2 digits
+        }   // This cell candidate i has exactly 2 digits. Get the two digits
         let (lower_digit, upper_digit) = top_two_digits(board[i].candidate_digits.mask); // we already determined that this candidate has exactly 2 digits
 
         // 63. Now look for another cell with exactly the same 2 digit candidates
@@ -831,11 +853,41 @@ fn get_candidate_cells(board: &mut Board) -> VecDeque<CandidateCellPair> {
             if row_or_column_or_block_shared(i, j)
             {
                 // found two cells which have the same 2 candidate digits and share a row, column, or block
-                candidate_cell_pairs.push_back(CandidateCellPair::new(CandidateCell::new(i, lower_digit, &"".to_string()), CandidateCell::new(j, upper_digit, &"".to_string())));
+                candidate_cell_pairs.push_back(CandidateCellPair::new(SingleCandidateCell::new(i, lower_digit, &"".to_string()), SingleCandidateCell::new(j, upper_digit, &"".to_string())));
             }
         }
     }
     candidate_cell_pairs
+}
+fn get_two_candidate_cells(board: &mut Board) -> VecDeque<TwoCandidatesCellPair> {
+    let mut two_candidate_cell_pairs: VecDeque<TwoCandidatesCellPair> = VecDeque::new();
+
+    // 61.
+    // index i goes from 0 to 80, index j goes from i+1 to 81. Gives us two cells, i & j, to compare candidate digits
+    for i in 0..80  // stop at 80 because j looks at i+1 cell
+    {
+        // 62.
+        if count_candidates(board[i].candidate_digits.mask) != 2 { // looking for cells with exactly 2 candidate digits
+            continue;
+        }   // This cell candidate i has exactly 2 digits. Get the two digits
+        let (lower_digit, upper_digit) = top_two_digits(board[i].candidate_digits.mask); // we already determined that this candidate has exactly 2 digits
+
+        // 63. Now look for another cell with exactly the same 2 digit candidates
+        for j in i + 1..81
+        {
+            if board[j].candidate_digits.mask != board[i].candidate_digits.mask {
+                continue;
+            }
+            // Found another cell[j] which has exactly the same two candidate digits as cell [i]
+            // Check if the two cells share a row, column, or block
+            if row_or_column_or_block_shared(i, j)
+            {
+                // found two cells which have the same 2 candidate digits and share a row, column, or block
+                two_candidate_cell_pairs.push_back(TwoCandidatesCellPair::new(i, j, lower_digit, upper_digit));
+            }
+        }
+    }
+    two_candidate_cell_pairs
 }
 
 fn print_starting_board(board: &mut Board) {
@@ -855,10 +907,10 @@ fn print_final_board(final_board: &Board) {
 }
 
 fn print_and_log_guessing_message(final_board: &Board, candidate_cell_pair: &CandidateCellPair) {
-    let row1 = candidate_cell_pair.candidate_cell1.get_row();
-    let col1 = candidate_cell_pair.candidate_cell1.get_column();
-    let row2 = candidate_cell_pair.candidate_cell2.get_row();
-    let col2 = candidate_cell_pair.candidate_cell2.get_column();
+    let row1 = candidate_cell_pair.cell1.get_row();
+    let col1 = candidate_cell_pair.cell1.get_column();
+    let row2 = candidate_cell_pair.cell2.get_row();
+    let col2 = candidate_cell_pair.cell2.get_column();
     let description: String;
 
     if row1 == row2
@@ -868,18 +920,18 @@ fn print_and_log_guessing_message(final_board: &Board, candidate_cell_pair: &Can
     {
         description = format!("column #{}", col1 + 1);
     } else {
-        let (block_row, block_col) = candidate_cell_pair.candidate_cell1.get_block();
+        let (block_row, block_col) = candidate_cell_pair.cell1.get_block();
         description = format!("block ({}, {})", block_row + 1, block_col + 1);
     }
 
     let s = format!("Guessing that {} and {} are arbitrary in {} (multiple solutions): Pick {}->({}, {}), {}->({}, {}).",
-                    candidate_cell_pair.candidate_cell1.digit,
-                    candidate_cell_pair.candidate_cell2.digit,
+                    candidate_cell_pair.cell1.digit,
+                    candidate_cell_pair.cell2.digit,
                     description,
-                    final_board[candidate_cell_pair.candidate_cell1.index],
+                    final_board[candidate_cell_pair.cell1.index],
                     row1 + 1,
                     col1 + 1,
-                    final_board[candidate_cell_pair.candidate_cell2.index],
+                    final_board[candidate_cell_pair.cell2.index],
                     row2 + 1,
                     col2 + 1);
     log(&s);
@@ -947,8 +999,8 @@ fn row_or_column_or_block_shared(i:usize, j:usize) -> bool {
     return row_i == row_j || col_i == col_j || block_i == block_j
 }
 
-fn get_single_digit_cells(board: &mut Board) -> Vec<CandidateCell> {
-    let mut candidate_cells: Vec<CandidateCell> = Vec::new();  // make a list of cells which have only 1 candidate digit
+fn get_single_digit_cells(board: &mut Board) -> Vec<SingleCandidateCell> {
+    let mut candidate_cells: Vec<SingleCandidateCell> = Vec::new();  // make a list of cells which have only 1 candidate digit
     // 39.
     // candidate_masks is input
     // test each digit
@@ -996,19 +1048,19 @@ fn get_single_digit_cells(board: &mut Board) -> Vec<CandidateCell> {
             // 44.
             if row_number_count == 1  // If there is only one cell in this row which can be set to digit, push cell on candidate stack.
             {
-                candidate_cells.push(CandidateCell::new(cell_group * 9 + index_in_row, digit, &format!("Row #{}", cell_group + 1)))
+                candidate_cells.push(SingleCandidateCell::new(cell_group * 9 + index_in_row, digit, &format!("Row #{}", cell_group + 1)))
             }
             // 45.
             if col_number_count == 1  // If there is only one cell in this column which can be set to digit, push cell on candidate stack.
             {
-                candidate_cells.push(CandidateCell::new(index_in_col * 9 + cell_group, digit, &format!("Column #{}", cell_group + 1)))
+                candidate_cells.push(SingleCandidateCell::new(index_in_col * 9 + cell_group, digit, &format!("Column #{}", cell_group + 1)))
             }
             // 46.
             if block_number_count == 1  // If there is only one cell in this block which can be set to digit, push cell on candidate stack.
             {
                 let block_row = cell_group / 3;
                 let block_col = cell_group % 3;
-                candidate_cells.push(CandidateCell::new((block_row * 3 + index_in_block / 3) * 9 + (block_col * 3 + index_in_block % 3), digit, &format!("Block ({}, {})", block_row + 1, block_col + 1)));
+                candidate_cells.push(SingleCandidateCell::new((block_row * 3 + index_in_block / 3) * 9 + (block_col * 3 + index_in_block % 3), digit, &format!("Block ({}, {})", block_row + 1, block_col + 1)));
             }
         } // for (cell_group = 0..8)
     } // for (digit = 1..9)
@@ -1016,16 +1068,51 @@ fn get_single_digit_cells(board: &mut Board) -> Vec<CandidateCell> {
 }
 
 fn generate_initial_board(rnglcg: &mut PortableLCG, final_board: &Board) -> Board {
-    let remaining_digits : usize = 30;
-    let max_removed_per_block = 6;
-    let mut removed_per_block: [[i32; 3]; 3] = [[0; 3]; 3];
-    let mut positions: [usize; 9 * 9] = std::array::from_fn(|i| i);
+    let remaining_digits : usize = 30;   // number of cells to leave numbers in
+    let max_removed_per_block = 6;  // Do not clear more than 6 cells in a block
+    let mut removed_per_block: [[i32; 3]; 3] = [[0; 3]; 3];  // keep track of how many cells in each block have been cleared
+    let mut positions: [usize; 9 * 9] = std::array::from_fn(|i| i); // array of cells which have been cleared. Initially filled with numbers 0-80
     let mut removed_pos: usize = 0;
-    let mut board = final_board.clone(); // new int[state.len()]; Array.Copy(state, final_state, final_state.len());
+    let mut board = final_board.clone(); // start with a copy of the final board
 
-    while removed_pos < 9 * 9 - remaining_digits  // 21.
+    // 'positions' array is initially filled with index numbers 0-80 in order
+    // We will be doing the equivalent of a random shuffling of a deck of cards (we have 81 cards in this case).
+    // Recall how to shuffle a deck of cards. We randomly pick a card from the array, swap it with card at position[0]
+    // Then randomly select a card from 1-80, swap with card at position[1]
+    // Then randomly select a card from 2-80, swap with card at position[2]. etc...
+    // Repeat until deck is shuffled.
+    // Here we do the same thing, except we stop when there are 30 cards still left unshiffled.
+    // Basically we are randomly picking 81-30=51 random values from the range 0-80
+    //
+    // To begin, Randomly pick an index number in range 0-80. This number is used with array positions[].
+    // Get number at positions[random index], use that as index into board to get cell.
+    // Clear number from cell.
+    // Swap positions[random index] with positions[0].
+    // Positions[0] is now a used index which we will not pick again.
+    // The board cell with index at positions[0] has been cleared.
+    // On next iteration we will confine ourselves to randomly selecting from positions[1] - positions[80]
+    // Now randomly pick a number in range 0-79. Add 1 to get random number in range 1-80. Say we get random number n.
+    // Use that random number as index into positions array. We are randomly selecting from positions[1]-positions[80]
+    // Use value in positions[n] as index into board to get random cell. Clear number from cell.
+    // Swap positions[n] with positions[1].
+    // Positions[0] and positions[1] now contain the index to cells which have been cleared.
+    // Repeat, selecting a random value from positions[2] - positions[80]
+    // Repeat, selecting a random value from positions[3] - positions[80]
+    // Repeat, selecting a random value from positions[4] - positions[80]
+    // Repeat until we have only 30 cells left with numbers in them.
+    //
+    // Consideration: here we are doing both the random picking and clearing the cell in the same loop.
+    // OOP design suggests we could break this up into two loops.
+    // First, shuffle the positions[] array randomly selecting 51 entries from it,
+    // Then, in a separate loop, clear all the cells using the 51 randomly selected enties as indicies.
+    // This separates the two jobs, making the code more modular and easier to maintain.
+    // We might decide later on to choose a different way of randomly picking 51 indexes from our array of 81 indexes
+    // We could easily do that, swapping out method 1 for method 2.
+    // We can't easily do that when both the random shuffle and the clearing of cells is in the same loop.
+
+    while removed_pos < 9 * 9 - remaining_digits  // 21. Loop. Clear cells until we have 'remainind_digits' cells left with numbers in them.
     {
-        let cur_remaining_digits: i32 = (positions.len() - removed_pos) as i32;
+        let cur_remaining_digits: i32 = (positions.len() - removed_pos) as i32;  // positions.len()=81
         let index_to_pick = removed_pos + rnglcg.next_range(cur_remaining_digits) as usize;
 
         let picked_index = positions[index_to_pick];
@@ -1412,6 +1499,7 @@ fn convert_digit_to_mask(digit: i32) -> i32 {
     1 << (digit - 1)
 }
 
+// count bits set in mask. Use table to speed this up.
 fn count_candidates(mask: i32) -> i32 {
     let candidates_count = mask_to_ones_count().get(&mask).copied().unwrap_or(0);
     candidates_count as i32
