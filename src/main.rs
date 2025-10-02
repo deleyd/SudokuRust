@@ -942,28 +942,9 @@ fn print_board_and_code(board: &mut Board) {
     print_code(&board);
 }
 
-fn generate_and_log_mask_to_clear_message(mask_to_clear: i32, cell: Cell) {
-    let mut mask_to_clear = mask_to_clear;
-    let mut value_to_clear = 1;
-    let mut separator: String = "".to_string();
-    let mut message: String = "".to_string();
-
-    // 58.
-    // convert mask to digits and append to message for each digit
-    while mask_to_clear > 0
-    {
-        if mask_to_clear & 1 > 0
-        {
-            message.push_str(&format!("{}{}", separator, value_to_clear));
-            separator = ", ".to_string();
-        }
-        mask_to_clear = mask_to_clear >> 1;
-        value_to_clear += 1;
-    }
+fn generate_and_log_mask_to_clear_message(mask: i32, cell: Cell) {
+    let mut message = mask_to_string_of_comma_separated_digits(mask);
     message.push_str(&format!(" cannot appear in cell ({}, {}).", cell.get_row() + 1, cell.get_column() + 1));
-    if cell.get_row() + 1 == 9 && cell.get_column() + 1 == 6 {
-        println!("Found It!");
-    }
     log(&message);
 }
 
@@ -1126,10 +1107,9 @@ fn generate_initial_board(rnglcg: &mut PortableLCG, final_board: &Board) -> Boar
 
         let block_row_to_remove = index_to_block_row(board_index);
         let block_col_to_remove = index_to_block_col(board_index);
-
         if removed_per_block[block_row_to_remove][block_col_to_remove] >= max_removed_per_block
         {
-            continue;  // try again
+            continue;  // don't remove from this block. try again
         }
 
         removed_per_block[block_row_to_remove][block_col_to_remove] += 1;
@@ -1232,10 +1212,11 @@ fn and_next_command(moved_to_digit: i32) -> Commands {
 }
 
 
-fn update_board(board: &mut Board, cell_to_move: &Cell, digit_to_move: i32, moved_to_digit: i32) {
-    if digit_to_move > 0
+// Set cell_to_move to moved_to_digit.
+fn update_board(board: &mut Board, cell_to_move: &Cell, digit_to_clear: i32, moved_to_digit: i32) {
+    if digit_to_clear > 0
     {
-        board.used_digits.clear_digit(digit_to_move);
+        board.used_digits.clear_digit(digit_to_clear);
         board[cell_to_move.index].digit = 0;
     }
     if moved_to_digit <= 9 {
@@ -1570,16 +1551,15 @@ fn single_bitmask_to_digit() -> &'static HashMap<usize, i32> {
 // Convert mask to list of digits they represent. Returns list of digits.
 fn mask_to_string_of_comma_separated_digits(mask: i32) -> String {
     let mut shift_mask = mask;
-    let mut message = "".to_string();
-    let mut separator = "";
     let mut cur_value = 1;  // bit 0 is digit 1
+    let mut separator = "";
+    let mut message : String = "".to_string();
 
     while shift_mask > 0
     {
-        if (shift_mask & 1) > 0
+        if shift_mask & 1 > 0
         {
-            let s = format!("{}{}", separator, cur_value);
-            message.push_str(&s);
+            message.push_str(&format!("{}{}", separator, cur_value));
             separator = ", ";
         }
         shift_mask = shift_mask >> 1;
@@ -1610,31 +1590,28 @@ fn top_two_digits(value: i32) -> (i32, i32) {
 }
 
 fn get_row_col_block_used_digits(current_state: &Board, target_cell: &Cell) -> Digits {
-    // gather all digits used in cell's row, column, and block. output is_digit_used. input: current_state, row, col, block_row, block_col
+    // gather all digits used in cell's row, column, and block. return used_digits. input: current_state, target_cell
     let row = target_cell.get_row();
     let col = target_cell.get_column();
     let block_row = row / 3;
     let block_col = col / 3;
-    let mut used_digits = Digits::new(0);
+    let mut used_digits = Digits::new(0); // collect all the digits already used in this row, column, and block
 
     for i in 0..9  // 12.
     {
-        let cell = current_state[9 * i + col].clone();
-        let row_digit = cell.digit;
+        let row_digit = current_state[9 * i + col].digit;
         if row_digit > 0
         {
             used_digits.set_digit(row_digit);
         }
 
-        let cell = current_state[9 * row + i].clone();
-        let col_digit = cell.digit;
+        let col_digit = current_state[9 * row + i].digit;
         if col_digit > 0
         {
             used_digits.set_digit(col_digit);
         }
 
-        let cell = current_state[(block_row * 3 + i / 3) * 9 + (block_col * 3 + i % 3)].clone();
-        let block_digit = cell.digit;
+        let block_digit = current_state[(block_row * 3 + i / 3) * 9 + (block_col * 3 + i % 3)].digit;
         if block_digit > 0
         {
             used_digits.set_digit(block_digit);
