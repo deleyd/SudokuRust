@@ -212,7 +212,7 @@ impl SingleCandidateCell {
     }
 }
 
-
+#[derive(Debug, Clone, Copy)]
 struct TwoCandidatesCellPair {
     index1 : usize,
     index2 : usize,
@@ -422,8 +422,8 @@ fn look_for_pairs_that_can_be_exchanged(mut rnglcg: &mut PortableLCG, final_boar
     // 64.
     while !candidate_cell_pairs.is_empty()
     {
-        let candidate_cell_pair = candidate_cell_pairs.pop_front().unwrap();
-        let two_candidate_cell_pair = two_candidate_cell_pairs.pop_front().unwrap();
+        let candidate_cell_pair : CandidateCellPair = candidate_cell_pairs.pop_front().unwrap();
+        let two_candidate_cell_pair : TwoCandidatesCellPair = two_candidate_cell_pairs.pop_front().unwrap();
         let alternate_board = get_alternate_board(&final_board, &board, &candidate_cell_pair);
 
         // 65.
@@ -481,7 +481,8 @@ fn look_for_pairs_that_can_be_exchanged(mut rnglcg: &mut PortableLCG, final_boar
         if command == Commands::Complete
         {   // Board was solved successfully even with two digits swapped
             candidate_cell_pair_stack.push(CandidateCellPair::new(candidate_cell_pair.cell1.clone(), candidate_cell_pair.cell2.clone()));
-            two_candidate_cell_pair_stack.push(TwoCandidatesCellPair::new(two_candidate_cell_pair.index1, two_candidate_cell_pair.index2, two_candidate_cell_pair.digit1, two_candidate_cell_pair.digit2));
+            //two_candidate_cell_pair_stack.push(TwoCandidatesCellPair::new(two_candidate_cell_pair.index1, two_candidate_cell_pair.index2, two_candidate_cell_pair.digit1, two_candidate_cell_pair.digit2));
+            two_candidate_cell_pair_stack.push(two_candidate_cell_pair);  // copy trait automatically makes a copy
         }
     } // while !candidate_cells1.is_empty()
 
@@ -625,32 +626,35 @@ fn get_cells_with_two_candidates(board: &mut Board) -> Vec<i32> {
     two_digit_masks
 }
 
-fn handle_cells_with_specified_two_candidates(board : &mut Board, cell_groups: &BTreeMap<usize, Vec<Cell>>, two_digit_masks: &Vec<i32>) -> bool {
-    let mut cell_group2s : Vec<CellGroup2> = Vec::new();
+fn handle_cells_with_specified_two_candidates(board : &mut Board, row_col_blk_groups: &BTreeMap<usize, Vec<Cell>>, two_digit_masks: &Vec<i32>) -> bool {
+    let mut tdmOverlapCellGroupList: Vec<CellGroup2> = Vec::new();
     let mut step_change_made = false;
     // Outer loop equivalent to SelectMany over twoDigitMasks
     // for every
     for two_digit_mask in two_digit_masks
     {
-        log(&format!("cellGroups.Count: {} mask: {}", cell_groups.len(), two_digit_mask).to_string());
+        //log(&format!("rowColBlkGroups.Count: {}", row_col_blk_groups.len()).to_string());
 
         // return groups (rows, cols, blocks) which have exactly 2 cells with the same 2 candidate digits specified in two_digit_mask
-        let more_cell_group2s = get_cells_with_specified_two_candidate_digits(board, &cell_groups, *two_digit_mask);
+        let more_cell_group2s = get_cells_with_specified_two_candidate_digits(board, &row_col_blk_groups, *two_digit_mask);
 
-        cell_group2s.extend(more_cell_group2s);
-        // 50.
-        //log(&format!("50. len(groups): {}", cell_group2s.len()));
-        if cell_group2s.is_empty() {
-            continue;
-        }
+        tdmOverlapCellGroupList.extend(more_cell_group2s);
+    }
+    // 50.
+    log(&format!("50. len(groups): {}", tdmOverlapCellGroupList.len()));
+    if !tdmOverlapCellGroupList.is_empty() {
         //log(&"groups.Any()".to_string());
         //log("50. Groups is NOT empty".to_string());
         //log(&format!("groups.Count()={}", groups.len()));
-        let result = handle_cellgroup2_groups(board, &mut cell_group2s);
+        let result = handle_cellgroup2_groups(board, &mut tdmOverlapCellGroupList);
 
         step_change_made = step_change_made || result;
         //log(&format!("step_change_made={}", step_change_made))
     }
+    else {
+        log("groups is empty");
+    }
+    log(&format!("step_change_made: {}", step_change_made).to_string());
     step_change_made
 }
 
@@ -677,80 +681,97 @@ fn set_one_single_digit_cell(rnglcg: &mut PortableLCG, board: &mut Board, candid
     change_made
 }
 
-fn handle_cellgroup2_groups(board: &mut Board, cell_group2s: &mut Vec<CellGroup2>) -> bool {
-    log(&format!("cell_group2s.Count()={}", cell_group2s.len()));
+fn handle_cellgroup2_groups(board: &mut Board, tdm_Overlap_Cell_Group_List: &mut Vec<CellGroup2>) -> bool {
+    log(&format!("tdmOverlapCellGroupList.Count()={}", tdm_Overlap_Cell_Group_List.len()));
     let mut step_change_made: bool = false;
 
     // cell_group2 is a row, column, or block, which has 2 cells with exactly 2 candiate digits between them (which digit goes in which cell is yet to be determined)
-    for cell_group2 in cell_group2s.iter().sorted_by_key(|cell_group| cell_group.discriminator)
+    for tdm_overlap_cell_group in tdm_Overlap_Cell_Group_List.iter().sorted_by_key(|cell_group| cell_group.discriminator)
     {
-        //log(&format!("cell_group2={}", cell_group2.description));
-
-        let cell_group2_cells_which_overlap: Vec<_> = cell_group2.cell_group.iter()
-            .filter(|cell| board[cell.index].candidate_digits.mask != cell_group2.mask && // not equal but overlaps board_candidate_masks[cell.index]
-                (board[cell.index].candidate_digits.mask & cell_group2.mask) > 0)
+        log(&format!("{} {:09b} {}", tdm_overlap_cell_group.description, tdm_overlap_cell_group.mask, tdm_overlap_cell_group.discriminator));
+    }
+    for tdm_overlap_cell_group in tdm_Overlap_Cell_Group_List.iter().sorted_by_key(|cell_group| cell_group.discriminator)
+    {
+        let cell_group2_cells_which_overlap: Vec<_> = tdm_overlap_cell_group.cell_group.iter()
+            .filter(|cell| board[cell.index].candidate_digits.mask != tdm_overlap_cell_group.mask && // not equal but overlaps board_candidate_masks[cell.index]
+                (board[cell.index].candidate_digits.mask & tdm_overlap_cell_group.mask) > 0)
             .sorted_by_key(|cell| cell.index)
             .collect::<Vec<_>>();
 
         // 51.
-        if cell_group2_cells_which_overlap.is_empty() {
-            //log(&"Cells is empty 51".to_string());
-            continue;
+        if !cell_group2_cells_which_overlap.is_empty() {
+            log(&format!("cells.Any() cells.len()={}", cell_group2_cells_which_overlap.len()));
+            //log(&format!("cells.len()={}", cell_group2_cells_which_overlap.len()).to_string());
+            // "Values {lower} and {upper} in {} are in cells ({mask_cells[0].row+1}, {mask_cells[0].col+1}) and ({mask_cells[1].row+1}, {mask_cells[1].col+1}).",
+            // Find the upper two bits. upper & lower represent digits
+            //log(&"cells.Any()".to_string());
+            let (lower, upper) = top_two_digits(tdm_overlap_cell_group.mask); // bits represent digits
+
+            let cells_with_same_2_candidates: Vec<&Cell> = tdm_overlap_cell_group.cell_group.iter()
+                .filter(|cell| board[cell.index].candidate_digits.mask == tdm_overlap_cell_group.mask) // equal to cell_group2.mask
+                .map(|x| x)
+                .collect();
+            if cells_with_same_2_candidates.len() >= 2 {
+                let s = format!(
+                    "Values {} and {} in {} go in cells ({}, {}) and ({}, {}). [index {} and {}]",
+                    lower,
+                    upper,
+                    tdm_overlap_cell_group.description,
+                    cells_with_same_2_candidates[0].get_row() + 1,
+                    cells_with_same_2_candidates[0].get_column() + 1,
+                    cells_with_same_2_candidates[1].get_row() + 1,
+                    cells_with_same_2_candidates[1].get_column() + 1,
+                    cells_with_same_2_candidates[0].index,
+                    cells_with_same_2_candidates[1].index,
+                );
+                log(&s);
+            } else {
+                let s = format!(
+                    "Values {} and {} in {} go in cells ({}, {}) and (nothing) because there is no maskCells[1]. [index {} and nothing]",
+                    lower,
+                    upper,
+                    tdm_overlap_cell_group.description,
+                    cells_with_same_2_candidates[0].get_row() + 1,
+                    cells_with_same_2_candidates[0].get_column() + 1,
+                    cells_with_same_2_candidates[0].index,
+                );
+                log(&s);
+            }
+
+            // 52.
+            let result = remove_other_candidates(board, tdm_overlap_cell_group, &cell_group2_cells_which_overlap);
+            step_change_made = step_change_made || result;
         }
-        //log(&format!("cells.len()={}", cell_group2_cells_which_overlap.len()).to_string());
-        // "Values {lower} and {upper} in {} are in cells ({mask_cells[0].row+1}, {mask_cells[0].col+1}) and ({mask_cells[1].row+1}, {mask_cells[1].col+1}).",
-        // Find the upper two bits. upper & lower represent digits
-        //log(&"cells.Any()".to_string());
-        let (lower, upper) = top_two_digits(cell_group2.mask); // bits represent digits
-
-        let cells_with_same_2_candidates: Vec<&Cell> = cell_group2.cell_group.iter()
-            .filter(|cell| board[cell.index].candidate_digits.mask == cell_group2.mask) // equal to cell_group2.mask
-            .map(|x| x)
-            .collect();
-        let s = format!(
-            "Values {} and {} in {} go in cells ({}, {}) and ({}, {}). [index {} and {}]",
-            lower,
-            upper,
-            cell_group2.description,
-            cells_with_same_2_candidates[0].get_row() + 1,
-            cells_with_same_2_candidates[0].get_column() + 1,
-            cells_with_same_2_candidates[1].get_row() + 1,
-            cells_with_same_2_candidates[1].get_column() + 1,
-            cells_with_same_2_candidates[0].index,
-            cells_with_same_2_candidates[1].index,
-        );
-        log(&s);
-
-        // 52.
-        let result = remove_other_candidates(board, cell_group2, &cell_group2_cells_which_overlap);
-        step_change_made = step_change_made || result;
+        else {
+            log("Cells is empty 51");
+        }
     }
     step_change_made
 }
 
 // return groups (rows, cols, blocks) which have exactly 2 cells with the same 2 candidate digits in two_digit_mask
-fn get_cells_with_specified_two_candidate_digits(board: &mut Board, cell_groups: &BTreeMap<usize, Vec<Cell>>, two_digit_mask: i32) -> Vec<CellGroup2>  {
+fn get_cells_with_specified_two_candidate_digits(board: &mut Board, row_col_blk_groups: &BTreeMap<usize, Vec<Cell>>, two_digit_mask: i32) -> Vec<CellGroup2>  {
     // cell_groups is a fixed list of cell rows, cell columns, and cell blocks
-    let mut cell_group2s : Vec<CellGroup2> = Vec::new();
-    for cell_group_kvp in cell_groups // key is the discrminiator
+    let mut tdmOverlap_Cell_Group_List: Vec<CellGroup2> = Vec::new();
+    for row_col_blk_group_kvp in row_col_blk_groups // key is the discrminiator
     {
         // First Where condition: group.Count(tuple => candidateMasks[tuple.Index] == mask) == 2
-        let cell_list = cell_group_kvp.1;  //cell_group.0 (key is the discrminator 0-27) tells us which group we are looking at (Specific row, col, or block). .1 is the list of 9 indexes which comprise this group
-        let mut sorted_cells: Vec<&Cell> = cell_list.iter().collect();
-        sorted_cells.sort_by_key(|cell| cell.index);
-        for cell in &sorted_cells
+        let rcb_cell_list = row_col_blk_group_kvp.1;  //cell_group.0 (key is the discrminator 0-27) tells us which group we are looking at (Specific row, col, or block). .1 is the list of 9 indexes which comprise this group
+        let mut rcb_sorted_cells: Vec<&Cell> = rcb_cell_list.iter().collect();
+        rcb_sorted_cells.sort_by_key(|cell| cell.index);
+        for cell in &rcb_sorted_cells
         {
-            log(&format!("cell.Index: {} candidateMasks[{}]: {:09b} = mask: {:09b}", cell.index, cell.index, board[cell.index].candidate_digits.mask, two_digit_mask));
+            //log(&format!("cell.Index: {} candidateMasks[{}]: {:09b} = mask: {:09b}", cell.index, cell.index, board[cell.index].candidate_digits.mask, two_digit_mask));
             if board[cell.index].candidate_digits.mask == two_digit_mask {
-                log(&"FOUND MATCH!".to_string());
+                //log(&"FOUND MATCH!".to_string());
             }
         }
-        let matching_count = sorted_cells.iter()  // iterate through the 9 cells in this group (may be a row, col, or block group)
+        let matching_count = rcb_sorted_cells.iter()  // iterate through the 9 cells in this group (may be a row, col, or block group)
             .filter(|cell| board[cell.index].candidate_digits.mask == two_digit_mask)  // for each cell in the list, get the index, look up digit candidates, test if they == mask passed to us
             .count();
 
-        log(&format!("candidateMasks.Count: {}", 81));
-        log(&format!("matchingMaskCount: {}", matching_count));
+        //log(&format!("candidateMasks.Count: {}", 81));
+        //log(&format!("matchingMaskCount: {}", matching_count));
 
         // we are hoping to find only 2 cells which can have these two digits in two_digit_mask
         if matching_count != 2 {
@@ -759,51 +780,51 @@ fn get_cells_with_specified_two_candidate_digits(board: &mut Board, cell_groups:
 
         // only 2 cells confirmed for 2 digits in mask
         // Second Where condition: group.Any(tuple => candidateMasks[tuple.Index] != mask && (candidateMasks[tuple.Index] & mask) > 0)
-        log(&format!("cells length: {}", sorted_cells.len()));
-        for cell in &sorted_cells {
-            log(&format!("cell.Index={} candidateMasks[{}]={:09b} mask={:09b} candidateMasks[cell.Index]&mask= {:09b}", cell.index, cell.index, board[cell.index].candidate_digits.mask, two_digit_mask, board[cell.index].candidate_digits.mask & two_digit_mask));
+        //log(&format!("cells length: {}", sorted_cells.len()));
+        for cell in &rcb_sorted_cells {
+            //log(&format!("cell.Index={} candidateMasks[{}]={:09b} mask={:09b} candidateMasks[cell.Index]&mask= {:09b}", cell.index, cell.index, board[cell.index].candidate_digits.mask, two_digit_mask, board[cell.index].candidate_digits.mask & two_digit_mask));
             if board[cell.index].candidate_digits.mask != two_digit_mask && (board[cell.index].candidate_digits.mask & two_digit_mask) > 0 {
                 break;
             }
         }
-        let has_overlapping_non_matching = sorted_cells.iter().any(|cell| {
+        let has_overlapping_non_matching = rcb_sorted_cells.iter().any(|cell| {
             board[cell.index].candidate_digits.mask != two_digit_mask && (board[cell.index].candidate_digits.mask & two_digit_mask) > 0
         });
 
         if !has_overlapping_non_matching {
-            log(&"no hasOverlappingNonMatch: ".to_string());
+            //log(&"no hasOverlappingNonMatch: ".to_string());
             continue;  // we can't handle it if other cells also have one of the two digits in two_digit_mask (overlap but not equal to)
         }
 
         // Get first description from the group. Description tells us which row, col, or block we are examining
-        log(&"hasOverlappingNonMatch: YES".to_string());
-        let description = sorted_cells.first().map(|cell| cell.description.clone()).unwrap_or_default();
+        //log(&"hasOverlappingNonMatch: YES".to_string());
+        let description = rcb_sorted_cells.first().map(|cell| cell.description.clone()).unwrap_or_default();
         // this cell_group of 9 cells two of which have exactly 2 candidate digits, the same 2 candidate digits.
         // One cell gets one digit, the other cell gets the other digit. Which digit goes with which cell? It might work both ways!
         let cell_group2 = CellGroup2 {
             mask: two_digit_mask,
-            discriminator: cell_group_kvp.0.clone() as i32,  // 0-8 (rows), 9-17 (cols), 18-27 (blocks). Key.
+            discriminator: row_col_blk_group_kvp.0.clone() as i32,  // 0-8 (rows), 9-17 (cols), 18-27 (blocks). Key.
             description,
-            cell_group: cell_list.clone(),
+            cell_group: rcb_cell_list.clone(),
         };
-        assert_eq!(cell_list.len(), 9);  // either 9 cells in a row, or 9 in a column, or 9 in a block
+        assert_eq!(rcb_cell_list.len(), 9);  // either 9 cells in a row, or 9 in a column, or 9 in a block
 
-        cell_group2s.push(cell_group2);
+        tdmOverlap_Cell_Group_List.push(cell_group2);
     }
-    cell_group2s
+    tdmOverlap_Cell_Group_List
 }
 
 
 // Remove candidates because they must go elsewhere
-fn remove_other_candidates(board: &mut Board, cell_group2: &CellGroup2, cells: &Vec<&Cell>) -> bool {
+fn remove_other_candidates(board: &mut Board, tdm_overlap_cell_group: &CellGroup2, cell_group2_cells_which_overlap: &Vec<&Cell>) -> bool {
     let mut step_change_made : bool = false;
-    for cell in cells
+    for cell in cell_group2_cells_which_overlap
     {
-        let mask_to_remove = board[cell.index].candidate_digits.mask & cell_group2.mask;  // intersection
+        let mask_to_remove = board[cell.index].candidate_digits.mask & tdm_overlap_cell_group.mask;  // intersection
         let values_report = mask_to_string_of_comma_separated_digits(mask_to_remove);
         let s = format!("{} cannot appear in ({}, {}).", values_report, cell.get_row() + 1, cell.get_column() + 1);
         log(&s);
-        board[cell.index].candidate_digits.mask &= !cell_group2.mask;
+        board[cell.index].candidate_digits.mask &= !tdm_overlap_cell_group.mask;
         step_change_made = true;
     }
     step_change_made
@@ -1672,7 +1693,7 @@ fn write_from_function(content: &str) -> io::Result<()> {
     Ok(())
 }
 
-fn log(s: &String)
+fn log(s: &str)
 {
     println!("{}", s);
     write_from_function(s).expect("TODO: panic message");
@@ -1770,7 +1791,7 @@ fn main()
     *GLOBAL_FILE.lock().unwrap() = Some(file.expect("REASON"));
 
     // MAIN LOOP
-    for seed in 1..5
+    for seed in 1..57
     {
         let my_rng = PortableLCG::new(seed);
         log(&format!("RUN {}", seed));
