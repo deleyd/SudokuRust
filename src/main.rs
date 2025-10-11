@@ -627,7 +627,7 @@ fn get_cells_with_two_candidates(board: &mut Board) -> Vec<i32> {
 }
 
 fn handle_cells_with_specified_two_candidates(board : &mut Board, row_col_blk_groups: &BTreeMap<usize, Vec<Cell>>, two_digit_masks: &Vec<i32>) -> bool {
-    let mut tdmOverlapCellGroupList: Vec<CellGroup2> = Vec::new();
+    let mut tdm_overlap_cell_group_list: Vec<CellGroup2> = Vec::new();
     let mut step_change_made = false;
     // Outer loop equivalent to SelectMany over twoDigitMasks
     // for every
@@ -638,15 +638,15 @@ fn handle_cells_with_specified_two_candidates(board : &mut Board, row_col_blk_gr
         // return groups (rows, cols, blocks) which have exactly 2 cells with the same 2 candidate digits specified in two_digit_mask
         let more_cell_group2s = get_cells_with_specified_two_candidate_digits(board, &row_col_blk_groups, *two_digit_mask);
 
-        tdmOverlapCellGroupList.extend(more_cell_group2s);
+        tdm_overlap_cell_group_list.extend(more_cell_group2s);
     }
     // 50.
-    log(&format!("50. len(groups): {}", tdmOverlapCellGroupList.len()));
-    if !tdmOverlapCellGroupList.is_empty() {
+    log(&format!("50. len(groups): {}", tdm_overlap_cell_group_list.len()));
+    if !tdm_overlap_cell_group_list.is_empty() {
         //log(&"groups.Any()".to_string());
         //log("50. Groups is NOT empty".to_string());
         //log(&format!("groups.Count()={}", groups.len()));
-        let result = handle_cellgroup2_groups(board, &mut tdmOverlapCellGroupList);
+        let result = handle_cellgroup2_groups(board, &mut tdm_overlap_cell_group_list);
 
         step_change_made = step_change_made || result;
         //log(&format!("step_change_made={}", step_change_made))
@@ -681,16 +681,16 @@ fn set_one_single_digit_cell(rnglcg: &mut PortableLCG, board: &mut Board, candid
     change_made
 }
 
-fn handle_cellgroup2_groups(board: &mut Board, tdm_Overlap_Cell_Group_List: &mut Vec<CellGroup2>) -> bool {
-    log(&format!("tdmOverlapCellGroupList.Count()={}", tdm_Overlap_Cell_Group_List.len()));
+fn handle_cellgroup2_groups(board: &mut Board, tdm_overlap_cell_group_list: &mut Vec<CellGroup2>) -> bool {
+    log(&format!("tdmOverlapCellGroupList.Count()={}", tdm_overlap_cell_group_list.len()));
     let mut step_change_made: bool = false;
 
     // cell_group2 is a row, column, or block, which has 2 cells with exactly 2 candiate digits between them (which digit goes in which cell is yet to be determined)
-    for tdm_overlap_cell_group in tdm_Overlap_Cell_Group_List.iter().sorted_by_key(|cell_group| cell_group.discriminator)
+    for tdm_overlap_cell_group in tdm_overlap_cell_group_list.iter().sorted_by_key(|cell_group| cell_group.discriminator)
     {
         log(&format!("{} {:09b} {}", tdm_overlap_cell_group.description, tdm_overlap_cell_group.mask, tdm_overlap_cell_group.discriminator));
     }
-    for tdm_overlap_cell_group in tdm_Overlap_Cell_Group_List.iter().sorted_by_key(|cell_group| cell_group.discriminator)
+    for tdm_overlap_cell_group in tdm_overlap_cell_group_list.iter().sorted_by_key(|cell_group| cell_group.discriminator)
     {
         let cell_group2_cells_which_overlap: Vec<_> = tdm_overlap_cell_group.cell_group.iter()
             .filter(|cell| board[cell.index].candidate_digits.mask != tdm_overlap_cell_group.mask && // not equal but overlaps board_candidate_masks[cell.index]
@@ -752,7 +752,7 @@ fn handle_cellgroup2_groups(board: &mut Board, tdm_Overlap_Cell_Group_List: &mut
 // return groups (rows, cols, blocks) which have exactly 2 cells with the same 2 candidate digits in two_digit_mask
 fn get_cells_with_specified_two_candidate_digits(board: &mut Board, row_col_blk_groups: &BTreeMap<usize, Vec<Cell>>, two_digit_mask: i32) -> Vec<CellGroup2>  {
     // cell_groups is a fixed list of cell rows, cell columns, and cell blocks
-    let mut tdmOverlap_Cell_Group_List: Vec<CellGroup2> = Vec::new();
+    let mut tdm_overlap_cell_group_list: Vec<CellGroup2> = Vec::new();
     for row_col_blk_group_kvp in row_col_blk_groups // key is the discrminiator
     {
         // First Where condition: group.Count(tuple => candidateMasks[tuple.Index] == mask) == 2
@@ -809,9 +809,9 @@ fn get_cells_with_specified_two_candidate_digits(board: &mut Board, row_col_blk_
         };
         assert_eq!(rcb_cell_list.len(), 9);  // either 9 cells in a row, or 9 in a column, or 9 in a block
 
-        tdmOverlap_Cell_Group_List.push(cell_group2);
+        tdm_overlap_cell_group_list.push(cell_group2);
     }
-    tdmOverlap_Cell_Group_List
+    tdm_overlap_cell_group_list
 }
 
 
