@@ -212,24 +212,6 @@ impl SingleCandidateCell {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
-struct TwoCandidatesCellPair {
-    index1 : usize,
-    index2 : usize,
-    digit1 : i32,
-    digit2 : i32,
-}
-impl TwoCandidatesCellPair {
-    pub fn new(i1: usize, i2: usize, d1: i32, d2: i32) -> TwoCandidatesCellPair {
-        TwoCandidatesCellPair {
-            index1 : i1,
-            index2 : i2,
-            digit1 : d1,
-            digit2 : d2,
-        }
-    }
-}
-
 
 struct CandidateCellPair {
     cell1: SingleCandidateCell,
@@ -284,6 +266,12 @@ enum Commands {
     Move,
     Collapse,
     Complete,
+    Fail,
+}
+#[derive(Debug, PartialEq)]
+enum BoolResult {
+    False,
+    True,
     Fail,
 }
 
@@ -388,8 +376,14 @@ fn play(mut rnglcg: PortableLCG) {
         //#region Final attempt - look if the board has multiple solutions
         if !change_made
         {
-            let result = look_for_pairs_that_can_be_exchanged(&mut rnglcg, &final_board, &mut board);
-            change_made = change_made || result;
+            let result : BoolResult = look_for_pairs_that_can_be_exchanged(&mut rnglcg, &final_board, &mut board);
+            if result == BoolResult::True {
+                change_made = true;
+            }
+            if result == BoolResult::Fail {
+                log("FAILED TO SOLVE BOARD.");
+                return;
+            }
         }
         //#endregion
 
@@ -403,7 +397,7 @@ fn play(mut rnglcg: PortableLCG) {
     log(&"BOARD SOLVED.".to_string())
 }
 
-fn look_for_pairs_that_can_be_exchanged(mut rnglcg: &mut PortableLCG, final_board: &Board, board: &mut Board) -> bool {
+fn look_for_pairs_that_can_be_exchanged(mut rnglcg: &mut PortableLCG, final_board: &Board, board: &mut Board) -> BoolResult {
     // This is the last chance to do something in this iteration:
     // If this attempt fails, board will not be entirely solved.
 
@@ -411,19 +405,16 @@ fn look_for_pairs_that_can_be_exchanged(mut rnglcg: &mut PortableLCG, final_boar
     // This happens when board has more than one valid solution
     let mut change_made = false;
     let mut candidate_cell_pairs = get_candidate_cells(board);
-    let mut two_candidate_cell_pairs = get_two_candidate_cells(board);
 
     // At this point we have the lists with pairs of cells that might pick one of two digits each
     // Now we have to check whether that is really true - does the board have two solutions?
     // possibly replace with cellList1,2. holding cells and values set for cell.
     let mut candidate_cell_pair_stack: Vec<CandidateCellPair> = Vec::new();
-    let mut two_candidate_cell_pair_stack: Vec<TwoCandidatesCellPair> = Vec::new();
 
     // 64.
     while !candidate_cell_pairs.is_empty()
     {
         let candidate_cell_pair : CandidateCellPair = candidate_cell_pairs.pop_front().unwrap();
-        let two_candidate_cell_pair : TwoCandidatesCellPair = two_candidate_cell_pairs.pop_front().unwrap();
         let alternate_board = get_alternate_board(&final_board, &board, &candidate_cell_pair);
 
         // 65.
@@ -439,9 +430,13 @@ fn look_for_pairs_that_can_be_exchanged(mut rnglcg: &mut PortableLCG, final_boar
             //log(&format!("Top command={:?}", command));
             match command {
                 Commands::Expand => {
-                    handle_expand(&mut rnglcg, &mut board_stack, alternate_board.clone());
-                    command = Commands::Move;  // Always try to move after expand
-                } // match Commands::Expand
+                    let result = handle_expand(&mut rnglcg, &mut board_stack, alternate_board.clone());
+                    command = if result == BoolResult::Fail {
+                        Commands::Fail
+                    } else {
+                        Commands::Move  // 17. // Always try to move after expand
+                    };
+                }
 
                 // 72.
                 Commands::Collapse => {
@@ -450,7 +445,7 @@ fn look_for_pairs_that_can_be_exchanged(mut rnglcg: &mut PortableLCG, final_boar
                         Commands::Move // Always try to move after collapse
                     } else {
                         Commands::Fail
-                    }
+                    };
                 }
 
                 // 73.
@@ -481,8 +476,10 @@ fn look_for_pairs_that_can_be_exchanged(mut rnglcg: &mut PortableLCG, final_boar
         if command == Commands::Complete
         {   // Board was solved successfully even with two digits swapped
             candidate_cell_pair_stack.push(CandidateCellPair::new(candidate_cell_pair.cell1.clone(), candidate_cell_pair.cell2.clone()));
-            //two_candidate_cell_pair_stack.push(TwoCandidatesCellPair::new(two_candidate_cell_pair.index1, two_candidate_cell_pair.index2, two_candidate_cell_pair.digit1, two_candidate_cell_pair.digit2));
-            two_candidate_cell_pair_stack.push(two_candidate_cell_pair);  // copy trait automatically makes a copy
+        }
+        if command == Commands::Fail
+        {
+            return BoolResult::Fail;
         }
     } // while !candidate_cells1.is_empty()
 
@@ -495,7 +492,10 @@ fn look_for_pairs_that_can_be_exchanged(mut rnglcg: &mut PortableLCG, final_boar
         change_made = true;
         // 79.
     }
-    change_made
+    if change_made {
+        return BoolResult::True;
+    }
+    BoolResult::False
 }
 
 fn set_randomly_picked_cell_pair_on_board(rnglcg: &mut PortableLCG,
@@ -880,36 +880,6 @@ fn get_candidate_cells(board: &mut Board) -> VecDeque<CandidateCellPair> {
     }
     candidate_cell_pairs
 }
-fn get_two_candidate_cells(board: &mut Board) -> VecDeque<TwoCandidatesCellPair> {
-    let mut two_candidate_cell_pairs: VecDeque<TwoCandidatesCellPair> = VecDeque::new();
-
-    // 61.
-    // index i goes from 0 to 80, index j goes from i+1 to 81. Gives us two cells, i & j, to compare candidate digits
-    for i in 0..80  // stop at 80 because j looks at i+1 cell
-    {
-        // 62.
-        if count_candidates(board[i].candidate_digits.mask) != 2 { // looking for cells with exactly 2 candidate digits
-            continue;
-        }   // This cell candidate i has exactly 2 digits. Get the two digits
-        let (lower_digit, upper_digit) = top_two_digits(board[i].candidate_digits.mask); // we already determined that this candidate has exactly 2 digits
-
-        // 63. Now look for another cell with exactly the same 2 digit candidates
-        for j in i + 1..81
-        {
-            if board[j].candidate_digits.mask != board[i].candidate_digits.mask {
-                continue;
-            }
-            // Found another cell[j] which has exactly the same two candidate digits as cell [i]
-            // Check if the two cells share a row, column, or block
-            if row_or_column_or_block_shared(i, j)
-            {
-                // found two cells which have the same 2 candidate digits and share a row, column, or block
-                two_candidate_cell_pairs.push_back(TwoCandidatesCellPair::new(i, j, lower_digit, upper_digit));
-            }
-        }
-    }
-    two_candidate_cell_pairs
-}
 
 fn print_starting_board(board: &mut Board) {
     log(&"".to_string());
@@ -1167,7 +1137,7 @@ fn construct_final_board(mut rnglcg: &mut PortableLCG) -> Board {
         match command {
             Commands::Expand => {
                 handle_expand(&mut rnglcg, &mut board_stack, Board::new());
-                command = Commands::Move;  // 17. // Always try to move after expand
+                command = Commands::Move  // 17. // Always try to move after expand
             }
             Commands::Collapse => {
                 board_stack.pop();
@@ -1247,7 +1217,7 @@ fn update_board(board: &mut Board, cell_to_move: &Cell, digit_to_clear: i32, mov
     }
 }
 
-fn handle_expand(rnglcg: &mut PortableLCG, board_stack: &mut Vec<Board>, alt_board: Board) {
+fn handle_expand(rnglcg: &mut PortableLCG, board_stack: &mut Vec<Board>, alt_board: Board) -> BoolResult {
     let mut current_board: Board = if !board_stack.is_empty()   // 9.
     {
         board_stack.last_mut().unwrap().clone()
@@ -1301,7 +1271,10 @@ fn handle_expand(rnglcg: &mut PortableLCG, board_stack: &mut Vec<Board>, alt_boa
         current_board.used_digits = best_used_digits;
         current_board.last_digit = 0;
         board_stack.push(current_board);
+        return BoolResult::True
     }
+
+    BoolResult::Fail
 }
 
 fn print_code(board: &Board) {
@@ -1791,7 +1764,7 @@ fn main()
     *GLOBAL_FILE.lock().unwrap() = Some(file.expect("REASON"));
 
     // MAIN LOOP
-    for seed in 1..57
+    for seed in 1..1000
     {
         let my_rng = PortableLCG::new(seed);
         log(&format!("RUN {}", seed));
