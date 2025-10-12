@@ -436,7 +436,7 @@ fn look_for_pairs_that_can_be_exchanged(mut rnglcg: &mut PortableLCG, final_boar
 
                 // 72.
                 Commands::Collapse => {
-                    log("72. command=collapse");
+                    //log("72. command=collapse");
                     board_stack.pop();
                     log(&format!("72. row_index_stack.length: {}", board_stack.len()));
                     command = Commands::Move // Always try to move after collapse
@@ -1758,7 +1758,7 @@ fn main()
     *GLOBAL_FILE.lock().unwrap() = Some(file.expect("REASON"));
 
     // MAIN LOOP
-    for seed in 1..1000
+    for seed in 1..100
     {
         let my_rng = PortableLCG::new(seed);
         log(&format!("RUN {}", seed));
