@@ -268,12 +268,6 @@ enum Commands {
     Complete,
     Fail,
 }
-#[derive(Debug, PartialEq)]
-enum BoolResult {
-    False,
-    True,
-    Fail,
-}
 
 fn print_board(state : &Board)
 {
@@ -430,40 +424,37 @@ fn look_for_pairs_that_can_be_exchanged(mut rnglcg: &mut PortableLCG, final_boar
             //log(&format!("Top command={:?}", command));
             match command {
                 Commands::Expand => {
-                    let result = handle_expand(&mut rnglcg, &mut board_stack, alternate_board.clone());
-                    command = if result == BoolResult::Fail {
-                        Commands::Fail
-                    } else {
-                        Commands::Move  // 17. // Always try to move after expand
-                    };
+                    handle_expand(&mut rnglcg, &mut board_stack, alternate_board.clone());
+                    command = Commands::Move  // 17. // Always try to move after expand
                 }
 
                 // 72.
                 Commands::Collapse => {
+                    log("72. command=collapse");
                     board_stack.pop();
-                    command = if !board_stack.is_empty() {
-                        Commands::Move // Always try to move after collapse
-                    } else {
-                        Commands::Fail
-                    };
+                    log(&format!("72. row_index_stack.length: {}", board_stack.len()));
+                    command = Commands::Move // Always try to move after collapse
                 }
 
                 // 73.
                 Commands::Move => {
-                    //log(&"73. command=move".to_string());
-                    let mut board = board_stack.pop().unwrap(); // Borrow top board
-                    let moved_to_digit = handle_move(&mut board, false);
-                    if moved_to_digit <= 9 {  // 75.
-                        command = if board.cells.iter().any(|cell| cell.digit == 0) {
-                            Commands::Expand
-                        } else {
-                            Commands::Complete
-                        };
+                    if board_stack.len() == 0 {
+                        command = Commands::Fail;
                     } else {
-                        // 76. No viable candidate was found at current position - pop it in the next iteration
-                        command = Commands::Collapse;
+                        let mut board = board_stack.pop().unwrap(); // Borrow top board
+                        let moved_to_digit = handle_move(&mut board, false);
+                        if moved_to_digit <= 9 {  // 75.
+                            command = if board.cells.iter().any(|cell| cell.digit == 0) {
+                                Commands::Expand
+                            } else {
+                                Commands::Complete
+                            };
+                        } else {
+                            // 76. No viable candidate was found at current position - pop it in the next iteration
+                            command = Commands::Collapse;
+                        }
+                        board_stack.push(board); // put top board back
                     }
-                    board_stack.push(board); // put top board back
                 } // match command::move
                 _ => {  // catch everything else
                     // should never get here
@@ -1217,7 +1208,7 @@ fn update_board(board: &mut Board, cell_to_move: &Cell, digit_to_clear: i32, mov
     }
 }
 
-fn handle_expand(rnglcg: &mut PortableLCG, board_stack: &mut Vec<Board>, alt_board: Board) -> BoolResult {
+fn handle_expand(rnglcg: &mut PortableLCG, board_stack: &mut Vec<Board>, alt_board: Board) {
     let mut current_board: Board = if !board_stack.is_empty()   // 9.
     {
         board_stack.last_mut().unwrap().clone()
