@@ -268,6 +268,12 @@ enum Commands {
     Complete,
     Fail,
 }
+#[derive(Debug, PartialEq)]
+enum BoolResult {
+    False,
+    True,
+    Fail,
+}
 
 fn print_board(state : &Board)
 {
@@ -1262,10 +1268,7 @@ fn handle_expand(rnglcg: &mut PortableLCG, board_stack: &mut Vec<Board>, alt_boa
         current_board.used_digits = best_used_digits;
         current_board.last_digit = 0;
         board_stack.push(current_board);
-        return BoolResult::True
     }
-
-    BoolResult::Fail
 }
 
 fn print_code(board: &Board) {
