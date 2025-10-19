@@ -147,6 +147,10 @@ impl Board {
         }
         candidate_cell_pairs
     }
+
+    pub fn board_has_empty_cells(&self) -> bool {
+        self.cells.iter().any(|cell| cell.digit == 0)
+    }
 }
 impl Index<&SingleCandidateCell> for Board {
     type Output = Cell;
@@ -508,7 +512,7 @@ fn look_for_pairs_that_can_be_exchanged(
                         let moved_to_digit = handle_move(&mut board, false);
                         if moved_to_digit <= 9 {
                             // 75.
-                            command = if board.cells.iter().any(|cell| cell.digit == 0) {
+                            command = if board.board_has_empty_cells() {
                                 Commands::Expand
                             } else {
                                 Commands::Complete
