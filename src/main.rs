@@ -109,6 +109,44 @@ impl Board {
             last_digit: -2,
         }
     }
+
+    // Try to see if there are pairs of values that can be exchanged arbitrarily
+    // This happens when board has more than one valid solution
+    // Look for a cell that has exactly 2 candidate digits; then look for another cell with the same 2 candidate digits
+    // Return 2 cells which share a row, column, or block, and which share the same 2 digit candidates
+    pub fn get_pair_candidate_cells(&self) -> VecDeque<CandidateCellPair> {
+        let mut candidate_cell_pairs: VecDeque<CandidateCellPair> = VecDeque::new();
+
+        // 61.
+        // index i goes from 0 to 80, index j goes from i+1 to 81. Gives us two cells, i & j, to compare candidate digits
+        for i in 0..80
+        // stop at 80 because j looks at i+1 cell
+        {
+            // 62.
+            if count_candidates(self[i].candidate_digits.mask) != 2 {
+                // looking for cells with exactly 2 candidate digits
+                continue;
+            } // This cell candidate i has exactly 2 digits. Get the two digits
+            let (lower_digit, upper_digit) = top_two_digits(self[i].candidate_digits.mask); // we already determined that this candidate has exactly 2 digits
+
+            // 63. Now look for another cell with exactly the same 2 digit candidates
+            for j in i + 1..81 {
+                if self[j].candidate_digits.mask != self[i].candidate_digits.mask {
+                    continue;
+                }
+                // Found another cell[j] which has exactly the same two candidate digits as cell [i]
+                // Check if the two cells share a row, column, or block
+                if row_or_column_or_block_shared(i, j) {
+                    // found two cells which have the same 2 candidate digits and share a row, column, or block
+                    candidate_cell_pairs.push_back(CandidateCellPair::new(
+                        SingleCandidateCell::new(i, lower_digit, &"".to_string()),
+                        SingleCandidateCell::new(j, upper_digit, &"".to_string()),
+                    ));
+                }
+            }
+        }
+        candidate_cell_pairs
+    }
 }
 impl Index<&SingleCandidateCell> for Board {
     type Output = Cell;
@@ -161,9 +199,9 @@ impl IndexMut<usize> for Board {
     }
 }
 
+// group with exactly 2 candidates and 2 cells those 2 candidate digits can be in
 #[derive(Debug, Clone)]
 pub struct CellGroup2 {
-    // group with exactly 2 candidates and 2 cells those 2 candidate digits can be in
     pub mask: i32,          // mask with 2 bits set indicating the 2 candidate digits
     pub discriminator: i32, // Key: 0-8 (rows), 9-17 (columns), 18-27 (blocks).
     pub description: String,
@@ -180,6 +218,7 @@ pub struct CellGroupN<'a> {
     pub cleanable_cells_count: u32,
 }
 
+// cell with only one candidate digit
 #[derive(Debug, Clone)]
 struct SingleCandidateCell {
     index: usize, // index tells us which cell on the board it is
@@ -210,6 +249,7 @@ impl SingleCandidateCell {
     }
 }
 
+// pair of cells with only one candidate digit
 struct CandidateCellPair {
     cell1: SingleCandidateCell,
     cell2: SingleCandidateCell,
@@ -223,6 +263,7 @@ impl CandidateCellPair {
     }
 }
 
+// collection of digits 1 - 9, stored in a bitmask.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct Digits {
     mask: i32,
@@ -302,19 +343,17 @@ fn play(mut rnglcg: PortableLCG) {
     print_starting_board(&board);
 
     solve_board(&mut board, &final_board, &mut rnglcg);
-
-    log(&"BOARD SOLVED.".to_string())
 }
 
 fn solve_board(mut_board: &mut Board, final_board: &Board, mut_rnglcg: &mut PortableLCG) {
     // Now solve the board
+    let cell_groups: BTreeMap<usize, Vec<Cell>> = get_indices(); // Key is the discriminator 0-27 cell_groups should always be immutable
     let mut change_made: bool = true;
     while change_made
     // 27
     {
         change_made = false;
         calculate_candidates(mut_board); // calculates all the options for every cell on board
-        let cell_groups: BTreeMap<usize, Vec<Cell>> = get_indices(); // Key is the discriminator 0-27 cell_groups should always be immutable
 
         // cell_groups has 3x 81 cells. 81 for rows, 81 for columns, 81 for blocks. Key is the discriminator 0-27
         // 34.
@@ -326,9 +365,8 @@ fn solve_board(mut_board: &mut Board, final_board: &Board, mut_rnglcg: &mut Port
 
             //#region Pick cells with only one candidate left
             let result = set_random_cell_with_only_one_candidate(mut_rnglcg, mut_board);
-            change_made = change_made || result;
-            if change_made {
-                //log(&format!("48. change_made: {}", change_made).to_string());
+            if result {
+                change_made = true;
                 continue;
             } //#endregion*
 
@@ -338,8 +376,8 @@ fn solve_board(mut_board: &mut Board, final_board: &Board, mut_rnglcg: &mut Port
             //log(&format!("38. change_made: {}", change_made).to_string());
             let single_digit_cells = get_single_digit_cells(mut_board);
             let result = set_one_single_digit_cell(mut_rnglcg, mut_board, single_digit_cells); // 47 False return means single_candidate_cells list was empty
-            change_made = change_made || result;
-            if change_made {
+            if result {
+                change_made = true;
                 continue;
             } //#endregion
 
@@ -348,30 +386,18 @@ fn solve_board(mut_board: &mut Board, final_board: &Board, mut_rnglcg: &mut Port
             //log(&format!("48. change_made: {}", change_made).to_string());
             //let two_digit_masks = candidate_masks.Where(mask => mask_to_ones_count[mask] == 2).Distinct().ToList();
             // look for cells which have only 2 options for digits
-            let two_digit_masks: Vec<i32> = get_cells_with_two_candidates(mut_board);
+            let two_digit_masks: Vec<i32> = get_candidate_pairs_with_two_candidates(mut_board);
 
-            // note every number here when expressed in biary uses only 2 bits, indicating there are two candidates for which? cells
-            //log(&format!("two_digit_masks={:#x?}", &two_digit_masks));
-            let mut s: String = "two_digit_masks=[".to_string();
-            let mut first: bool = true;
-            for mask in &two_digit_masks {
-                if !first {
-                    s.push_str(", ");
-                }
-                first = false;
-                s.push_str(&format!("{:09b}", &mask));
-            }
-            s += "]";
-            log(&s);
+            print_two_digit_masks(&two_digit_masks);
 
             // 49. handle cells with exactly 2 candidate digits as specified in two_digit_masks
-            let result = handle_cells_with_specified_two_candidates(
+            let result = handle_candidate_pairs_with_two_candidates(
                 mut_board,
                 &cell_groups,
                 &two_digit_masks,
             );
-            step_change_made = step_change_made || result;
-            if change_made || step_change_made {
+            if result {
+                step_change_made = true;
                 continue;
             } //#endregion
 
@@ -386,12 +412,11 @@ fn solve_board(mut_board: &mut Board, final_board: &Board, mut_rnglcg: &mut Port
         //60.
         //#region Final attempt - look if the board has multiple solutions
         if !change_made {
-            let result: BoolResult =
-                look_for_pairs_that_can_be_exchanged(mut_rnglcg, &final_board, mut_board);
+            let result: BoolResult = look_for_pairs_that_can_be_exchanged(mut_rnglcg, &final_board, mut_board);
             if result == BoolResult::True {
                 change_made = true;
             }
-            if result == BoolResult::Fail {
+            else if result == BoolResult::Fail {
                 log("FAILED TO SOLVE BOARD.");
                 return;
             }
@@ -405,6 +430,23 @@ fn solve_board(mut_board: &mut Board, final_board: &Board, mut_rnglcg: &mut Port
             print_board_and_code(mut_board); //#region Print the board as it looks after one change was made to it
         }
     }
+    log(&"BOARD SOLVED.".to_string())
+}
+
+fn print_two_digit_masks(two_digit_masks: &Vec<i32>) {
+    // note every number here when expressed in biary uses only 2 bits, indicating there are two candidates for which? cells
+    //log(&format!("two_digit_masks={:#x?}", &two_digit_masks));
+    let mut s: String = "two_digit_masks=[".to_string();
+    let mut first: bool = true;
+    for mask in two_digit_masks {
+        if !first {
+            s.push_str(", ");
+        }
+        first = false;
+        s.push_str(&format!("{:09b}", &mask));
+    }
+    s += "]";
+    log(&s);
 }
 
 fn look_for_pairs_that_can_be_exchanged(
@@ -418,7 +460,7 @@ fn look_for_pairs_that_can_be_exchanged(
     // Try to see if there are pairs of values that can be exchanged arbitrarily
     // This happens when board has more than one valid solution
     let mut change_made = false;
-    let mut candidate_cell_pairs = get_candidate_cells(board);
+    let mut candidate_cell_pairs = board.get_pair_candidate_cells();
 
     // At this point we have the lists with pairs of cells that might pick one of two digits each
     // Now we have to check whether that is really true - does the board have two solutions?
@@ -639,7 +681,7 @@ fn for_n_digit_groups(board: &mut Board, n_digit_groups: Vec<CellGroupN>) -> boo
     step_change_made
 }
 
-fn get_cells_with_two_candidates(board: &mut Board) -> Vec<i32> {
+fn get_candidate_pairs_with_two_candidates(board: &mut Board) -> Vec<i32> {
     let board_candidate_masks: [i32; 81] = std::array::from_fn(|i| board[i].candidate_digits.mask);
 
     /*let mut board_candidate_masks:[i32; 81] = [0;81];
@@ -654,7 +696,7 @@ fn get_cells_with_two_candidates(board: &mut Board) -> Vec<i32> {
     two_digit_masks
 }
 
-fn handle_cells_with_specified_two_candidates(
+fn handle_candidate_pairs_with_two_candidates(
     board: &mut Board,
     row_col_blk_groups: &BTreeMap<usize, Vec<Cell>>,
     two_digit_masks: &Vec<i32>,
@@ -685,7 +727,6 @@ fn handle_cells_with_specified_two_candidates(
         //log("50. Groups is NOT empty".to_string());
         //log(&format!("groups.Count()={}", groups.len()));
         let result = handle_cellgroup2_groups(board, &mut tdm_overlap_cell_group_list);
-
         step_change_made = step_change_made || result;
         //log(&format!("step_change_made={}", step_change_made))
     } else {
@@ -936,44 +977,6 @@ fn get_alternate_board(
         alternate_board[candidate_cell_pair.cell2.index].digit = candidate_cell_pair.cell2.digit;
     }
     alternate_board
-}
-
-// Try to see if there are pairs of values that can be exchanged arbitrarily
-// This happens when board has more than one valid solution
-// Look for a cell that has exactly 2 candidate digits; then look for another cell with the same 2 candidate digits
-// Return 2 cells which share a row, column, or block, and which share the same 2 digit candidates
-fn get_candidate_cells(board: &mut Board) -> VecDeque<CandidateCellPair> {
-    let mut candidate_cell_pairs: VecDeque<CandidateCellPair> = VecDeque::new();
-
-    // 61.
-    // index i goes from 0 to 80, index j goes from i+1 to 81. Gives us two cells, i & j, to compare candidate digits
-    for i in 0..80
-    // stop at 80 because j looks at i+1 cell
-    {
-        // 62.
-        if count_candidates(board[i].candidate_digits.mask) != 2 {
-            // looking for cells with exactly 2 candidate digits
-            continue;
-        } // This cell candidate i has exactly 2 digits. Get the two digits
-        let (lower_digit, upper_digit) = top_two_digits(board[i].candidate_digits.mask); // we already determined that this candidate has exactly 2 digits
-
-        // 63. Now look for another cell with exactly the same 2 digit candidates
-        for j in i + 1..81 {
-            if board[j].candidate_digits.mask != board[i].candidate_digits.mask {
-                continue;
-            }
-            // Found another cell[j] which has exactly the same two candidate digits as cell [i]
-            // Check if the two cells share a row, column, or block
-            if row_or_column_or_block_shared(i, j) {
-                // found two cells which have the same 2 candidate digits and share a row, column, or block
-                candidate_cell_pairs.push_back(CandidateCellPair::new(
-                    SingleCandidateCell::new(i, lower_digit, &"".to_string()),
-                    SingleCandidateCell::new(j, upper_digit, &"".to_string()),
-                ));
-            }
-        }
-    }
-    candidate_cell_pairs
 }
 
 fn print_starting_board(board: &Board) {
@@ -1933,7 +1936,7 @@ fn main() {
     *GLOBAL_FILE.lock().unwrap() = Some(file.expect("REASON"));
 
     // MAIN LOOP
-    for seed in 1..1000 {
+    for seed in 1..100 {
         let my_rng = PortableLCG::new(seed);
         log(&format!("RUN {}", seed));
         play(my_rng);
